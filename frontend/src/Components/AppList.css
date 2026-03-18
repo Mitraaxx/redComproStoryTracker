@@ -1,0 +1,41 @@
+/* AppList.css */
+
+.app-card-aligned {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  
+
+  min-width: 250px;  
+  min-height: 50px; 
+  padding: 30px;    
+  gap: 20px;         
+}
+
+.app-name-text {
+  font-size: 1.07rem; 
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+  word-wrap: break-word; 
+  word-break: break-word;
+  width: 100%;
+  line-height: 1.4;
+}
+
+.app-repo-badge {
+  font-size: 0.8rem; 
+  font-weight: 600;
+  color: #2563eb;
+  background-color: #eff6ff;
+  padding: 10px 16px; 
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+  
+  word-break: break-all; 
+  width: 100%; 
+  box-sizing: border-box; 
+  display: block; 
+}

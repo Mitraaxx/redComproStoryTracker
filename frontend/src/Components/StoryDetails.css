@@ -1,0 +1,281 @@
+.sprint-storyDetails-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sprint-storyDetails-container2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* ── Info Panel ── */
+.sprint-storyDetails-container2-5 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr)) 220px;
+  gap: 6px 10px;
+  background-color: #f8fafc;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  max-width: 900px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  align-items: start;
+  overflow: hidden;
+}
+
+.sprint-storyDetails-container2-5 p {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.82rem;
+  color: #64748b;   
+  line-height: 1.4;
+}
+
+.sprint-storyDetails-container2-5 strong {
+  color: #0f172a;  
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Comments column ── */
+.sprint-storyDetails-container2-5 p.comments-field {
+  grid-column: 5;
+  grid-row: 1 / span 5;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 10px 12px;
+  min-height: 110px;
+  font-size: 0.82rem;
+  color: #1e3a5f;
+  line-height: 1.6;
+  max-width: 220px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.sprint-storyDetails-container2-5 p.comments-field strong {
+  color: #3b82f6;
+  font-size: 0.72rem;
+  margin-bottom: 4px;
+}
+
+.sprint-storyDetails-container2-5 p.comments-field span {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sprint-storyDetails-container2-5 p:last-child:not(.comments-field) {
+  grid-column: 1;
+  grid-row: 6;
+  margin-top: 10px;
+}
+
+
+.sprint-storyDetails-container3 {
+  display: flex;
+  gap: .5rem;
+  align-items: center
+}
+
+#release-tag {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: 0;
+  letter-spacing: 0.3px;
+  border: 1px solid #bae6fd;
+  width: fit-content;
+  font-size: 0.70rem;
+}
+
+.sprint-storyDetails-title {
+  color: #1e293b;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.sprint-storyDetails-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+}
+
+.sprint-storyDetails-card {
+  width: 320px; /* Size bada kar diya */
+  min-height: 340px; /* Min height badha di */
+  max-height: 450px; /* Max height set kar di taki bohot lamba na ho */
+  padding: 16px;
+  background-color: #ffffff;
+  border: 1px solid #3b82f6;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column; /* Flex set kar diya */
+  box-shadow:
+    0 7px 18px rgba(59,130,246,0.07),
+    0 3px 6px rgba(59,130,246,0.04);
+  transition: all 0.25s ease;
+}
+
+.sprint-storyDetails-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 20px rgba(59,130,246,0.18);
+}
+
+.sprint-storyDetails-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+}
+
+.sprint-storyDetails-card p {
+  margin: 8px 0;
+  line-height: 1.4;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+/* 👇 NAYA: Labels (Feature Branch, Base Branch, Notes) ko ekdum Black (#000000) kar diya */
+.sprint-storyDetails-card strong {
+  color: #000000;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* ── Naya App Card Body Style ── */
+.app-card-body {
+  flex: 1; /* Bachi hui saari space yeh lega */
+  overflow-y: auto; /* Ab sirf content scroll hoga */
+  margin-bottom: 12px;
+  padding-right: 4px;
+}
+
+.comments-field{
+  height: 125px;
+  overflow-y: auto;
+}
+
+.back-button {
+  padding: 8px;
+  cursor: pointer;
+  background-color: #3b82f6;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  height: 2rem;
+}
+
+.back-button:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.15);
+}
+
+.storyDetails-search-input {
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  border: 1px solid;
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+.storyDetails-search-input:hover {
+  border-color: #3b82f6;
+}
+
+.storyDetails-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.25),
+    0 8px 16px rgba(59, 130, 246, 0.15);
+}
+
+/* ── New Extracted Classes for Feature Branch Block ── */
+
+.storyDetails-feature-branch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  background-color: #f8fafc;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.storyDetails-feature-branch-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.storyDetails-feature-branch-text {
+  font-size: 0.85rem;
+}
+
+.storyDetails-btn-github {
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  background-color: #24292e; /* GitHub dark color */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.add-app-button {
+  padding: 0 5px; 
+  height: 35px; 
+  min-width: 100px;
+  padding: 8px 18px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+/* 👇 NAYA: Teri purani file mein yeh typo .app-app-button tha, jisko theek kiya taaki hover kaam kare */
+.add-app-button:hover {
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.storyDetails-btn-pr {
+  padding: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  background-color: #000000;
+  color: #ffffff; 
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: background-color 0.2s;
+}
+
+.storyDetails-btn-pr:hover {
+  background-color: #333333; 
+}

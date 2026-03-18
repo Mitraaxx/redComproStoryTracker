@@ -1,0 +1,54 @@
+.release-card {
+  min-width: 220px;
+  min-height: 110px;
+  padding: 16px;
+  background-color: #ffffff;
+  border: 1px solid #3b82f6;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 500;
+  
+ 
+  text-align: center; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; 
+  gap: 12px; 
+
+  transition: all 0.25s ease;
+  box-shadow:
+    0 7px 18px rgba(59,130,246,0.07),
+    0 3px 6px rgba(59,130,246,0.04);
+}
+
+.release-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px; 
+}
+
+.release-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.release-category-tag {
+  background-color: #eff6ff; 
+  color: #2563eb; 
+  padding: 4px;
+  border-radius: 12px;
+  font-size: 0.70rem;
+  font-weight: 600;
+  border: 1px solid #bfdbfe;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.release-card:hover { 
+  transform: scale(1.05);
+  border-color: #3b82f6;
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.15);
+}

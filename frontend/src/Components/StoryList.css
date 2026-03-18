@@ -1,0 +1,114 @@
+.story-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.story-container2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.story-title {
+  color: #1e293b;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+
+.story-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+}
+
+.story-card {
+  width: 320px;         
+  height: 240px;
+  padding: 16px;
+  background-color: #ffffff;
+  border: 1px solid #3b82f6;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  box-shadow: 
+    0 7px 18px rgba(59,130,246,0.07),
+    0 3px 6px rgba(59,130,246,0.04);
+  transition: all 0.25s ease;
+  overflow-y: auto; 
+}
+
+
+.story-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 10px 20px rgba(59,130,246,0.18);
+}
+
+
+.story-card p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  line-height: 1.3;
+  word-break: break-word; 
+}
+
+
+.story-search-input {
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #3b82f6;
+  background-color: #ffffff;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+.story-search-input:hover {
+  border-color: #3b82f6;
+}
+
+.story-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 
+    0 0 0 3px rgba(59, 130, 246, 0.25),
+    0 8px 16px rgba(59, 130, 246, 0.15);
+}
+
+.create-story-btn {
+  padding: 8px 18px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+
+.story-comments {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: #1e3a5f;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+
+  max-height: 40px;
+  overflow-y: auto;
+}
+
+.story-comments strong {
+  color: #3b82f6;
+  font-size: 0.75rem;
+  display: block; 
+  margin-bottom: 4px;
+}

@@ -1,0 +1,148 @@
+.relative-modal {
+  position: relative;
+}
+
+.required-asterisk {
+  color: #ef4444; 
+  margin-left: 3px;
+  font-weight: bold;
+}
+
+.apps-section {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 15px;
+  margin-top: 10px;
+}
+
+.apps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.apps-title {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.btn-add-app {
+  padding: 8px 14px;
+  background-color: #f1f5f9;
+  color: #3b82f6; 
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.btn-add-app:hover {
+  background-color: #e2e8f0;
+  color: #2563eb;
+  border-color: #94a3b8;
+}
+
+.apps-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.app-item {
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.app-item:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.app-details {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-name-highlight {
+  color: #0f172a;
+  font-size: 0.95rem;
+}
+
+.app-branch {
+  font-size: 0.85rem;
+  color: #64748b;
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.delete-icon {
+  cursor: pointer;
+  color: #ef4444;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.delete-icon:hover {
+  transform: scale(1.1);
+}
+
+.no-apps-text {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-style: italic;
+  text-align: center;
+  padding: 15px 0;
+  background-color: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+}
+
+
+/* --- NESTED MODAL SPECIFIC STYLES --- */
+.nested-overlay {
+  z-index: 1050; /* Ensuring it's above the main modal */
+  background-color: rgba(15, 23, 42, 0.75); /* Slightly darker backdrop for focus */
+}
+
+.nested-modal-content {
+  width: 40%;
+  min-width: 400px;
+  max-width: 600px;
+  height: auto;
+  max-height: 85vh;
+}
+
+/* Action buttons container */
+.app-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Edit icon styling */
+.edit-icon {
+  cursor: pointer;
+  color: #3b82f6; /* Match kiya delete icon jaisa normal state mein */
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.edit-icon:hover {
+  transform: scale(1.1);
+}
