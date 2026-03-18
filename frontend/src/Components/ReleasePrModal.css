@@ -1,0 +1,93 @@
+.pr-modal-custom-content {
+  max-width: 650px !important;
+  min-width: 500px;
+  width: 100%;
+}
+
+.pr-modal-body {
+  padding: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+
+.pr-repo-card {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: #f8fafc;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.pr-repo-title-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.pr-repo-title {
+  font-size: 1.1rem;
+  color: #0f172a;
+  font-weight: 700;
+  margin: 0;
+}
+
+
+.pr-branch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pr-branch-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  transition: all 0.2s ease;
+}
+
+.pr-branch-item:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-color: #94a3b8;
+}
+
+.pr-branch-name {
+  font-size: 0.9rem;
+  color: #334155;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+
+.pr-create-btn {
+  padding: 8px 16px;
+  background-color: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.pr-create-btn:hover {
+  background-color: #15803d;
+}
+
+.pr-empty-text {
+  font-size: 0.9rem;
+  color: #64748b;
+  text-align: center;
+  padding: 10px;
+  font-style: italic;
+}

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 let cachedSprintList = null;
 let cachedSprintStories = {};

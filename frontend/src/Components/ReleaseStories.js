@@ -7,8 +7,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AddExistingStoryModal from "./AddExistingStoryModal";
 import EditReleaseModal from "./EditReleaseModal";
+// 👇 NAYA: Alag file se PR Modal import kiya
+import StoryPrModal from "./ReleasePrModal"; 
 import "./SprintStories.css"; 
 import { APPS_CONFIG } from "../utils/AppConfig";
+import ReleasePrModal from "./ReleasePrModal";
 
 const ReleaseStories = () => {
   const [stories, setStories] = useState([]);
@@ -24,6 +27,10 @@ const ReleaseStories = () => {
 
   const [newManualApp, setNewManualApp] = useState("");
   
+  // 👇 NAYA: Story specific PR Modal ke liye states
+  const [isPrModalOpen, setIsPrModalOpen] = useState(false);
+  const [selectedStoryForPr, setSelectedStoryForPr] = useState(null);
+
   const { releaseId } = useParams();
   const navigate = useNavigate();
 
@@ -208,7 +215,6 @@ const ReleaseStories = () => {
     }
   };
 
-
   const filtered = stories?.filter((item) => {
     const search = searchTerm.trim().toLowerCase();
     const storyName = item.storyName?.toLowerCase() || "";
@@ -241,22 +247,10 @@ const ReleaseStories = () => {
         </section>
 
         <div className="relTop-btn-group">
-        <button 
-          className="relTop-btn-pr"
-        >
-          Master
-        </button>
-        <button 
-          className="relTop-btn-pr"
-        >
-          Alpha
-        </button>
-        <button 
-          className="relTop-btn-pr"
-        >
-          HFX
-        </button>
-      </div>
+          <button className="relTop-btn-pr">Master</button>
+          <button className="relTop-btn-pr">Alpha</button>
+          <button className="relTop-btn-pr">HFX</button>
+        </div>
 
         <section className="sprint-story-container3">
           <div className="story-search-header">
@@ -319,8 +313,6 @@ const ReleaseStories = () => {
         </div>
       </div>
 
-      
-
       <div className="sprint-story-grid">
         {filtered.length > 0 ? (
           filtered.map((story) => (
@@ -344,7 +336,15 @@ const ReleaseStories = () => {
               <strong>Comments: </strong>
               <span>{story?.comments || "No comments."}</span>
               </div>
-              <button className="prForRel-btn">
+              
+              <button 
+                className="prForRel-btn"
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  setSelectedStoryForPr(story);
+                  setIsPrModalOpen(true);
+                }}
+              >
                 PR Rel 
               </button>
             </div>
@@ -355,6 +355,12 @@ const ReleaseStories = () => {
           </p>
         )}
       </div>
+
+      <ReleasePrModal
+        isOpen={isPrModalOpen} 
+        onClose={() => setIsPrModalOpen(false)} 
+        selectedStory={selectedStoryForPr} 
+      />
 
       <AddExistingStoryModal
         isOpen={isAddExistingModalOpen}

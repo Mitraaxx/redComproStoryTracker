@@ -225,52 +225,57 @@
 
 .relTop-btn-group {
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   align-items: center;
-  gap: 10px;              
+  gap: 10px;
 }
 
-
-.relTop-btn-pr {
+.relTop-btn-pr{
   padding: 8px 14px;
   font-size: 0.85rem;
   cursor: pointer;
-  background-color: #24292F; 
-  color: #ffffff; 
-  border: none;
-  border-radius: 15px;
+
+  background-color: transparent;   
+  color: #24292F;                 
+  
+  border: 1.5px solid #24292F;    
+  border-radius: 10px;
+
   font-weight: 500;
   letter-spacing: 0.5px;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 90px; 
+  min-width: 90px;
+
+  transition: all 0.25s ease;     
 }
 
 .relTop-btn-pr:hover {
-  background-color: #334155; 
+  background-color: #24292F;     
+  color: #ffffff;
+  border-color: #24292F;
 }
 
-.prForRel-btn{
-  padding: 5px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  background-color: #24292F; 
-  color: #ffffff; 
-  border: none;
-  border-radius: 10px;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 75px; 
-  margin-top: 10px;
-  position: relative;
-  left: 75%;
+.prForRel-btn {
+  margin-top: auto; 
+  align-self: flex-end; 
+  padding: 6px; 
+  background-color: #ffffff; 
+  color: #334155; 
+  border: 1.5px solid #24292F;   
+  border-radius: 6px; 
+  cursor: pointer; 
+  font-size: 0.8rem; 
+  font-weight: 600;
+  transition: all 0.2s ease;
+  margin-top: 5px;
 }
 
 .prForRel-btn:hover {
-  background-color: #334155; 
+  background-color: #24292F;     
+  color: #ffffff;
+  border-color: #24292F;
 }
 

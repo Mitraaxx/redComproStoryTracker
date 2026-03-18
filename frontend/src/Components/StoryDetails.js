@@ -130,7 +130,18 @@ const StoryDetails = () => {
             </span>
           </p>
           <p><strong>Type: </strong> <span>{storyData.type}</span></p>
-          <p><strong>Apps to be deployed: </strong> <span>{`${storyData.appsToBeDeployed},`}</span></p>
+         <p>
+            <strong>Apps to be deployed: </strong> 
+            <span style={{ marginTop: "4px" }}>
+              {Array.isArray(storyData.appsToBeDeployed) && storyData.appsToBeDeployed.length > 0
+                ? storyData.appsToBeDeployed.map((app, i) => (
+                    <span key={i} style={{ display: "block", fontSize: "0.8rem", color: "#475569" }}>
+                      • {app}
+                    </span>
+                  ))
+                : (storyData.appsToBeDeployed || "None")}
+            </span>
+          </p>
           <p className="comments-field"><strong>Comments: </strong> <span>{storyData.comments || "No comments."}</span></p>
         </div>
 

@@ -267,9 +267,10 @@
   padding: 6px;
   font-size: 11px;
   cursor: pointer;
-  background-color: #000000;
-  color: #ffffff; 
-  border: none;
+  background-color: transparent;   
+  color: #24292F;                 
+  
+  border: 1.5px solid #24292F;  
   border-radius: 8px;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -277,5 +278,7 @@
 }
 
 .storyDetails-btn-pr:hover {
-  background-color: #333333; 
+  background-color: #24292F;     
+  color: #ffffff;
+  border-color: #24292F;
 }

@@ -442,8 +442,10 @@ exports.getReleaseStories = async (req, res) => {
     if (!release) return res.status(404).json({ error: 'Release not found' });
 
     const stories = await Story.find({ releaseTag: release.name })
-      // 👇 NAYA: 'appsToBeDeployed' add kiya select query mein
-      .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments appsToBeDeployed')
+      // 👇 NAYA: Yahan select mein linkedApps add kiya
+      .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments appsToBeDeployed linkedApps')
+      // 👇 NAYA: linkedApps ke andar app ka asli naam fetch karne ke liye populate kiya
+      .populate('linkedApps.appRef', 'name')
       .sort({ createdAt: -1 });
 
     res.json({ release, stories });
