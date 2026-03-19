@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { APPS_CONFIG } from "../utils/AppConfig";
-import "./SprintList.css"; 
-import "./AppList.css"; 
+import { APPS_CONFIG } from "../../utils/AppConfig";
+import "../Sprints/SprintList.css"; 
+import "../App/AppList.css"; 
 
 const AppList = () => {
   const navigate = useNavigate();

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useContext } from "react";
-import { fetchAllSprints,createSprint, clearAllCaches } from "../Api/api";
+import { fetchAllSprints,createSprint, clearAllCaches } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
-import "./SprintList.css";
-import CreateSprintModal from "./CreateSprintModal";
+import "../Sprints/SprintList.css";
+import CreateSprintModal from "../Modals/CreateSprintModal";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

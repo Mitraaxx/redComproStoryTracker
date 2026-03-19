@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { fetchSprintStories, clearAllCaches, updateSprint, createStory,fetchAllSprints,fetchStoryDetails,updateStory,updateStoryApps,fetchAllReleases} from "../Api/api";
+import { fetchSprintStories, clearAllCaches, updateSprint, createStory,fetchAllSprints,fetchStoryDetails,updateStory,updateStoryApps,fetchAllReleases} from "../../Api/api";
 import { MdArrowBack, MdEdit } from "react-icons/md";
 import { HashLoader } from "react-spinners";
 import { useParams, useNavigate } from "react-router-dom";
-import "./SprintStories.css";
-import EditSprintModal from "./EditSprintModal";
+import "../Sprints/SprintStories.css";
+import EditSprintModal from "../Modals/EditSprintModal";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CreateStoryModal from "./CreateStoryModal";
-import AddExistingStoryModal from "./AddExistingStoryModal";
+import CreateStoryModal from "../Modals/CreateStoryModal";
+import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 
 
 const SprintStories = () => {

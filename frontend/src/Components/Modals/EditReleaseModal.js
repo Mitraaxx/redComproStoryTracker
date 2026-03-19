@@ -1,6 +1,6 @@
 import React from "react";
 import { MdClose } from "react-icons/md";
-import "./EditStoryModal.css";
+import "../Modals/EditStoryModal.css";
 
 const EditReleaseModal = ({
   isOpen, onClose, releaseFormData, handleReleaseChange, handleReleaseSave, saving

@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { fetchStoryDetails, updateStory, updateStoryApps, clearAllCaches, fetchAllSprints, fetchAllReleases } from "../Api/api";
+import { fetchStoryDetails, updateStory, updateStoryApps, clearAllCaches, fetchAllSprints, fetchAllReleases } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { MdArrowBack, MdSource, MdNotes, MdEdit } from "react-icons/md";
 import { FaCodeBranch, FaGithub } from "react-icons/fa";
 import { AiOutlineLink } from "react-icons/ai";
 import { useParams, useNavigate } from "react-router-dom";
-import "./StoryDetails.css";
+import "../Sprints/StoryDetails.css";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CreatePrModal from "./CreatePrModal";
-import UnifiedEditModal from "./UnifiedEditModal";
-import { APPS_CONFIG } from "../utils/AppConfig";
+import CreatePrModal from "../Modals/CreatePrModal";
+import UnifiedEditModal from "../Modals/UnifiedEditModal";
+import { APPS_CONFIG } from "../../utils/AppConfig";
 
 const StoryDetails = () => {
   const [loading, setLoading] = useState(true);

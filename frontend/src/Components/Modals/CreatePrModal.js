@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { MdClose } from "react-icons/md";
 import { FaGithub } from "react-icons/fa";
-import { PR_BASE_BRANCHES } from "../utils/AppConfig";
-import "./EditStoryModal.css"; 
+import { PR_BASE_BRANCHES } from "../../utils/AppConfig";
+import "../Modals//EditStoryModal.css"; 
 
 const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
   const [baseBranch, setBaseBranch] = useState("");

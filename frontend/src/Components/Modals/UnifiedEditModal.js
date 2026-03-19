@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { MdClose, MdAdd, MdDelete, MdEdit } from "react-icons/md";
-import "./EditStoryModal.css";
-import "./CreateStoryHalfModal.css";
-import { APPS_CONFIG, TEAM_MEMBERS } from "../utils/AppConfig";
+import "../Modals/EditStoryModal.css";
+import "../Modals/CreateStoryHalfModal.css";
+import { APPS_CONFIG, TEAM_MEMBERS } from "../../utils/AppConfig";
 
 
-const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [], releasesList = [], initialSprintName = "", sprintId = null, hideSprintField = false }) => {
-  const [formData, setFormData] = useState({ status: "Pending", sprintName: "" });
+const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sprintsList = [], releasesList = [] }) => {
+  const [formData, setFormData] = useState({});
   const [appsList, setAppsList] = useState([]);
 
-  // 👇 NAYA: Multiple Apps to be deployed ke liye state
+  const [originalFormData, setOriginalFormData] = useState({});
+  const [originalAppsList, setOriginalAppsList] = useState([]);
+
+  // 👇 NAYA: Multiple Apps ke arrays
   const [deployAppsList, setDeployAppsList] = useState([]);
+  const [originalDeployAppsList, setOriginalDeployAppsList] = useState([]);
   const [deployAppInput, setDeployAppInput] = useState("");
 
   const [isAppFormOpen, setIsAppFormOpen] = useState(false);
@@ -18,32 +22,70 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
   const [editingAppIndex, setEditingAppIndex] = useState(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setFormData({ status: "Pending", sprintName: initialSprintName || "" });
-      setAppsList([]);
-      setDeployAppsList([]); // Modal khulne par reset
+    if (isOpen && initialData) {
+      const formatDate = (dateString) => dateString ? new Date(dateString).toISOString().split("T")[0] : "";
+
+      const formattedData = {
+        storyId: initialData.storyId || "",
+        storyName: initialData.storyName || "",
+        sprintName: initialData.sprint?.name || initialData.sprintName || "", 
+        status: initialData.status || "Pending",
+        storyPoints: initialData.storyPoints || "",
+        responsibility: initialData.responsibility || "",
+        qaEnvRelDate: formatDate(initialData.qaEnvRelDate),
+        liveEnvRelease: formatDate(initialData.liveEnvRelease),
+        comments: initialData.comments || "",
+        releaseTag: initialData.releaseTag || "",
+        epic: initialData.epic || "",
+        category: initialData.category || "",
+        type: initialData.type || "",
+        firstReview: initialData.firstReview || "",
+      };
+
+      let formattedApps = [];
+      if (initialData.linkedApps && initialData.linkedApps.length > 0) {
+        formattedApps = initialData.linkedApps.map(app => ({
+          appName: app.appRef?.name || app.appName || "",
+          featureBranches: Array.isArray(app.featureBranches) ? app.featureBranches.join(", ") : (app.featureBranches || ""),
+          baseBranch: app.baseBranch || "",
+          dependencies: app.dependencies || "",
+          notes: app.notes || ""
+        }));
+      }
+
+      // 👇 NAYA: Agar backend se pehle se array aayi hai toh load karo, warna empty rakho
+      const initialDeployApps = Array.isArray(initialData.appsToBeDeployed) 
+        ? initialData.appsToBeDeployed 
+        : (initialData.appsToBeDeployed ? [initialData.appsToBeDeployed] : []);
+
+      setFormData(formattedData);
+      setOriginalFormData(formattedData);
+      
+      setAppsList(formattedApps);
+      setOriginalAppsList(formattedApps);
+
+      setDeployAppsList(initialDeployApps);
+      setOriginalDeployAppsList(initialDeployApps);
       setDeployAppInput("");
-      setEditingAppIndex(null);
     }
-  }, [isOpen, initialSprintName]);
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   
   const handleKeyDown = (e) => {
-    // Agar input form field mein Enter maarein (deploy app ko chhod kar)
     if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.name !== 'appsToBeDeployedInput') {
       e.preventDefault();
     }
   };
 
-  // 👇 NAYA: Deploy App add aur remove karne ke functions
+  // 👇 NAYA: Deploy App Functions
   const addDeployApp = () => {
     if (deployAppInput.trim() && !deployAppsList.includes(deployAppInput.trim())) {
       setDeployAppsList([...deployAppsList, deployAppInput.trim()]);
     }
-    setDeployAppInput(""); // Add karne ke baad input clear kar do
+    setDeployAppInput("");
   };
 
   const removeDeployApp = (indexToRemove) => {
@@ -59,21 +101,38 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
 
   const submitMainForm = (e) => {
     e.preventDefault();
-    
-    let finalSprintId = sprintId;
 
-    if (!hideSprintField && formData.sprintName && formData.sprintName.trim() !== "") {
+    const isFormUnchanged = JSON.stringify(formData) === JSON.stringify(originalFormData);
+    const isAppsUnchanged = JSON.stringify(appsList) === JSON.stringify(originalAppsList);
+    // 👇 NAYA: Deploy Apps compare check
+    const isDeployAppsUnchanged = JSON.stringify(deployAppsList) === JSON.stringify(originalDeployAppsList);
+
+    if (isFormUnchanged && isAppsUnchanged && isDeployAppsUnchanged) {
+      console.log("No changes detected. Skipping API call.");
+      onClose();
+      return; 
+    }
+    
+    let finalSprintId = null;
+
+    if (formData.sprintName && formData.sprintName.trim() !== "") {
       const matchedSprint = sprintsList.find((s) => s.name === formData.sprintName.trim());
       
       if (!matchedSprint) {
-        alert("Sprint not found! Please select a valid sprint from the list or leave it empty.");
+        alert("Sprint not found! Please select a valid sprint from the list or leave it empty for backlog.");
         return; 
       }
       finalSprintId = matchedSprint._id;
     }
-    
-    // 👇 NAYA: deployAppsList ko payload mein array banakar bhej rahe hain
-    handleSave({ ...formData, sprintId: finalSprintId, appsData: appsList, appsToBeDeployed: deployAppsList });
+
+    // 👇 NAYA: Array pass kiya
+    handleSave({ 
+      ...formData, 
+      sprint: finalSprintId, 
+      sprintId: finalSprintId, 
+      appsData: appsList,
+      appsToBeDeployed: deployAppsList 
+    });
   };
 
   const openAppForm = () => {
@@ -124,73 +183,74 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
       <div className="modal-overlay">
         <div className="modal-content main-modal relative-modal">
           <div className="modal-header">
-            <h2>Create New Story</h2>
+            <h2>Edit Story & Apps</h2>
             <MdClose size={28} className="close-icon" onClick={onClose} />
           </div>
 
           <form onSubmit={submitMainForm} onKeyDown={handleKeyDown} className="modal-form">
             <div className="form-grid">
               <label className="form-label">
-                <span>Story ID <span className="required-asterisk">*</span></span>
-                <input type="text" name="storyId" onChange={handleChange} required className="form-input" />
+                <span>Story Name <span className="required-asterisk">*</span></span>
+                <input type="text" name="storyName" value={formData.storyName || ""} onChange={handleChange} required className="form-input" />
               </label>
 
               <label className="form-label">
-                <span>Story Name <span className="required-asterisk">*</span></span>
-                <input type="text" name="storyName" onChange={handleChange} required className="form-input" />
+                <span>Sprint Name</span>
+                <input list="sprint-options" name="sprintName" value={formData.sprintName || ""} onChange={handleChange} className="form-input" placeholder="Select Sprint" autoComplete="off" />
+                <datalist id="sprint-options">
+                  {sprintsList && sprintsList.map((s) => <option key={s._id} value={s.name} />)}
+                </datalist>
               </label>
-
-              {!hideSprintField && (
-                <label className="form-label">
-                  <span>Sprint Name</span>
-                  <input list="new-story-sprint-options" name="sprintName" value={formData.sprintName || ""} onChange={handleChange} className="form-input" placeholder="Select Sprint" autoComplete="off" />
-                  <datalist id="new-story-sprint-options">
-                    {sprintsList.map((s) => <option key={s._id} value={s.name} />)}
-                  </datalist>
-                </label>
-              )}
 
               <label className="form-label">
                 Status
-                <input type="text" name="status" onChange={handleChange} className="form-input" />
+                <input type="text" name="status" value={formData.status || ""} onChange={handleChange} className="form-input" />
               </label>
+
               <label className="form-label">
                 <span>Story Points</span>
-                <input type="number" name="storyPoints" onChange={handleChange} className="form-input" />
+                <input type="number" name="storyPoints" value={formData.storyPoints || ""} onChange={handleChange} className="form-input" />
               </label>
+
               <label className="form-label">
                 <span>Responsibility</span>
-                <input list="team-options" type="text" name="responsibility" onChange={handleChange} className="form-input" autoComplete="off" placeholder="Select Team Member" />
+                <input list="team-options" type="text" name="responsibility" value={formData.responsibility || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Select Team Member" />
                 <datalist id="team-options">
                   {TEAM_MEMBERS.map((member, i) => <option key={i} value={member} />)}
                 </datalist>
               </label>
+
               <label className="form-label">
                 <span>QA Release Date</span>
-                <input type="date" name="qaEnvRelDate" onChange={handleChange} className="form-input" />
+                <input type="date" name="qaEnvRelDate" value={formData.qaEnvRelDate || ""} onChange={handleChange} className="form-input" />
               </label>
+
               <label className="form-label">
                 <span>Live Release Date</span>
-                <input type="date" name="liveEnvRelease" onChange={handleChange} className="form-input" />
+                <input type="date" name="liveEnvRelease" value={formData.liveEnvRelease || ""} onChange={handleChange} className="form-input" />
               </label>
+
               <label className="form-label">
                 <span>Release Tag</span>
-                <input list="new-story-release-options" type="text" name="releaseTag" onChange={handleChange} className="form-input" placeholder="Select release tag" autoComplete="off" />
-                <datalist id="new-story-release-options">
-                  {releasesList.map((r) => <option key={r._id} value={r.name} />)}
+                <input list="edit-story-release-options" type="text" name="releaseTag" value={formData.releaseTag || ""} onChange={handleChange} className="form-input" placeholder="Select release tag" autoComplete="off" />
+                <datalist id="edit-story-release-options">
+                  {releasesList && releasesList.map((r) => <option key={r._id} value={r.name} />)}
                 </datalist>
               </label>
+
               <label className="form-label">
                 <span>EPIC</span>
-                <input type="text" name="epic" onChange={handleChange} className="form-input" />
+                <input type="text" name="epic" value={formData.epic || ""} onChange={handleChange} className="form-input" />
               </label>
+
               <label className="form-label">
                 <span>Category</span>
-                <input type="text" name="category" onChange={handleChange} className="form-input" />
+                <input type="text" name="category" value={formData.category || ""} onChange={handleChange} className="form-input" />
               </label>
+
               <label className="form-label">
                 <span>First Review</span>
-                <input list="team-options" type="text" name="firstReview" onChange={handleChange} className="form-input" autoComplete="off" placeholder="Select Team Member" />
+                <input list="team-options" type="text" name="firstReview" value={formData.firstReview || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Select Team Member" />
               </label>
 
               <label className="form-label">
@@ -202,8 +262,7 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
                   <option value="Spike" />
                 </datalist>
               </label>
-              
-              {/* 👇 NAYA: Array wala Multi-select Field */}
+
               <label className="form-label">
                 <span>Apps to be deployed</span>
                 <div style={{ display: "flex", gap: "6px" }}>
@@ -244,9 +303,10 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
 
             <label className="form-label full-width">
               <span>Comments</span>
-              <textarea name="comments" onChange={handleChange} rows="2" className="form-input textarea-input"></textarea>
+              <textarea name="comments" value={formData.comments || ""} onChange={handleChange} rows="2" className="form-input textarea-input"></textarea>
             </label>
 
+            {/* ================= APPS SECTION ================= */}
             <div className="apps-section">
               <div className="apps-header">
                 <h3 className="apps-title">Linked Apps</h3>
@@ -277,13 +337,14 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
 
             <div className="modal-actions main-actions">
               <button type="submit" disabled={saving} className="btn-save primary">
-                {saving ? "Saving..." : "Create Story"}
+                {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </form>
         </div>
       </div>
 
+      {/* ================= NESTED APP OVERLAY ================= */}
       {isAppFormOpen && (
         <div className="modal-overlay nested-overlay">
           <div className="modal-content nested-modal-content">
@@ -332,4 +393,4 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
   );
 };
 
-export default CreateStoryModal;
+export default UnifiedEditModal;

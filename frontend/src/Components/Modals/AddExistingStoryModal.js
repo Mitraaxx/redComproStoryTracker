@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { MdClose, MdSearch } from "react-icons/md";
-import { fetchAllStories } from "../Api/api";
+import { fetchAllStories } from "../../Api/api";
 import { HashLoader } from "react-spinners";
-import "./EditStoryModal.css";
+import "../Modals/EditStoryModal.css";
 
 
 const AddExistingStoryModal = ({

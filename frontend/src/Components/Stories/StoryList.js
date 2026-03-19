@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { fetchAllStories, fetchAllSprints, createStory, clearAllCaches,fetchAllReleases } from '../Api/api';
+import { fetchAllStories, fetchAllSprints, createStory, clearAllCaches,fetchAllReleases } from '../../Api/api';
 import { HashLoader } from "react-spinners";
 import { useNavigate } from 'react-router-dom';
-import './StoryList.css';
+import '../Stories/StoryList.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CreateStoryModal from './CreateStoryModal';
+import CreateStoryModal from '../Modals/CreateStoryModal';
 
 const StoryList = () => {
   const [stories, setStories] = useState([]);

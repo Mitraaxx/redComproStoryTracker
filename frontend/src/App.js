@@ -2,14 +2,15 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Navbar from "./Components/Navbar";
-import SprintList from "./Components/SprintList";
-import SprintStories from "./Components/SprintStories";
-import StoryDetails from "./Components/StoryDetails";
-import StoryList from "./Components/StoryList";
-import ReleaseList from "./Components/ReleaseList";
-import ReleaseStories from "./Components/ReleaseStories";
-import AppList from "./Components/AppList";
-import AppStories from "./Components/AppStories";
+import SprintList from "./Components/Sprints/SprintList";
+import SprintStories from "./Components/Sprints/SprintStories";
+import StoryDetails from "./Components/Sprints/StoryDetails";
+import StoryList from "./Components/Stories/StoryList";
+import ReleaseList from "./Components/Release/ReleaseList";
+import ReleaseStories from "./Components/Release/ReleaseStories";
+import AppList from "./Components/App/AppList";
+import AppStories from "./Components/App/AppStories";
+
 
 const App = () => {
   return (

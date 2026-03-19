@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { fetchAllReleases, createRelease } from "../Api/api";
+import { fetchAllReleases, createRelease } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import CreateReleaseModal from "./CreateReleaseModal";
-import "./SprintList.css"; 
-import "./ReleaseList.css";
+import CreateReleaseModal from "../Modals/CreateReleaseModal";
+import "../Sprints/SprintList.css"; 
+import "../Release/ReleaseList.css";
 import { useNavigate } from "react-router-dom"; 
 
 const ReleaseList = () => {

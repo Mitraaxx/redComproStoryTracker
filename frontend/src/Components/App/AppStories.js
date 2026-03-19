@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { fetchAppStories } from "../Api/api";
+import { fetchAppStories } from "../../Api/api";
 import { MdArrowBack } from "react-icons/md";
 import { HashLoader } from "react-spinners";
 import { useParams, useNavigate } from "react-router-dom";
-import "./SprintStories.css"; 
+import "../Sprints/SprintStories.css"; 
 
 const AppStories = () => {
   const [stories, setStories] = useState([]);

@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { fetchReleaseStories, fetchStoryDetails, updateStory, clearAllCaches, updateRelease } from "../Api/api";
+import { fetchReleaseStories, fetchStoryDetails, updateStory, clearAllCaches, updateRelease } from "../../Api/api";
 import { MdArrowBack, MdEdit, MdClose } from "react-icons/md";
 import { HashLoader } from "react-spinners";
 import { useParams, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import AddExistingStoryModal from "./AddExistingStoryModal";
-import EditReleaseModal from "./EditReleaseModal";
+import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
+import EditReleaseModal from "../Modals/EditReleaseModal";
 // 👇 NAYA: Alag file se PR Modal import kiya
-import StoryPrModal from "./ReleasePrModal"; 
-import "./SprintStories.css"; 
-import { APPS_CONFIG } from "../utils/AppConfig";
-import ReleasePrModal from "./ReleasePrModal";
+import "../Sprints/SprintStories.css"; 
+import { APPS_CONFIG } from "../../utils/AppConfig";
+import ReleasePrModal from "../Modals/ReleasePrModal";
 
 const ReleaseStories = () => {
   const [stories, setStories] = useState([]);
