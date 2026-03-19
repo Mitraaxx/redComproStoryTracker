@@ -26,11 +26,6 @@ const StoryList = () => {
       setLoading(true);
       const data = await fetchAllStories();
       setStories(data);
-      const sprintsData = await fetchAllSprints();
-      if (sprintsData) setSprintsList(sprintsData);
-
-      const releasesData = await fetchAllReleases();
-      if (releasesData) setReleasesList(releasesData);
     } catch (err) {
       console.log(err);
     } finally {
@@ -57,6 +52,22 @@ const StoryList = () => {
       toast.error(error.message || "Failed to create story");
     } finally {
       setCreatingStory(false);
+    }
+  };
+
+  const openNewStoryModal = async () => {
+    setIsCreateModalOpen(true);
+
+    try {
+      const sprintsData = await fetchAllSprints();
+      if (sprintsData) setSprintsList(sprintsData);
+
+      const releasesData = await fetchAllReleases();
+      if (releasesData) {
+        setReleasesList(releasesData);
+      }
+    } catch (err) {
+      console.error("Failed to fetch releases", err);
     }
   };
 
@@ -124,7 +135,7 @@ const StoryList = () => {
           />
           <button 
             className="create-story-btn" 
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={openNewStoryModal}
           >
             New Story
           </button>
