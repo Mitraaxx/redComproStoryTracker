@@ -4,6 +4,8 @@ import { MdAdd } from "react-icons/md";
 import logo from "../assets/logo.png"
 import './Navbar.css';
 
+// This is changed
+
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
