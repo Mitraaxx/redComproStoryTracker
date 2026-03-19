@@ -10,6 +10,10 @@ import EditReleaseModal from "../Modals/EditReleaseModal";
 import "../Sprints/SprintStories.css"; 
 import { APPS_CONFIG } from "../../utils/AppConfig";
 import ReleasePrModal from "../Modals/ReleasePrModal";
+import MasterPrModal from "../Modals/MasterPrModal";
+import AlphaPrModal from "../Modals/AlphaPrModal";
+import HFXPrModal from "../Modals/HFXPrModal";
+
 
 const ReleaseStories = () => {
   const [stories, setStories] = useState([]);
@@ -27,6 +31,10 @@ const ReleaseStories = () => {
   
   const [isPrModalOpen, setIsPrModalOpen] = useState(false);
   const [selectedStoryForPr, setSelectedStoryForPr] = useState(null);
+
+  const [isMasterModalOpen, setIsMasterModalOpen] = useState(false);
+  const [isAlphaModalOpen, setIsAlphaModalOpen] = useState(false);
+  const [isHFXModalOpen, setIsHFXModalOpen] = useState(false);
 
   const { releaseId } = useParams();
   const navigate = useNavigate();
@@ -227,83 +235,182 @@ const ReleaseStories = () => {
         <section>
           <div className="sprint-title-group">
             <h2 className="sprint-story-title">{release?.name}</h2>
-            <button onClick={openReleaseEditModal} className="sprint-edit-btn" title="Edit Release">
+            <button
+              onClick={openReleaseEditModal}
+              className="sprint-edit-btn"
+              title="Edit Release"
+            >
               <MdEdit size={15} />
             </button>
           </div>
-          <p className="sprint-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem" }}>
+          <p
+            className="sprint-date-badge"
+            style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+          >
             <strong>Release Date: </strong>
             {release?.releaseDate
-              ? new Date(release.releaseDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+              ? new Date(release.releaseDate).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
               : "TBD"}
           </p>
-          <p className="sprint-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem" }}>
+          <p
+            className="sprint-date-badge"
+            style={{ padding: "4px 8px", fontSize: "0.75rem" }}
+          >
             <strong>Category: </strong>
             {release?.category || "General"}
           </p>
         </section>
 
         <div className="relTop-btn-group">
-          <button className="relTop-btn-pr">Master</button>
-          <button className="relTop-btn-pr">Alpha</button>
-          <button className="relTop-btn-pr">HFX</button>
+          <button
+            className="relTop-btn-pr"
+            onClick={(e) => {
+              setIsMasterModalOpen(true);
+            }}
+          >
+            Master
+          </button>
+          <button
+            className="relTop-btn-pr"
+            onClick={(e) => {
+              setIsAlphaModalOpen(true);
+            }}
+          >
+            Alpha
+          </button>
+          <button
+            className="relTop-btn-pr"
+            onClick={(e) => {
+              setIsHFXModalOpen(true);
+            }}
+          >
+            HFX
+          </button>
         </div>
 
         <section className="sprint-story-container3">
           <div className="story-search-header">
-            <input type="text" className="story-search-input" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <input
+              type="text"
+              className="story-search-input"
+              placeholder="Search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <button className="btn-add-existing" onClick={() => setIsAddExistingModalOpen(true)}>Add Existing</button>
-          <button onClick={handleBack} className="back-button"><MdArrowBack /></button>
+          <button
+            className="btn-add-existing"
+            onClick={() => setIsAddExistingModalOpen(true)}
+          >
+            Add Existing
+          </button>
+          <button onClick={handleBack} className="back-button">
+            <MdArrowBack />
+          </button>
         </section>
       </div>
 
-      <div style={{
-        display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", 
-        marginBottom: "25px", padding: "12px 18px", backgroundColor: "#f8fafc", 
-        borderRadius: "10px", border: "1px solid #e2e8f0" 
-      }}>
-        <strong style={{ fontSize: "0.9rem", color: "#334155" }}>Apps to be deployed: </strong>
-        
-        {combinedUniqueApps.length > 0 ? combinedUniqueApps.map((app, idx) => {
-          const isFromStory = storyApps.includes(app);
-          return (
-            <span key={idx} style={{ 
-              backgroundColor: "#eff6ff", color: "#2563eb", padding: "4px 10px", 
-              borderRadius: "6px", fontSize: "0.8rem", border: "1px solid #bfdbfe", 
-              fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "6px" 
-            }}>
-              {app}
-              {!isFromStory && (
-                <MdClose 
-                  size={14} 
-                  style={{ cursor: "pointer", color: "#ef4444" }} 
-                  onClick={() => handleRemoveManualApp(app)} 
-                  title="Remove manually added app"
-                />
-              )}
-            </span>
-          );
-        }) : <span style={{ color: "#64748b", fontSize: "0.85rem" }}>None yet</span>}
-        
-        <div style={{ display: "flex", gap: "6px", alignItems: "center", marginLeft: "auto" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexWrap: "wrap",
+          marginBottom: "25px",
+          padding: "12px 18px",
+          backgroundColor: "#f8fafc",
+          borderRadius: "10px",
+          border: "1px solid #e2e8f0",
+        }}
+      >
+        <strong style={{ fontSize: "0.9rem", color: "#334155" }}>
+          Apps to be deployed:{" "}
+        </strong>
+
+        {combinedUniqueApps.length > 0 ? (
+          combinedUniqueApps.map((app, idx) => {
+            const isFromStory = storyApps.includes(app);
+            return (
+              <span
+                key={idx}
+                style={{
+                  backgroundColor: "#eff6ff",
+                  color: "#2563eb",
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  fontSize: "0.8rem",
+                  border: "1px solid #bfdbfe",
+                  fontWeight: "600",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                }}
+              >
+                {app}
+                {!isFromStory && (
+                  <MdClose
+                    size={14}
+                    style={{ cursor: "pointer", color: "#ef4444" }}
+                    onClick={() => handleRemoveManualApp(app)}
+                    title="Remove manually added app"
+                  />
+                )}
+              </span>
+            );
+          })
+        ) : (
+          <span style={{ color: "#64748b", fontSize: "0.85rem" }}>
+            None yet
+          </span>
+        )}
+
+        <div
+          style={{
+            display: "flex",
+            gap: "6px",
+            alignItems: "center",
+            marginLeft: "auto",
+          }}
+        >
           <input
             list="release-apps-options"
             type="text"
             value={newManualApp}
             onChange={(e) => setNewManualApp(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAddManualApp()}
+            onKeyDown={(e) => e.key === "Enter" && handleAddManualApp()}
             placeholder="Select app to add..."
-            style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", width: "160px", outline: "none" }}
+            style={{
+              padding: "6px 10px",
+              borderRadius: "6px",
+              border: "1px solid #cbd5e1",
+              fontSize: "0.8rem",
+              width: "160px",
+              outline: "none",
+            }}
           />
           <datalist id="release-apps-options">
             {availableAppsForManualAdd.map((app, i) => (
-              <option key={i} value={app.repoName}>{app.repoName}</option>
+              <option key={i} value={app.repoName}>
+                {app.repoName}
+              </option>
             ))}
           </datalist>
-          <button 
-            onClick={handleAddManualApp} 
-            style={{ backgroundColor: "#16a34a", color: "white", border: "none", borderRadius: "6px", padding: "6px 14px", fontSize: "0.8rem", cursor: "pointer", fontWeight: "600" }}
+          <button
+            onClick={handleAddManualApp}
+            style={{
+              backgroundColor: "#16a34a",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              padding: "6px 14px",
+              fontSize: "0.8rem",
+              cursor: "pointer",
+              fontWeight: "600",
+            }}
           >
             Add
           </button>
@@ -318,31 +425,44 @@ const ReleaseStories = () => {
               onClick={() => handleStoryClick(story._id)}
               className="sprint-story-card"
             >
-              <p><strong>Story Name: </strong>{story?.storyName}</p>
-              <p><strong>Story ID: </strong> {story?.storyId}</p>
-              <p><strong>Assigned: </strong> {story?.responsibility}</p>
-              <p><strong>First Review: </strong> {story?.firstReview}</p>
               <p>
-              <strong>Release Date: </strong>
-              {new Date(story?.qaEnvRelDate).toLocaleDateString("en-IN", {
-                day: "2-digit", month: "short", year: "numeric",
-              })}
-            </p>
-              <p><strong>Story Points: </strong> {story?.storyPoints}</p>
+                <strong>Story Name: </strong>
+                {story?.storyName}
+              </p>
+              <p>
+                <strong>Story ID: </strong> {story?.storyId}
+              </p>
+              <p>
+                <strong>Assigned: </strong> {story?.responsibility}
+              </p>
+              <p>
+                <strong>First Review: </strong> {story?.firstReview}
+              </p>
+              <p>
+                <strong>Release Date: </strong>
+                {new Date(story?.qaEnvRelDate).toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </p>
+              <p>
+                <strong>Story Points: </strong> {story?.storyPoints}
+              </p>
               <div className="story-comments">
-              <strong>Comments: </strong>
-              <span>{story?.comments || "No comments."}</span>
+                <strong>Comments: </strong>
+                <span>{story?.comments || "No comments."}</span>
               </div>
-              
-              <button 
+
+              <button
                 className="prForRel-btn"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   setSelectedStoryForPr(story);
                   setIsPrModalOpen(true);
                 }}
               >
-                PR Rel 
+                PR Rel
               </button>
             </div>
           ))
@@ -353,10 +473,32 @@ const ReleaseStories = () => {
         )}
       </div>
 
+
+      <MasterPrModal
+        isOpen={isMasterModalOpen}
+        onClose={() => setIsMasterModalOpen(false)}
+        appsToBeDeployed={combinedUniqueApps}
+        releaseName={release?.name}
+      />
+
+      <AlphaPrModal
+        isOpen={isAlphaModalOpen}
+        onClose={() => setIsAlphaModalOpen(false)}
+        appsToBeDeployed={combinedUniqueApps}
+        releaseName={release?.name}
+      />
+
+      <HFXPrModal
+        isOpen={isHFXModalOpen}
+        onClose={() => setIsHFXModalOpen(false)}
+        appsToBeDeployed={combinedUniqueApps}
+        releaseName={release?.name}
+      />
+
       <ReleasePrModal
-        isOpen={isPrModalOpen} 
-        onClose={() => setIsPrModalOpen(false)} 
-        selectedStory={selectedStoryForPr} 
+        isOpen={isPrModalOpen}
+        onClose={() => setIsPrModalOpen(false)}
+        selectedStory={selectedStoryForPr}
       />
 
       <AddExistingStoryModal
