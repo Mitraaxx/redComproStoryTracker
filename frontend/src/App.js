@@ -11,7 +11,6 @@ import ReleaseStories from "./Components/Release/ReleaseStories";
 import AppList from "./Components/App/AppList";
 import AppStories from "./Components/App/AppStories";
 
-// for merging
 
 const App = () => {
   return (
