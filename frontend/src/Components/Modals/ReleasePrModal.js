@@ -35,7 +35,7 @@ const ReleasePrModal = ({ isOpen, onClose, selectedStory }) => {
                           <button
                             className="pr-create-btn"
                             onClick={() => {
-                              const githubUrl = `https://github.com/${orgName}/${repoName}/compare/env/rel...${branch}`;
+                              const githubUrl = `https://github.com/${orgName}/${repoName}/compare/env/release...${branch}`;
                               window.open(githubUrl, "_blank");
                             }}
                           >
