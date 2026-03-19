@@ -45,9 +45,6 @@ const SprintStories = () => {
         
         const allSprintsData = await fetchAllSprints();
         if (allSprintsData) setSprintsList(allSprintsData);
-
-        const releasesData = await fetchAllReleases();
-        if (releasesData) setReleasesList(releasesData);
       } catch (err) {
         console.log(err);
       } finally {
@@ -178,7 +175,7 @@ const SprintStories = () => {
       setStories(updatedData.stories);
       setSprint(updatedData.sprint);
       
-      toast.success("Story successfully moved to this Sprint! 🚀");
+      toast.success("Story successfully moved to this Sprint!");
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to move story to this sprint");
@@ -187,6 +184,18 @@ const SprintStories = () => {
     }
   };
 
+  const openCreateStoryModal = async () => {
+    setIsCreateStoryModalOpen(true); 
+    
+    try {
+      const releasesData = await fetchAllReleases(); 
+      if (releasesData) {
+        setReleasesList(releasesData);
+      }
+    } catch (err) {
+      console.error("Failed to fetch releases", err);
+    }
+  };
   
   const handleUnifiedEditSave = async (updatedDataWithApps) => {
     setCreatingStory(true); 
@@ -297,7 +306,7 @@ const SprintStories = () => {
             </button>
             <button 
                className="create-story-btn" 
-               onClick={() => setIsCreateStoryModalOpen(true)}
+               onClick={openCreateStoryModal}
             >
               New Story
             </button>

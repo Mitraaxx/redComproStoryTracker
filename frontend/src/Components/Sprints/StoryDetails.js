@@ -45,8 +45,6 @@ const StoryDetails = () => {
         setSprintsList(sprintsData);
       }
 
-      const releasesData = await fetchAllReleases();
-      if (releasesData) setReleasesList(releasesData);
     } catch (err) {
       console.log(err);
     } finally {
@@ -74,6 +72,19 @@ const StoryDetails = () => {
       setSavingChanges(false);
     }
   };
+
+  const openEditStoryModal = async () => {
+      setIsEditModalOpen(true); 
+      
+      try {
+        const releasesData = await fetchAllReleases(); 
+        if (releasesData) {
+          setReleasesList(releasesData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch releases", err);
+      }
+    };
 
   useEffect(() => {
     if (storyId) {
@@ -146,7 +157,7 @@ const StoryDetails = () => {
         </div>
 
         <section className="sprint-storyDetails-container3">
-          <button className="add-app-button" onClick={() => setIsEditModalOpen(true)} style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+          <button className="add-app-button" onClick={openEditStoryModal} style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
             <MdEdit /> Edit
           </button>
           <button onClick={handleBack} className="back-button">
