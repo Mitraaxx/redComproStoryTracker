@@ -10,7 +10,7 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
   const [appsList, setAppsList] = useState([]);
 
   const [originalFormData, setOriginalFormData] = useState({});
-  const [originalAppsList, setOriginalAppsList] = useState([]);
+  const [originalAppsList, setOriginalAppsList] = useState({});
 
   const [deployAppsList, setDeployAppsList] = useState([]);
   const [originalDeployAppsList, setOriginalDeployAppsList] = useState([]);
@@ -166,12 +166,16 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
   };
 
   const availableApps = APPS_CONFIG.filter((appObj) => {
-  const isAlreadyAdded = appsList?.some((addedApp) => addedApp.appName === appObj.repoName);
-  const isCurrentlyEditing = editingAppIndex !== null && appsList[editingAppIndex]?.appName === appObj.repoName;
-  return !isAlreadyAdded || isCurrentlyEditing;
+    const isAlreadyAdded = appsList?.some((addedApp) => addedApp.appName === appObj.repoName);
+    const isCurrentlyEditing = editingAppIndex !== null && appsList[editingAppIndex]?.appName === appObj.repoName;
+    return !isAlreadyAdded || isCurrentlyEditing;
   });
 
   const isAllAppsAdded = appsList.length >= APPS_CONFIG.length;
+
+  const availableDeployApps = APPS_CONFIG.filter(
+    (app) => !deployAppsList.includes(app.repoName)
+  );
 
   return (
     <>
@@ -277,7 +281,7 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
                   </button>
                 </div>
                 <datalist id="deploy-apps-options">
-                  {APPS_CONFIG.map((app, i) => (
+                  {availableDeployApps.map((app, i) => (
                     <option key={i} value={app.repoName}>{app.repoName}</option>
                   ))}
                 </datalist>
@@ -300,7 +304,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
               <textarea name="comments" value={formData.comments || ""} onChange={handleChange} rows="2" className="form-input textarea-input"></textarea>
             </label>
 
-            {/* ================= APPS SECTION ================= */}
             <div className="apps-section">
               <div className="apps-header">
                 <h3 className="apps-title">Linked Apps</h3>
@@ -338,7 +341,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
         </div>
       </div>
 
-      {/* ================= NESTED APP OVERLAY ================= */}
       {isAppFormOpen && (
         <div className="modal-overlay nested-overlay">
           <div className="modal-content nested-modal-content">

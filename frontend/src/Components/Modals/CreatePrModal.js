@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdClose } from "react-icons/md";
 import { FaGithub } from "react-icons/fa";
-import { PR_BASE_BRANCHES } from "../../utils/AppConfig";
+import { PR_BASE_BRANCHES, APPS_CONFIG } from "../../utils/AppConfig";
 import "../Modals//EditStoryModal.css"; 
 
 const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
@@ -16,7 +16,10 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
       return;
     }
 
-    const prUrl = `https://github.com/ELTTechnology/${appName}/compare/${baseBranch}...${featureBranch}`;
+    const matchedApp = APPS_CONFIG.find((a) => a.repoName === appName);
+    const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
+
+    const prUrl = `https://github.com/${orgName}/${appName}/compare/${baseBranch}...${featureBranch}`;
     
     window.open(prUrl, "_blank");
     onClose(); 

@@ -36,7 +36,6 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
     }
   };
 
-
   const addDeployApp = () => {
     if (deployAppInput.trim() && !deployAppsList.includes(deployAppInput.trim())) {
       setDeployAppsList([...deployAppsList, deployAppInput.trim()]);
@@ -69,7 +68,6 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
       }
       finalSprintId = matchedSprint._id;
     }
-    
     
     handleSave({ ...formData, sprintId: finalSprintId, appsData: appsList, appsToBeDeployed: deployAppsList });
   };
@@ -110,12 +108,16 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
   };
 
   const availableApps = APPS_CONFIG.filter((appObj) => {
-  const isAlreadyAdded = appsList?.some((addedApp) => addedApp.appName === appObj.repoName);
-  const isCurrentlyEditing = editingAppIndex !== null && appsList[editingAppIndex]?.appName === appObj.repoName;
-  return !isAlreadyAdded || isCurrentlyEditing;
+    const isAlreadyAdded = appsList?.some((addedApp) => addedApp.appName === appObj.repoName);
+    const isCurrentlyEditing = editingAppIndex !== null && appsList[editingAppIndex]?.appName === appObj.repoName;
+    return !isAlreadyAdded || isCurrentlyEditing;
   });
 
   const isAllAppsAdded = appsList.length >= APPS_CONFIG.length;
+
+  const availableDeployApps = APPS_CONFIG.filter(
+    (app) => !deployAppsList.includes(app.repoName)
+  );
 
   return (
     <>
@@ -201,7 +203,6 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
                 </datalist>
               </label>
               
-             
               <label className="form-label">
                 <span>Apps to be deployed</span>
                 <div style={{ display: "flex", gap: "6px" }}>
@@ -221,11 +222,10 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
                   </button>
                 </div>
                 <datalist id="deploy-apps-options">
-                  {APPS_CONFIG.map((app, i) => (
+                  {availableDeployApps.map((app, i) => (
                     <option key={i} value={app.repoName}>{app.repoName}</option>
                   ))}
                 </datalist>
-                
                 
                 {deployAppsList.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
