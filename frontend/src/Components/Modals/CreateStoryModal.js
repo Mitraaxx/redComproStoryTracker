@@ -9,7 +9,6 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
   const [formData, setFormData] = useState({ status: "Pending", sprintName: "" });
   const [appsList, setAppsList] = useState([]);
 
-  // 👇 NAYA: Multiple Apps to be deployed ke liye state
   const [deployAppsList, setDeployAppsList] = useState([]);
   const [deployAppInput, setDeployAppInput] = useState("");
 
@@ -21,7 +20,7 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
     if (isOpen) {
       setFormData({ status: "Pending", sprintName: initialSprintName || "" });
       setAppsList([]);
-      setDeployAppsList([]); // Modal khulne par reset
+      setDeployAppsList([]); 
       setDeployAppInput("");
       setEditingAppIndex(null);
     }
@@ -32,18 +31,17 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   
   const handleKeyDown = (e) => {
-    // Agar input form field mein Enter maarein (deploy app ko chhod kar)
     if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.name !== 'appsToBeDeployedInput') {
       e.preventDefault();
     }
   };
 
-  // 👇 NAYA: Deploy App add aur remove karne ke functions
+
   const addDeployApp = () => {
     if (deployAppInput.trim() && !deployAppsList.includes(deployAppInput.trim())) {
       setDeployAppsList([...deployAppsList, deployAppInput.trim()]);
     }
-    setDeployAppInput(""); // Add karne ke baad input clear kar do
+    setDeployAppInput(""); 
   };
 
   const removeDeployApp = (indexToRemove) => {
@@ -72,7 +70,7 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
       finalSprintId = matchedSprint._id;
     }
     
-    // 👇 NAYA: deployAppsList ko payload mein array banakar bhej rahe hain
+    
     handleSave({ ...formData, sprintId: finalSprintId, appsData: appsList, appsToBeDeployed: deployAppsList });
   };
 
@@ -203,7 +201,7 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
                 </datalist>
               </label>
               
-              {/* 👇 NAYA: Array wala Multi-select Field */}
+             
               <label className="form-label">
                 <span>Apps to be deployed</span>
                 <div style={{ display: "flex", gap: "6px" }}>
@@ -228,7 +226,7 @@ const CreateStoryModal = ({ isOpen, onClose, handleSave, saving, sprintsList = [
                   ))}
                 </datalist>
                 
-                {/* Selected Apps Tags */}
+                
                 {deployAppsList.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
                     {deployAppsList.map((app, index) => (

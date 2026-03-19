@@ -7,7 +7,6 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import EditReleaseModal from "../Modals/EditReleaseModal";
-// 👇 NAYA: Alag file se PR Modal import kiya
 import "../Sprints/SprintStories.css"; 
 import { APPS_CONFIG } from "../../utils/AppConfig";
 import ReleasePrModal from "../Modals/ReleasePrModal";
@@ -26,7 +25,6 @@ const ReleaseStories = () => {
 
   const [newManualApp, setNewManualApp] = useState("");
   
-  // 👇 NAYA: Story specific PR Modal ke liye states
   const [isPrModalOpen, setIsPrModalOpen] = useState(false);
   const [selectedStoryForPr, setSelectedStoryForPr] = useState(null);
 

@@ -38,17 +38,12 @@ const AddExistingStoryModal = ({
   if (!isOpen) return null;
 
 
-  // ================= SMART FILTERING LOGIC =================
 
-  // 1. Current sprint ki stories ki IDs nikal lo
+ 
   const currentStoryIds = currentSprintStories.map((s) => s._id);
-
-  // 2. allStories mein se current sprint wali stories hata do
   const availableStoriesToLink = allStories.filter(
     (s) => !currentStoryIds.includes(s._id),
   );
-
-  // 3. Ab search sirf un bachi hui stories par chalega!
   const filteredStories = availableStoriesToLink.filter(
     (s) =>
       (s.storyId &&
@@ -56,8 +51,6 @@ const AddExistingStoryModal = ({
       (s.storyName &&
         s.storyName.toLowerCase().includes(searchTerm.toLowerCase())),
   );
-
-  // =========================================================
 
   const visibleStories = filteredStories.slice(0, visibleCount);
 

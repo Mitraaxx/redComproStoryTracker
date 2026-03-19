@@ -115,10 +115,9 @@
 }
 
 
-/* --- NESTED MODAL SPECIFIC STYLES --- */
 .nested-overlay {
-  z-index: 1050; /* Ensuring it's above the main modal */
-  background-color: rgba(15, 23, 42, 0.75); /* Slightly darker backdrop for focus */
+  z-index: 1050; 
+  background-color: rgba(15, 23, 42, 0.75); 
 }
 
 .nested-modal-content {
@@ -129,17 +128,15 @@
   max-height: 85vh;
 }
 
-/* Action buttons container */
 .app-actions {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-/* Edit icon styling */
 .edit-icon {
   cursor: pointer;
-  color: #3b82f6; /* Match kiya delete icon jaisa normal state mein */
+  color: #3b82f6; 
   transition: color 0.2s ease, transform 0.2s ease;
 }
 

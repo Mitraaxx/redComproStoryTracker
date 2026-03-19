@@ -12,7 +12,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
   const [originalFormData, setOriginalFormData] = useState({});
   const [originalAppsList, setOriginalAppsList] = useState([]);
 
-  // 👇 NAYA: Multiple Apps ke arrays
   const [deployAppsList, setDeployAppsList] = useState([]);
   const [originalDeployAppsList, setOriginalDeployAppsList] = useState([]);
   const [deployAppInput, setDeployAppInput] = useState("");
@@ -53,7 +52,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
         }));
       }
 
-      // 👇 NAYA: Agar backend se pehle se array aayi hai toh load karo, warna empty rakho
       const initialDeployApps = Array.isArray(initialData.appsToBeDeployed) 
         ? initialData.appsToBeDeployed 
         : (initialData.appsToBeDeployed ? [initialData.appsToBeDeployed] : []);
@@ -80,7 +78,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
     }
   };
 
-  // 👇 NAYA: Deploy App Functions
   const addDeployApp = () => {
     if (deployAppInput.trim() && !deployAppsList.includes(deployAppInput.trim())) {
       setDeployAppsList([...deployAppsList, deployAppInput.trim()]);
@@ -104,7 +101,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
 
     const isFormUnchanged = JSON.stringify(formData) === JSON.stringify(originalFormData);
     const isAppsUnchanged = JSON.stringify(appsList) === JSON.stringify(originalAppsList);
-    // 👇 NAYA: Deploy Apps compare check
     const isDeployAppsUnchanged = JSON.stringify(deployAppsList) === JSON.stringify(originalDeployAppsList);
 
     if (isFormUnchanged && isAppsUnchanged && isDeployAppsUnchanged) {
@@ -125,7 +121,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
       finalSprintId = matchedSprint._id;
     }
 
-    // 👇 NAYA: Array pass kiya
     handleSave({ 
       ...formData, 
       sprint: finalSprintId, 
@@ -287,7 +282,6 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
                   ))}
                 </datalist>
                 
-                {/* Selected Apps Tags */}
                 {deployAppsList.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
                     {deployAppsList.map((app, index) => (
