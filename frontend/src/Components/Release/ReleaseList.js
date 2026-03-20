@@ -53,7 +53,7 @@ const ReleaseList = () => {
       await createRelease(formData);
       setIsModalOpen(false);
       await getReleases(); 
-      toast.success("Release created successfully!");
+      toast.success("Release created successfully");
     } catch (error) {
       toast.error(error.message || "Failed to create release");
     } finally {

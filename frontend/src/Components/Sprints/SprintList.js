@@ -43,7 +43,7 @@ const SprintList = () => {
         clearAllCaches();
         const data = await fetchAllSprints();
         setSprints(data);
-        toast.success("Sprint updated successfully!");
+        toast.success("Sprint updated successfully");
       } catch (error) {
         console.error("Sprint Save error:", error);
         toast.error("Sprint Name exists");

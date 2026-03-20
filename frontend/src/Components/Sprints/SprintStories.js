@@ -123,7 +123,7 @@ const SprintStories = () => {
       setStories(updatedData.stories);
       setSprint(updatedData.sprint);
 
-      toast.success("Sprint updated successfully!");
+      toast.success("Update Successful");
       
     } catch (error) {
       console.error("Sprint Save error:", error);
@@ -148,7 +148,7 @@ const SprintStories = () => {
       setSprint(updatedData.sprint);
       setLoading(false);
 
-      toast.success("Story created successfully!");
+      toast.success("Story created successfully");
     } catch (error) {
       console.error(error);
       toast.error(error.message || "Failed to create story");
@@ -175,7 +175,7 @@ const SprintStories = () => {
       setStories(updatedData.stories);
       setSprint(updatedData.sprint);
       
-      toast.success("Story successfully moved to this Sprint!");
+      toast.success("Story successfully moved to this Sprint");
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to move story to this sprint");
@@ -214,7 +214,7 @@ const SprintStories = () => {
       setSprint(updatedData.sprint);
       setLoading(false);
 
-      toast.success("Story added to this Sprint successfully! 🚀");
+      toast.success("Story added to this Sprint successfully");
     } catch (error) {
       toast.error(error.message || "Failed to update story");
     } finally {

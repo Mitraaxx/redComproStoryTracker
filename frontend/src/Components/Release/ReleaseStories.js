@@ -105,7 +105,7 @@ const ReleaseStories = () => {
       setRelease(updatedData.release);
       setStories(updatedData.stories);
       setNewManualApp("");
-      toast.success("App added to release!");
+      toast.success("App added to release");
     } catch (err) {
       console.error(err);
       toast.error("Failed to add app");
@@ -129,7 +129,7 @@ const ReleaseStories = () => {
       const updatedData = await fetchReleaseStories(releaseId);
       setRelease(updatedData.release);
       setStories(updatedData.stories);
-      toast.success("App removed from release!");
+      toast.success("App removed from release");
     } catch (err) {
       console.error(err);
       toast.error("Failed to remove app");
@@ -154,7 +154,7 @@ const ReleaseStories = () => {
       setRelease(updatedData.release);
       setStories(updatedData.stories);
       
-      toast.success("Story successfully added to this Release!");
+      toast.success("Story successfully added to this Release");
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to add story to this release");
@@ -211,7 +211,7 @@ const ReleaseStories = () => {
       setRelease(updatedData.release);
       setStories(updatedData.stories);
 
-      toast.success("Release updated successfully!");
+      toast.success("Release updated successfully");
     } catch (error) {
       console.error("Release Save error:", error);
       toast.error(error.message || "Release Name exists");

@@ -46,7 +46,7 @@ const StoryList = () => {
       setIsCreateModalOpen(false); 
       clearAllCaches(); 
       await getStoriesAndSprints(); 
-      toast.success("Story created successfully! 🚀");
+      toast.success("Story created successfully");
     } catch (error) {
       console.error(error);
       toast.error(error.message || "Failed to create story");
