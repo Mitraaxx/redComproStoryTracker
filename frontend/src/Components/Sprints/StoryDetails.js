@@ -64,10 +64,10 @@ const StoryDetails = () => {
       clearAllCaches();
       
       await getStoryDetails();
-      toast.success("Story and Apps updated successfully!");
+      toast.success("Update Successful");
     } catch (error) {
       console.error(error);
-      toast.error(error.message || "Failed to update story");
+      toast.error(error.message || "Update Failed");
     } finally {
       setSavingChanges(false);
     }
