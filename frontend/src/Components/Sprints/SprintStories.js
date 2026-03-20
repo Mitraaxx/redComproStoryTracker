@@ -9,6 +9,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CreateStoryModal from "../Modals/CreateStoryModal";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 
 
 const SprintStories = () => {
@@ -34,6 +35,15 @@ const SprintStories = () => {
 
   const [releasesList, setReleasesList] = useState([]);
 
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`sprint_${sprintId}_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`sprint_${sprintId}_count`, visibleCount);
+  }, [visibleCount, sprintId]);
+
   useEffect(() => {
     const getStories = async () => {
       try {
@@ -42,7 +52,6 @@ const SprintStories = () => {
         setStories(data.stories);
         setSprint(data.sprint);
 
-        
         const allSprintsData = await fetchAllSprints();
         if (allSprintsData) setSprintsList(allSprintsData);
       } catch (err) {
@@ -123,7 +132,7 @@ const SprintStories = () => {
       setStories(updatedData.stories);
       setSprint(updatedData.sprint);
 
-      toast.success("Sprint updated successfully!");
+      toast.success("Update Successful");
       
     } catch (error) {
       console.error("Sprint Save error:", error);
@@ -132,7 +141,6 @@ const SprintStories = () => {
       setSavingSprint(false);
     }
   };
-
 
   const handleCreateNewStory = async (storyDataWithApps) => {
     setCreatingStory(true);
@@ -148,7 +156,7 @@ const SprintStories = () => {
       setSprint(updatedData.sprint);
       setLoading(false);
 
-      toast.success("Story created successfully!");
+      toast.success("Story created successfully");
     } catch (error) {
       console.error(error);
       toast.error(error.message || "Failed to create story");
@@ -157,7 +165,6 @@ const SprintStories = () => {
     }
   };
 
-  
   const handleSelectExistingStory = async (storyDbId) => {
     setIsAddExistingModalOpen(false); 
     setLoading(true); 
@@ -175,7 +182,7 @@ const SprintStories = () => {
       setStories(updatedData.stories);
       setSprint(updatedData.sprint);
       
-      toast.success("Story successfully moved to this Sprint!");
+      toast.success("Story successfully moved to this Sprint");
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to move story to this sprint");
@@ -214,7 +221,7 @@ const SprintStories = () => {
       setSprint(updatedData.sprint);
       setLoading(false);
 
-      toast.success("Story added to this Sprint successfully! 🚀");
+      toast.success("Story added to this Sprint successfully");
     } catch (error) {
       toast.error(error.message || "Failed to update story");
     } finally {
@@ -222,36 +229,47 @@ const SprintStories = () => {
     }
   };
 
-
   const filtered =
-    stories?.filter((item) => {
-      const search = searchTerm.trim().toLowerCase();
+    stories
+      ?.filter((item) => {
+        const search = searchTerm.trim().toLowerCase();
 
-      const storyName = item.storyName?.toLowerCase() || "";
-      const storyId = item.storyId?.toLowerCase() || "";
-      const responsibility = item.responsibility?.toLowerCase() || "";
-      const firstReview = item.firstReview?.toLowerCase() || "";
-      const releaseDate = item.qaEnvRelDate
-        ? new Date(item.qaEnvRelDate)
-            .toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            .toLowerCase()
-        : "";
-      const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
+        const storyName = item.storyName?.toLowerCase() || "";
+        const storyId = item.storyId?.toLowerCase() || "";
+        const responsibility = item.responsibility?.toLowerCase() || "";
+        const firstReview = item.firstReview?.toLowerCase() || "";
+        const releaseDate = item.qaEnvRelDate
+          ? new Date(item.qaEnvRelDate)
+              .toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+              .toLowerCase()
+          : "";
+        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
 
-      return (
-        storyName.includes(search) ||
-        storyId.includes(search) ||
-        responsibility.includes(search) ||
-        firstReview.includes(search) ||
-        releaseDate.includes(search) ||
-        storyPoints.includes(search)
-      );
-    }) || [];
+        return (
+          storyName.includes(search) ||
+          storyId.includes(search) ||
+          responsibility.includes(search) ||
+          firstReview.includes(search) ||
+          releaseDate.includes(search) ||
+          storyPoints.includes(search)
+        );
+      })
+      .sort((a, b) => {
+        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+        return numB - numA;
+      }) || [];
 
+      const visibleStories = filtered.slice(0, visibleCount);
+
+      const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+      
   return (
     <div className="sprint-story-container">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -296,7 +314,10 @@ const SprintStories = () => {
               className="story-search-input"
               placeholder="Search"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setVisibleCount(ITEMS_PER_PAGE);
+              }}
             />
             <button 
                className="btn-add-existing" 
@@ -319,7 +340,7 @@ const SprintStories = () => {
       </div>
 
       <div className="sprint-story-grid">
-        {filtered.map((story) => (
+        {visibleStories.map((story) => (
           <div
             key={story._id}
             onClick={() => handleStoryClick(story._id)}
@@ -357,6 +378,23 @@ const SprintStories = () => {
         ))}
       </div>
 
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More
+            </button>
+          )}
+          
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
+
       <EditSprintModal
         isOpen={isSprintModalOpen}
         onClose={() => setIsSprintModalOpen(false)}
@@ -387,5 +425,3 @@ const SprintStories = () => {
 };
 
 export default SprintStories;
-
-

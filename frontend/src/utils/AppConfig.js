@@ -46,3 +46,5 @@ export const TEAM_MEMBERS = [
   "Kamakshi",
   "Sushil"
 ];
+
+export const ITEMS_PER_PAGE = 15;

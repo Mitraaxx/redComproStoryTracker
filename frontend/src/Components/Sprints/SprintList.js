@@ -6,6 +6,7 @@ import "../Sprints/SprintList.css";
 import CreateSprintModal from "../Modals/CreateSprintModal";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 
 const SprintList = () => {
   const [sprints, setSprints] = useState([]);
@@ -17,40 +18,47 @@ const SprintList = () => {
   const [newSprintData, setNewSprintData] = useState({ name: "", startDate: "", endDate: "", sprintNotes: "" });
   const [savingSprint, setSavingSprint] = useState(false);
 
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`sprintList_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
 
+  useEffect(() => {
+    sessionStorage.setItem(`sprintList_count`, visibleCount);
+  }, [visibleCount]);
+
+  const openCreateSprintModal = () => {
+    setNewSprintData({
+      name: "",
+      startDate: "",
+      endDate: "",
+      sprintNotes: "",
+    });
+    setCreateIsSprintModalOpen(true);
+  };
   
-    const openCreateSprintModal = () => {
-      setNewSprintData({
-        name: "",
-        startDate: "",
-        endDate: "",
-        sprintNotes: "",
-      });
-      setCreateIsSprintModalOpen(true);
-    };
+  const handleSprintChange = (e) => {
+    setNewSprintData({ ...newSprintData, [e.target.name]: e.target.value });
+  };
   
-    const handleSprintChange = (e) => {
-      setNewSprintData({ ...newSprintData, [e.target.name]: e.target.value });
-    };
-  
-    const handleSprintSave = async (e) => {
-      e.preventDefault();
-      setSavingSprint(true);
-      try {
-        await createSprint(newSprintData)
-  
-        setCreateIsSprintModalOpen(false);
-        clearAllCaches();
-        const data = await fetchAllSprints();
-        setSprints(data);
-        toast.success("Sprint updated successfully!");
-      } catch (error) {
-        console.error("Sprint Save error:", error);
-        toast.error("Sprint Name exists");
-      } finally {
-        setSavingSprint(false);
-      }
-    };
+  const handleSprintSave = async (e) => {
+    e.preventDefault();
+    setSavingSprint(true);
+    try {
+      await createSprint(newSprintData)
+
+      setCreateIsSprintModalOpen(false);
+      clearAllCaches();
+      const data = await fetchAllSprints();
+      setSprints(data);
+      toast.success("Sprint updated successfully");
+    } catch (error) {
+      console.error("Sprint Save error:", error);
+      toast.error("Sprint Name exists");
+    } finally {
+      setSavingSprint(false);
+    }
+  };
 
   useEffect(() => {
     const getSprints = async () => {
@@ -98,6 +106,12 @@ const SprintList = () => {
       return nameB.localeCompare(nameA, undefined, { numeric: true, sensitivity: 'base' });
     }) || [];
 
+    const visibleSprints = filtered.slice(0, visibleCount);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="sprint-container">
        <ToastContainer position="top-right" autoClose={3000} />
@@ -109,14 +123,17 @@ const SprintList = () => {
             className="sprint-search-input"
             placeholder="Search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setVisibleCount(ITEMS_PER_PAGE); 
+            }}
           />
           <button className="create-sprint-button" onClick={openCreateSprintModal}>Add Sprint</button>
         </div>
       </div>
 
       <div className="sprint-grid">
-        {filtered.map((sprint) => (
+        {visibleSprints.map((sprint) => (
           <div
             key={sprint._id}
             onClick={() => handleSprintClick(sprint._id)}
@@ -126,6 +143,23 @@ const SprintList = () => {
           </div>
         ))}
       </div>
+
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More
+            </button>
+          )}
+          
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
 
       <CreateSprintModal
         isOpen={isCreateSprintModalOpen}

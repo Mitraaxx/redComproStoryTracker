@@ -8,12 +8,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import EditReleaseModal from "../Modals/EditReleaseModal";
 import "../Sprints/SprintStories.css"; 
-import { APPS_CONFIG } from "../../utils/AppConfig";
+import { APPS_CONFIG, ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import ReleasePrModal from "../Modals/ReleasePrModal";
 import MasterPrModal from "../Modals/MasterPrModal";
 import AlphaPrModal from "../Modals/AlphaPrModal";
 import HFXPrModal from "../Modals/HFXPrModal";
-
 
 const ReleaseStories = () => {
   const [stories, setStories] = useState([]);
@@ -38,6 +37,15 @@ const ReleaseStories = () => {
 
   const { releaseId } = useParams();
   const navigate = useNavigate();
+
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`release_${releaseId}_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
+  }, [visibleCount, releaseId]);
 
   useEffect(() => {
     const getStories = async () => {
@@ -105,7 +113,7 @@ const ReleaseStories = () => {
       setRelease(updatedData.release);
       setStories(updatedData.stories);
       setNewManualApp("");
-      toast.success("App added to release!");
+      toast.success("App added to release");
     } catch (err) {
       console.error(err);
       toast.error("Failed to add app");
@@ -129,7 +137,7 @@ const ReleaseStories = () => {
       const updatedData = await fetchReleaseStories(releaseId);
       setRelease(updatedData.release);
       setStories(updatedData.stories);
-      toast.success("App removed from release!");
+      toast.success("App removed from release");
     } catch (err) {
       console.error(err);
       toast.error("Failed to remove app");
@@ -154,7 +162,7 @@ const ReleaseStories = () => {
       setRelease(updatedData.release);
       setStories(updatedData.stories);
       
-      toast.success("Story successfully added to this Release!");
+      toast.success("Story successfully added to this Release");
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Failed to add story to this release");
@@ -211,7 +219,7 @@ const ReleaseStories = () => {
       setRelease(updatedData.release);
       setStories(updatedData.stories);
 
-      toast.success("Release updated successfully!");
+      toast.success("Release updated successfully");
     } catch (error) {
       console.error("Release Save error:", error);
       toast.error(error.message || "Release Name exists");
@@ -220,12 +228,25 @@ const ReleaseStories = () => {
     }
   };
 
-  const filtered = stories?.filter((item) => {
-    const search = searchTerm.trim().toLowerCase();
-    const storyName = item.storyName?.toLowerCase() || "";
-    const storyId = item.storyId?.toLowerCase() || "";
-    return storyName.includes(search) || storyId.includes(search);
-  }) || [];
+  const filtered =
+    stories
+      ?.filter((item) => {
+        const search = searchTerm.trim().toLowerCase();
+        const storyName = item.storyName?.toLowerCase() || "";
+        const storyId = item.storyId?.toLowerCase() || "";
+        return storyName.includes(search) || storyId.includes(search);
+      })
+      .sort((a, b) => {
+        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+        return numB - numA;
+      }) || [];
+
+      const visibleStories = filtered.slice(0, visibleCount);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div className="sprint-story-container">
@@ -299,7 +320,10 @@ const ReleaseStories = () => {
               className="story-search-input"
               placeholder="Search"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setVisibleCount(ITEMS_PER_PAGE);
+              }}
             />
           </div>
           <button
@@ -418,8 +442,8 @@ const ReleaseStories = () => {
       </div>
 
       <div className="sprint-story-grid">
-        {filtered.length > 0 ? (
-          filtered.map((story) => (
+        {visibleStories.length > 0 ? (
+          visibleStories.map((story) => (
             <div
               key={story._id}
               onClick={() => handleStoryClick(story._id)}
@@ -473,6 +497,22 @@ const ReleaseStories = () => {
         )}
       </div>
 
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More
+            </button>
+          )}
+          
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
 
       <MasterPrModal
         isOpen={isMasterModalOpen}
