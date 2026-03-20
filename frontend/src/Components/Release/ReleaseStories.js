@@ -8,12 +8,11 @@ import 'react-toastify/dist/ReactToastify.css';
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import EditReleaseModal from "../Modals/EditReleaseModal";
 import "../Sprints/SprintStories.css"; 
-import { APPS_CONFIG } from "../../utils/AppConfig";
+import { APPS_CONFIG, ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import ReleasePrModal from "../Modals/ReleasePrModal";
 import MasterPrModal from "../Modals/MasterPrModal";
 import AlphaPrModal from "../Modals/AlphaPrModal";
 import HFXPrModal from "../Modals/HFXPrModal";
-
 
 const ReleaseStories = () => {
   const [stories, setStories] = useState([]);
@@ -38,6 +37,15 @@ const ReleaseStories = () => {
 
   const { releaseId } = useParams();
   const navigate = useNavigate();
+
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`release_${releaseId}_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
+  }, [visibleCount, releaseId]);
 
   useEffect(() => {
     const getStories = async () => {
@@ -234,6 +242,12 @@ const ReleaseStories = () => {
         return numB - numA;
       }) || [];
 
+      const visibleStories = filtered.slice(0, visibleCount);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="sprint-story-container">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -306,7 +320,10 @@ const ReleaseStories = () => {
               className="story-search-input"
               placeholder="Search"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setVisibleCount(ITEMS_PER_PAGE);
+              }}
             />
           </div>
           <button
@@ -425,8 +442,8 @@ const ReleaseStories = () => {
       </div>
 
       <div className="sprint-story-grid">
-        {filtered.length > 0 ? (
-          filtered.map((story) => (
+        {visibleStories.length > 0 ? (
+          visibleStories.map((story) => (
             <div
               key={story._id}
               onClick={() => handleStoryClick(story._id)}
@@ -480,6 +497,22 @@ const ReleaseStories = () => {
         )}
       </div>
 
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More
+            </button>
+          )}
+          
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
 
       <MasterPrModal
         isOpen={isMasterModalOpen}

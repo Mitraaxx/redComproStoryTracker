@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { fetchAllStories, fetchAllSprints, createStory, clearAllCaches,fetchAllReleases } from '../../Api/api';
+import { fetchAllStories, fetchAllSprints, createStory, clearAllCaches, fetchAllReleases } from '../../Api/api';
 import { HashLoader } from "react-spinners";
 import { useNavigate } from 'react-router-dom';
 import '../Stories/StoryList.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CreateStoryModal from '../Modals/CreateStoryModal';
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 
 const StoryList = () => {
   const [stories, setStories] = useState([]);
@@ -13,14 +14,21 @@ const StoryList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
- 
   const [sprintsList, setSprintsList] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [creatingStory, setCreatingStory] = useState(false);
 
   const [releasesList, setReleasesList] = useState([]);
 
-  
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`storyList_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`storyList_count`, visibleCount);
+  }, [visibleCount]);
+
   const getStoriesAndSprints = async () => {
     try {
       setLoading(true);
@@ -37,7 +45,6 @@ const StoryList = () => {
     getStoriesAndSprints();
   }, []);
 
-  
   const handleCreateNewStory = async (storyDataWithApps) => {
     setCreatingStory(true);
     try {
@@ -119,6 +126,12 @@ const StoryList = () => {
       );
     }) || [];
 
+    const visibleStories = filtered.slice(0, visibleCount);
+
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
   return (
     <div className="story-container">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -131,7 +144,10 @@ const StoryList = () => {
             className="story-search-input"
             placeholder="Search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setVisibleCount(ITEMS_PER_PAGE); 
+            }}
           />
           <button 
             className="create-story-btn" 
@@ -143,7 +159,7 @@ const StoryList = () => {
       </div>
 
       <div className="story-grid">
-        {filtered.map((story) => (
+        {visibleStories.map((story) => (
           <div
             key={story._id}
             onClick={() => handleStoryClick(story._id)}
@@ -180,6 +196,22 @@ const StoryList = () => {
           </div>
         ))}
       </div>
+
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More
+            </button>
+          )}
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
 
       <CreateStoryModal
         isOpen={isCreateModalOpen}

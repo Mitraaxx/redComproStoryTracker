@@ -9,6 +9,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CreateStoryModal from "../Modals/CreateStoryModal";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 
 
 const SprintStories = () => {
@@ -34,6 +35,15 @@ const SprintStories = () => {
 
   const [releasesList, setReleasesList] = useState([]);
 
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`sprint_${sprintId}_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`sprint_${sprintId}_count`, visibleCount);
+  }, [visibleCount, sprintId]);
+
   useEffect(() => {
     const getStories = async () => {
       try {
@@ -42,7 +52,6 @@ const SprintStories = () => {
         setStories(data.stories);
         setSprint(data.sprint);
 
-        
         const allSprintsData = await fetchAllSprints();
         if (allSprintsData) setSprintsList(allSprintsData);
       } catch (err) {
@@ -133,7 +142,6 @@ const SprintStories = () => {
     }
   };
 
-
   const handleCreateNewStory = async (storyDataWithApps) => {
     setCreatingStory(true);
     try {
@@ -157,7 +165,6 @@ const SprintStories = () => {
     }
   };
 
-  
   const handleSelectExistingStory = async (storyDbId) => {
     setIsAddExistingModalOpen(false); 
     setLoading(true); 
@@ -222,7 +229,6 @@ const SprintStories = () => {
     }
   };
 
-
   const filtered =
     stories
       ?.filter((item) => {
@@ -258,6 +264,12 @@ const SprintStories = () => {
         return numB - numA;
       }) || [];
 
+      const visibleStories = filtered.slice(0, visibleCount);
+
+      const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+      
   return (
     <div className="sprint-story-container">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -302,7 +314,10 @@ const SprintStories = () => {
               className="story-search-input"
               placeholder="Search"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setVisibleCount(ITEMS_PER_PAGE);
+              }}
             />
             <button 
                className="btn-add-existing" 
@@ -325,7 +340,7 @@ const SprintStories = () => {
       </div>
 
       <div className="sprint-story-grid">
-        {filtered.map((story) => (
+        {visibleStories.map((story) => (
           <div
             key={story._id}
             onClick={() => handleStoryClick(story._id)}
@@ -363,6 +378,23 @@ const SprintStories = () => {
         ))}
       </div>
 
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More
+            </button>
+          )}
+          
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
+
       <EditSprintModal
         isOpen={isSprintModalOpen}
         onClose={() => setIsSprintModalOpen(false)}
@@ -393,5 +425,3 @@ const SprintStories = () => {
 };
 
 export default SprintStories;
-
-

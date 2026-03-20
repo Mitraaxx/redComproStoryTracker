@@ -4,6 +4,7 @@ import { MdArrowBack } from "react-icons/md";
 import { HashLoader } from "react-spinners";
 import { useParams, useNavigate } from "react-router-dom";
 import "../Sprints/SprintStories.css"; 
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 
 const AppStories = () => {
   const [stories, setStories] = useState([]);
@@ -12,6 +13,15 @@ const AppStories = () => {
   
   const { appName } = useParams();
   const navigate = useNavigate();
+
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`app_${appName}_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`app_${appName}_count`, visibleCount);
+  }, [visibleCount, appName]);
 
   useEffect(() => {
     const getStories = async () => {
@@ -30,18 +40,23 @@ const AppStories = () => {
 
   if (loading) return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}><HashLoader color="#007bff" size={80} /></div>;
 
-  const filtered = stories.filter(
-    (item) =>
-      item.storyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.storyId
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase())
-        .sort((a, b) => {
-          const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
-          const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
-          return numB - numA;
-        }),
-  );
+  const filtered = stories
+    .filter(
+      (item) =>
+        item.storyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.storyId?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+      const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+      return numB - numA;
+    });
+
+  const visibleStories = filtered.slice(0, visibleCount);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <div className="sprint-story-container">
@@ -54,14 +69,23 @@ const AppStories = () => {
 
         <section className="sprint-story-container3">
           <div className="story-search-header">
-            <input type="text" className="story-search-input" placeholder="Search" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <input 
+              type="text" 
+              className="story-search-input" 
+              placeholder="Search" 
+              value={searchTerm} 
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setVisibleCount(ITEMS_PER_PAGE);
+              }} 
+            />
           </div>
           <button onClick={() => navigate(-1)} className="back-button"><MdArrowBack /></button>
         </section>
       </div>
 
       <div className="sprint-story-grid">
-        {filtered.length > 0 ? filtered.map((story) => (
+        {visibleStories.length > 0 ? visibleStories.map((story) => (
           <div key={story._id} onClick={() => navigate(`/apps/${appName}/stories/${story._id}`)} className="sprint-story-card">
             <p><strong>Story Name: </strong>{story?.storyName}</p>
             <p><strong>Story ID: </strong> {story?.storyId}</p>
@@ -81,6 +105,23 @@ const AppStories = () => {
           </div>
         )) : <p style={{ color: "#64748b", marginTop: "20px" }}>No stories linked to this app yet.</p>}
       </div>
+
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More 
+            </button>
+          )}
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
+
     </div>
   );
 };

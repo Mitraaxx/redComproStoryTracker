@@ -7,6 +7,7 @@ import CreateReleaseModal from "../Modals/CreateReleaseModal";
 import "../Sprints/SprintList.css"; 
 import "../Release/ReleaseList.css";
 import { useNavigate } from "react-router-dom"; 
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 
 const ReleaseList = () => {
   const [releases, setReleases] = useState([]);
@@ -18,6 +19,15 @@ const ReleaseList = () => {
   const [saving, setSaving] = useState(false);
 
   const navigate = useNavigate();
+
+  const [visibleCount, setVisibleCount] = useState(() => {
+    const savedCount = sessionStorage.getItem(`releaseList_count`);
+    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(`releaseList_count`, visibleCount);
+  }, [visibleCount]);
 
   const handleReleaseClick = (releaseId) => {
     navigate(`/releases/${releaseId}/stories`); 
@@ -74,6 +84,12 @@ const ReleaseList = () => {
     item.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const visibleRelease = filtered.slice(0, visibleCount);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <div className="sprint-container">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -86,14 +102,17 @@ const ReleaseList = () => {
             className="sprint-search-input"
             placeholder="Search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setVisibleCount(ITEMS_PER_PAGE);
+            }}
           />
           <button className="create-sprint-button" onClick={handleOpenModal}>Add Release</button>
         </div>
       </div>
 
       <div className="sprint-grid">
-        {filtered.map((release) => (
+        {visibleRelease.map((release) => (
           <div key={release._id} className="release-card" onClick={() => handleReleaseClick(release._id)}>
             <div className="release-card-header">
               <span className="release-name">{release.name}</span>
@@ -109,8 +128,25 @@ const ReleaseList = () => {
 
           </div>
         ))}
-        {filtered.length === 0 && <p style={{ textAlign: "center", width: "100%", color: "#64748b" }}>No releases found.</p>}
+        {visibleRelease.length === 0 && <p style={{ textAlign: "center", width: "100%", color: "#64748b" }}>No releases found.</p>}
       </div>
+
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="pagination-container">
+          {visibleCount < filtered.length && (
+            <button 
+              className="load-more-btn" 
+              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+            >
+              Load More
+            </button>
+          )}
+          
+          <button className="back-top-btn" onClick={scrollToTop}>
+            ⬆
+          </button>
+        </div>
+      )}
 
       <CreateReleaseModal
         isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}
