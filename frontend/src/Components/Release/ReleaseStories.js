@@ -220,12 +220,19 @@ const ReleaseStories = () => {
     }
   };
 
-  const filtered = stories?.filter((item) => {
-    const search = searchTerm.trim().toLowerCase();
-    const storyName = item.storyName?.toLowerCase() || "";
-    const storyId = item.storyId?.toLowerCase() || "";
-    return storyName.includes(search) || storyId.includes(search);
-  }) || [];
+  const filtered =
+    stories
+      ?.filter((item) => {
+        const search = searchTerm.trim().toLowerCase();
+        const storyName = item.storyName?.toLowerCase() || "";
+        const storyId = item.storyId?.toLowerCase() || "";
+        return storyName.includes(search) || storyId.includes(search);
+      })
+      .sort((a, b) => {
+        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+        return numB - numA;
+      }) || [];
 
   return (
     <div className="sprint-story-container">

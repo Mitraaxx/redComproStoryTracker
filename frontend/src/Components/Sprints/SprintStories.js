@@ -224,33 +224,39 @@ const SprintStories = () => {
 
 
   const filtered =
-    stories?.filter((item) => {
-      const search = searchTerm.trim().toLowerCase();
+    stories
+      ?.filter((item) => {
+        const search = searchTerm.trim().toLowerCase();
 
-      const storyName = item.storyName?.toLowerCase() || "";
-      const storyId = item.storyId?.toLowerCase() || "";
-      const responsibility = item.responsibility?.toLowerCase() || "";
-      const firstReview = item.firstReview?.toLowerCase() || "";
-      const releaseDate = item.qaEnvRelDate
-        ? new Date(item.qaEnvRelDate)
-            .toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })
-            .toLowerCase()
-        : "";
-      const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
+        const storyName = item.storyName?.toLowerCase() || "";
+        const storyId = item.storyId?.toLowerCase() || "";
+        const responsibility = item.responsibility?.toLowerCase() || "";
+        const firstReview = item.firstReview?.toLowerCase() || "";
+        const releaseDate = item.qaEnvRelDate
+          ? new Date(item.qaEnvRelDate)
+              .toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+              .toLowerCase()
+          : "";
+        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
 
-      return (
-        storyName.includes(search) ||
-        storyId.includes(search) ||
-        responsibility.includes(search) ||
-        firstReview.includes(search) ||
-        releaseDate.includes(search) ||
-        storyPoints.includes(search)
-      );
-    }) || [];
+        return (
+          storyName.includes(search) ||
+          storyId.includes(search) ||
+          responsibility.includes(search) ||
+          firstReview.includes(search) ||
+          releaseDate.includes(search) ||
+          storyPoints.includes(search)
+        );
+      })
+      .sort((a, b) => {
+        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+        return numB - numA;
+      }) || [];
 
   return (
     <div className="sprint-story-container">

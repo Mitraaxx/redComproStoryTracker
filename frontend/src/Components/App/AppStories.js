@@ -30,9 +30,17 @@ const AppStories = () => {
 
   if (loading) return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}><HashLoader color="#007bff" size={80} /></div>;
 
-  const filtered = stories.filter(item => 
-    item.storyName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.storyId?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filtered = stories.filter(
+    (item) =>
+      item.storyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.storyId
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase())
+        .sort((a, b) => {
+          const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+          const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+          return numB - numA;
+        }),
   );
 
   return (
