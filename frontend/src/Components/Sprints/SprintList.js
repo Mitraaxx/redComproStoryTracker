@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useContext } from "react";
-import { fetchAllSprints,createSprint, clearAllCaches } from "../../Api/api";
+import { fetchAllSprints, createSprint, clearAllCaches } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 import "../Sprints/SprintList.css";
 import CreateSprintModal from "../Modals/CreateSprintModal";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 
+/**
+ * Main component to render and manage the complete list of sprints.
+ * Handles fetching sprint data, searching, pagination (Load More), and initiating new sprint creation.
+ */
 const SprintList = () => {
   const [sprints, setSprints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,18 +19,34 @@ const SprintList = () => {
   const navigate = useNavigate();
 
   const [isCreateSprintModalOpen, setCreateIsSprintModalOpen] = useState(false);
-  const [newSprintData, setNewSprintData] = useState({ name: "", startDate: "", endDate: "", sprintNotes: "" });
+  const [newSprintData, setNewSprintData] = useState({
+    name: "",
+    startDate: "",
+    endDate: "",
+    sprintNotes: "",
+  });
   const [savingSprint, setSavingSprint] = useState(false);
 
+  /**
+   * Initializes the visible count for pagination from session storage to persist user state,
+   * falling back to the default ITEMS_PER_PAGE if no cache exists.
+   */
   const [visibleCount, setVisibleCount] = useState(() => {
     const savedCount = sessionStorage.getItem(`sprintList_count`);
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
 
+  /**
+   * Effect hook to synchronize the current visible count with session storage
+   * whenever the user interacts with the pagination (Load More).
+   */
   useEffect(() => {
     sessionStorage.setItem(`sprintList_count`, visibleCount);
   }, [visibleCount]);
 
+  /**
+   * Initializes the form data to empty values and opens the "Create Sprint" modal.
+   */
   const openCreateSprintModal = () => {
     setNewSprintData({
       name: "",
@@ -36,16 +56,24 @@ const SprintList = () => {
     });
     setCreateIsSprintModalOpen(true);
   };
-  
+
+  /**
+   * Handles input changes within the create sprint modal form.
+   */
   const handleSprintChange = (e) => {
     setNewSprintData({ ...newSprintData, [e.target.name]: e.target.value });
   };
-  
+
+  /**
+   * Handles the submission of a new sprint.
+   * Sends data to the API, clears local caches, refreshes the sprint list, 
+   * and displays a toast notification regarding the outcome.
+   */
   const handleSprintSave = async (e) => {
     e.preventDefault();
     setSavingSprint(true);
     try {
-      await createSprint(newSprintData)
+      await createSprint(newSprintData);
 
       setCreateIsSprintModalOpen(false);
       clearAllCaches();
@@ -60,6 +88,10 @@ const SprintList = () => {
     }
   };
 
+  /**
+   * Effect hook to fetch the complete list of sprints from the backend API
+   * when the component mounts. Manages the loading state during the request.
+   */
   useEffect(() => {
     const getSprints = async () => {
       try {
@@ -90,31 +122,46 @@ const SprintList = () => {
     );
   }
 
+  /**
+   * Navigates to the detailed story view for a specific sprint.
+   */
   const handleSprintClick = (sprintId) => {
     navigate(`/sprints/${sprintId}/stories`);
   };
 
+  /**
+   * Filters the master sprint array based on the current search term,
+   * and subsequently sorts the results in descending order.
+   */
   const filtered =
-    sprints?.filter((item) => {
-      const search = searchTerm.toLowerCase();
-      const sprintName = item.name?.toLowerCase() || "";
-      return sprintName.includes(search);
-    })
-    .sort((a, b) => {
-      const nameA = a.name || "";
-      const nameB = b.name || "";
-      return nameB.localeCompare(nameA, undefined, { numeric: true, sensitivity: 'base' });
-    }) || [];
+    sprints
+      ?.filter((item) => {
+        const search = searchTerm.toLowerCase();
+        const sprintName = item.name?.toLowerCase() || "";
+        return sprintName.includes(search);
+      })
+      .sort((a, b) => {
+        const nameA = a.name || "";
+        const nameB = b.name || "";
+        return nameB.localeCompare(nameA, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        });
+      }) || [];
 
-    const visibleSprints = filtered.slice(0, visibleCount);
+  // Applies pagination limit to the filtered array
+  const visibleSprints = filtered.slice(0, visibleCount);
 
+  /**
+   * Utility function to smoothly scroll the window back to the top of the page.
+   */
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <div className="sprint-container">
-       <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="sprint-container2">
         <h2 className="sprint-title">Sprint List</h2>
         <div className="sprint-search-header">
@@ -125,10 +172,15 @@ const SprintList = () => {
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
-              setVisibleCount(ITEMS_PER_PAGE); 
+              setVisibleCount(ITEMS_PER_PAGE);
             }}
           />
-          <button className="create-sprint-button" onClick={openCreateSprintModal}>Add Sprint</button>
+          <button
+            className="create-sprint-button"
+            onClick={openCreateSprintModal}
+          >
+            Add Sprint
+          </button>
         </div>
       </div>
 
@@ -147,14 +199,14 @@ const SprintList = () => {
       {filtered.length > ITEMS_PER_PAGE && (
         <div className="pagination-container">
           {visibleCount < filtered.length && (
-            <button 
-              className="load-more-btn" 
+            <button
+              className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
             >
               Load More
             </button>
           )}
-          
+
           <button className="back-top-btn" onClick={scrollToTop}>
             ⬆
           </button>

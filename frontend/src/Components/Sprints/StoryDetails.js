@@ -1,39 +1,60 @@
 import React, { useEffect, useState } from "react";
-import { fetchStoryDetails, updateStory, updateStoryApps, clearAllCaches, fetchAllSprints, fetchAllReleases } from "../../Api/api";
+import {
+  fetchStoryDetails,
+  updateStory,
+  updateStoryApps,
+  clearAllCaches,
+  fetchAllSprints,
+  fetchAllReleases,
+} from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { MdArrowBack, MdSource, MdNotes, MdEdit } from "react-icons/md";
-import { FaCodeBranch, FaGithub } from "react-icons/fa";
+import { FaCodeBranch } from "react-icons/fa";
 import { AiOutlineLink } from "react-icons/ai";
 import { useParams, useNavigate } from "react-router-dom";
 import "../Sprints/StoryDetails.css";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import CreatePrModal from "../Modals/CreatePrModal";
 import UnifiedEditModal from "../Modals/UnifiedEditModal";
-import { APPS_CONFIG } from "../../utils/AppConfig";
 
+/**
+ * Component to display the comprehensive details of a specific story.
+ * Handles displaying story metadata, linked applications, feature branches,
+ * and provides functionalities to edit the story or trigger Pull Requests.
+ */
 const StoryDetails = () => {
   const [loading, setLoading] = useState(true);
   const [storyData, setStoryData] = useState(null);
-  
+
   const [sprintsList, setSprintsList] = useState([]);
-  
+
   const { storyId } = useParams();
   const navigate = useNavigate();
 
   const [isPrModalOpen, setIsPrModalOpen] = useState(false);
-  const [prAppData, setPrAppData] = useState({ appName: "", featureBranch: "" });
+  const [prAppData, setPrAppData] = useState({
+    appName: "",
+    featureBranch: "",
+  });
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [savingChanges, setSavingChanges] = useState(false);
 
   const [releasesList, setReleasesList] = useState([]);
 
+  /**
+   * Opens the Pull Request modal and sets the context for the selected app and branch.
+   */
   const openPrModal = (appName, featureBranch) => {
     setPrAppData({ appName: appName || "Unknown", featureBranch });
     setIsPrModalOpen(true);
   };
 
+  /**
+   * Fetches the detailed information of the current story from the backend API,
+   * along with the list of available sprints to populate dropdowns if editing.
+   */
   const getStoryDetails = async () => {
     try {
       setLoading(true);
@@ -41,10 +62,9 @@ const StoryDetails = () => {
       setStoryData(data);
 
       const sprintsData = await fetchAllSprints();
-      if(sprintsData) {
+      if (sprintsData) {
         setSprintsList(sprintsData);
       }
-
     } catch (err) {
       console.log(err);
     } finally {
@@ -52,17 +72,31 @@ const StoryDetails = () => {
     }
   };
 
+  /**
+   * Effect hook to trigger the data fetch when the component mounts
+   * or when the storyId URL parameter changes.
+   */
+  useEffect(() => {
+    if (storyId) {
+      getStoryDetails();
+    }
+  }, [storyId]);
+
+  /**
+   * Handles saving modifications made to the story.
+   * Separates core story fields from linked application data and updates both via API.
+   */
   const handleEditStorySave = async (updatedDataWithApps) => {
     setSavingChanges(true);
     try {
       const { appsData, ...storyFields } = updatedDataWithApps;
-      
+
       await updateStory(storyData.storyId, storyFields);
       await updateStoryApps(storyData.storyId, appsData);
-      
+
       setIsEditModalOpen(false);
       clearAllCaches();
-      
+
       await getStoryDetails();
       toast.success("Update Successful");
     } catch (error) {
@@ -73,32 +107,41 @@ const StoryDetails = () => {
     }
   };
 
+  /**
+   * Opens the comprehensive edit modal for the story.
+   * Concurrently fetches the latest release data required for the form dropdowns.
+   */
   const openEditStoryModal = async () => {
-      setIsEditModalOpen(true); 
-      
-      try {
-        const releasesData = await fetchAllReleases(); 
-        if (releasesData) {
-          setReleasesList(releasesData);
-        }
-      } catch (err) {
-        console.error("Failed to fetch releases", err);
+    setIsEditModalOpen(true);
+
+    try {
+      const releasesData = await fetchAllReleases();
+      if (releasesData) {
+        setReleasesList(releasesData);
       }
-    };
-
-  useEffect(() => {
-    if (storyId) {
-      getStoryDetails();
+    } catch (err) {
+      console.error("Failed to fetch releases", err);
     }
-  }, [storyId]);
+  };
 
+  /**
+   * Navigates the user back to the previous page in their browser history.
+   */
   const handleBack = () => {
     navigate(-1);
   };
 
   if (loading) {
     return (
-      <div className="loader-container" style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <div
+        className="loader-container"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <HashLoader color="#007bff" size={80} />
       </div>
     );
@@ -112,52 +155,97 @@ const StoryDetails = () => {
     <div className="sprint-storyDetails-container">
       <div className="sprint-storyDetails-container2">
         <div className="sprint-storyDetails-container2-5">
-          <p><strong>Story Name: </strong><span>{storyData.storyName}</span></p>
-          <p><strong>Story ID: </strong> {storyData.storyId}</p>
-          <p><strong>Sprint: </strong> {storyData.sprint?.name || "N/A"}</p>
-          <p><strong>Release Tag: </strong> <span id="release-tag">{storyData.releaseTag}</span></p>
-          <p><strong>Story Points: </strong> <span>{storyData.storyPoints}</span></p>
-          <p><strong>EPIC: </strong> <span>{storyData.epic}</span></p>
-          <p><strong>Category: </strong> <span>{storyData.category}</span></p>
-          <p><strong>Responsibility: </strong> <span>{storyData.responsibility}</span></p>
-          <p><strong>First Review: </strong> <span>{storyData.firstReview}</span></p>
+          <p>
+            <strong>Story Name: </strong>
+            <span>{storyData.storyName}</span>
+          </p>
+          <p>
+            <strong>Story ID: </strong> {storyData.storyId}
+          </p>
+          <p>
+            <strong>Sprint: </strong> {storyData.sprint?.name || "N/A"}
+          </p>
+          <p>
+            <strong>Release Tag: </strong>{" "}
+            <span id="release-tag">{storyData.releaseTag}</span>
+          </p>
+          <p>
+            <strong>Story Points: </strong> <span>{storyData.storyPoints}</span>
+          </p>
+          <p>
+            <strong>EPIC: </strong> <span>{storyData.epic}</span>
+          </p>
+          <p>
+            <strong>Category: </strong> <span>{storyData.category}</span>
+          </p>
+          <p>
+            <strong>Responsibility: </strong>{" "}
+            <span>{storyData.responsibility}</span>
+          </p>
+          <p>
+            <strong>First Review: </strong> <span>{storyData.firstReview}</span>
+          </p>
           <p>
             <strong>Release Date: </strong>{" "}
             <span>
               {storyData?.qaEnvRelDate
                 ? new Date(storyData.qaEnvRelDate).toLocaleDateString("en-IN", {
-                    day: "2-digit", month: "short", year: "numeric",
-                  }) : "N/A"}
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "N/A"}
             </span>
           </p>
-          <p><strong>Status: </strong> <span>{storyData.status}</span></p>
+          <p>
+            <strong>Status: </strong> <span>{storyData.status}</span>
+          </p>
           <p>
             <strong>Live Env release: </strong>{" "}
             <span>
               {storyData?.liveEnvRelease
                 ? new Date(storyData.liveEnvRelease).toLocaleDateString(
-                    "en-IN", { day: "2-digit", month: "short", year: "numeric" },
-                  ) : "N/A"}
+                    "en-IN",
+                    { day: "2-digit", month: "short", year: "numeric" },
+                  )
+                : "N/A"}
             </span>
           </p>
-          <p><strong>Type: </strong> <span>{storyData.type}</span></p>
-         <p>
-            <strong>Apps to be deployed: </strong> 
+          <p>
+            <strong>Type: </strong> <span>{storyData.type}</span>
+          </p>
+          <p>
+            <strong>Apps to be deployed: </strong>
             <span style={{ marginTop: "4px" }}>
-              {Array.isArray(storyData.appsToBeDeployed) && storyData.appsToBeDeployed.length > 0
+              {Array.isArray(storyData.appsToBeDeployed) &&
+              storyData.appsToBeDeployed.length > 0
                 ? storyData.appsToBeDeployed.map((app, i) => (
-                    <span key={i} style={{ display: "block", fontSize: "0.8rem", color: "#475569" }}>
+                    <span
+                      key={i}
+                      style={{
+                        display: "block",
+                        fontSize: "0.8rem",
+                        color: "#475569",
+                      }}
+                    >
                       • {app}
                     </span>
                   ))
-                : (storyData.appsToBeDeployed || "None")}
+                : storyData.appsToBeDeployed || "None"}
             </span>
           </p>
-          <p className="comments-field"><strong>Comments: </strong> <span>{storyData.comments || "No comments."}</span></p>
+          <p className="comments-field">
+            <strong>Comments: </strong>{" "}
+            <span>{storyData.comments || "No comments."}</span>
+          </p>
         </div>
 
         <section className="sprint-storyDetails-container3">
-          <button className="add-app-button" onClick={openEditStoryModal} style={{display: 'flex', alignItems: 'center', gap: '5px'}}>
+          <button
+            className="add-app-button"
+            onClick={openEditStoryModal}
+            style={{ display: "flex", alignItems: "center", gap: "5px" }}
+          >
             <MdEdit /> Edit
           </button>
           <button onClick={handleBack} className="back-button">
@@ -170,11 +258,9 @@ const StoryDetails = () => {
         {appsList.map((appItem, index) => {
           const repoName = appItem.appRef?.name || "Unknown App";
 
-
           return (
             <div key={index} className="sprint-storyDetails-card">
-              
-             <div
+              <div
                 className="app-card-header"
                 style={{
                   borderBottom: "1px solid #e2e8f0",
@@ -182,7 +268,6 @@ const StoryDetails = () => {
                   marginBottom: "12px",
                 }}
               >
-                
                 <span
                   style={{
                     backgroundColor: "#eff6ff",
@@ -198,7 +283,6 @@ const StoryDetails = () => {
                   {repoName}
                 </span>
               </div>
-              
 
               <div className="app-card-body">
                 <div>
@@ -258,7 +342,7 @@ const StoryDetails = () => {
         releasesList={releasesList}
         sprintsList={sprintsList}
         saving={savingChanges}
-        initialData={storyData} 
+        initialData={storyData}
       />
       <ToastContainer />
     </div>
