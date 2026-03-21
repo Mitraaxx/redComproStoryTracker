@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { fetchReleaseStories, fetchStoryDetails, updateStory, clearAllCaches, updateRelease } from "../../Api/api";
+import {
+  fetchReleaseStories,
+  fetchStoryDetails,
+  updateStory,
+  clearAllCaches,
+  updateRelease,
+} from "../../Api/api";
 import { MdArrowBack, MdEdit, MdClose } from "react-icons/md";
 import { HashLoader } from "react-spinners";
 import { useParams, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import EditReleaseModal from "../Modals/EditReleaseModal";
-import "../Sprints/SprintStories.css"; 
+import "../Sprints/SprintStories.css";
 import { APPS_CONFIG, ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import ReleasePrModal from "../Modals/ReleasePrModal";
 import MasterPrModal from "../Modals/MasterPrModal";
 import AlphaPrModal from "../Modals/AlphaPrModal";
 import HFXPrModal from "../Modals/HFXPrModal";
 
+/**
+ * Component to manage and display stories tied to a specific Release.
+ * Handles manual app additions, existing story linking, and triggering global PRs for the release.
+ */
 const ReleaseStories = () => {
   const [stories, setStories] = useState([]);
   const [release, setRelease] = useState(null);
@@ -21,13 +31,13 @@ const ReleaseStories = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
-  
+
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
   const [releaseFormData, setReleaseFormData] = useState({});
   const [savingRelease, setSavingRelease] = useState(false);
 
   const [newManualApp, setNewManualApp] = useState("");
-  
+
   const [isPrModalOpen, setIsPrModalOpen] = useState(false);
   const [selectedStoryForPr, setSelectedStoryForPr] = useState(null);
 
@@ -38,6 +48,9 @@ const ReleaseStories = () => {
   const { releaseId } = useParams();
   const navigate = useNavigate();
 
+  /**
+   * Initializes and persists pagination limits in session storage.
+   */
   const [visibleCount, setVisibleCount] = useState(() => {
     const savedCount = sessionStorage.getItem(`release_${releaseId}_count`);
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
@@ -47,6 +60,9 @@ const ReleaseStories = () => {
     sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
   }, [visibleCount, releaseId]);
 
+  /**
+   * Fetches specific release metadata and all stories associated with that release tag.
+   */
   useEffect(() => {
     const getStories = async () => {
       try {
@@ -67,12 +83,23 @@ const ReleaseStories = () => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <HashLoader color="#007bff" size={80} />
       </div>
     );
   }
 
+  /**
+   * Dynamically aggregates a unique list of all applications that need to be deployed
+   * in this release, combining apps inherently linked via stories with apps added manually.
+   */
   const storyApps = stories.reduce((acc, story) => {
     if (Array.isArray(story.appsToBeDeployed)) {
       acc.push(...story.appsToBeDeployed);
@@ -85,14 +112,21 @@ const ReleaseStories = () => {
   const combinedUniqueApps = [...new Set([...storyApps, ...manualReleaseApps])];
 
   const availableAppsForManualAdd = APPS_CONFIG.filter(
-    (app) => !combinedUniqueApps.includes(app.repoName)
+    (app) => !combinedUniqueApps.includes(app.repoName),
   );
 
+  /**
+   * Handles manually adding an application to the global release list.
+   * Prevents duplicates and updates the release document via API.
+   */
   const handleAddManualApp = async () => {
     if (!newManualApp.trim()) return;
-    
-    if (manualReleaseApps.includes(newManualApp.trim()) || storyApps.includes(newManualApp.trim())) {
-      setNewManualApp(""); 
+
+    if (
+      manualReleaseApps.includes(newManualApp.trim()) ||
+      storyApps.includes(newManualApp.trim())
+    ) {
+      setNewManualApp("");
       return;
     }
 
@@ -103,12 +137,12 @@ const ReleaseStories = () => {
         name: release.name,
         releaseDate: release.releaseDate,
         category: release.category,
-        appsToBeDeployed: updatedApps
+        appsToBeDeployed: updatedApps,
       };
-      
+
       await updateRelease(releaseId, payload);
       clearAllCaches();
-      
+
       const updatedData = await fetchReleaseStories(releaseId);
       setRelease(updatedData.release);
       setStories(updatedData.stories);
@@ -120,20 +154,24 @@ const ReleaseStories = () => {
     }
   };
 
+  /**
+   * Handles removing a manually added application from the release.
+   * Note: Applications attached via specific stories cannot be removed here.
+   */
   const handleRemoveManualApp = async (appToRemove) => {
-    const updatedApps = manualReleaseApps.filter(app => app !== appToRemove);
+    const updatedApps = manualReleaseApps.filter((app) => app !== appToRemove);
 
     try {
       const payload = {
         name: release.name,
         releaseDate: release.releaseDate,
         category: release.category,
-        appsToBeDeployed: updatedApps
+        appsToBeDeployed: updatedApps,
       };
-      
+
       await updateRelease(releaseId, payload);
       clearAllCaches();
-      
+
       const updatedData = await fetchReleaseStories(releaseId);
       setRelease(updatedData.release);
       setStories(updatedData.stories);
@@ -144,24 +182,27 @@ const ReleaseStories = () => {
     }
   };
 
+  /**
+   * Associates an existing, standalone story directly with this release.
+   */
   const handleSelectExistingStory = async (storyDbId) => {
-    setIsAddExistingModalOpen(false); 
-    setLoading(true); 
+    setIsAddExistingModalOpen(false);
+    setLoading(true);
     try {
       const fullStory = await fetchStoryDetails(storyDbId, true);
-      fullStory.releaseTag = release?.name; 
+      fullStory.releaseTag = release?.name;
 
       if (fullStory.sprint) {
         fullStory.sprintId = fullStory.sprint._id || fullStory.sprint;
       }
-      
-      await updateStory(fullStory.storyId, fullStory); 
-      
+
+      await updateStory(fullStory.storyId, fullStory);
+
       clearAllCaches();
-      const updatedData = await fetchReleaseStories(releaseId); 
+      const updatedData = await fetchReleaseStories(releaseId);
       setRelease(updatedData.release);
       setStories(updatedData.stories);
-      
+
       toast.success("Story successfully added to this Release");
     } catch (err) {
       console.error(err);
@@ -184,6 +225,9 @@ const ReleaseStories = () => {
     return new Date(dateString).toISOString().split("T")[0];
   };
 
+  /**
+   * Opens the Release Edit Modal, pre-filling it with the current release context.
+   */
   const openReleaseEditModal = () => {
     setReleaseFormData({
       name: release?.name || "",
@@ -197,14 +241,21 @@ const ReleaseStories = () => {
     setReleaseFormData({ ...releaseFormData, [e.target.name]: e.target.value });
   };
 
+  /**
+   * Saves metadata modifications to the release context (name, date, category).
+   * Bypasses the API call if no changes were detected.
+   */
   const handleReleaseSave = async (e) => {
     e.preventDefault();
     const isNameSame = (releaseFormData.name || "") === (release?.name || "");
-    const isDateSame = (releaseFormData.releaseDate || "") === formatDateForInput(release?.releaseDate);
-    const isCatSame = (releaseFormData.category || "") === (release?.category || "");
+    const isDateSame =
+      (releaseFormData.releaseDate || "") ===
+      formatDateForInput(release?.releaseDate);
+    const isCatSame =
+      (releaseFormData.category || "") === (release?.category || "");
 
     if (isNameSame && isDateSame && isCatSame) {
-      setIsReleaseModalOpen(false); 
+      setIsReleaseModalOpen(false);
       return;
     }
 
@@ -228,6 +279,9 @@ const ReleaseStories = () => {
     }
   };
 
+  /**
+   * Filters stories based on the search query and orders them by ID number in descending order.
+   */
   const filtered =
     stories
       ?.filter((item) => {
@@ -242,7 +296,7 @@ const ReleaseStories = () => {
         return numB - numA;
       }) || [];
 
-      const visibleStories = filtered.slice(0, visibleCount);
+  const visibleStories = filtered.slice(0, visibleCount);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -251,7 +305,6 @@ const ReleaseStories = () => {
   return (
     <div className="sprint-story-container">
       <ToastContainer position="top-right" autoClose={3000} />
-
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
@@ -337,7 +390,6 @@ const ReleaseStories = () => {
           </button>
         </section>
       </div>
-
       <div
         style={{
           display: "flex",
@@ -355,6 +407,10 @@ const ReleaseStories = () => {
           Apps to be deployed:{" "}
         </strong>
 
+        
+        {/* List of all the apps to be deployed present in the stories
+        attached with the release tag
+        */}
         {combinedUniqueApps.length > 0 ? (
           combinedUniqueApps.map((app, idx) => {
             const isFromStory = storyApps.includes(app);
@@ -391,7 +447,6 @@ const ReleaseStories = () => {
             None yet
           </span>
         )}
-
         <div
           style={{
             display: "flex",
@@ -441,6 +496,10 @@ const ReleaseStories = () => {
         </div>
       </div>
 
+      {/*
+      This display all the stories in card format attached with the
+      release tag 
+       */}
       <div className="sprint-story-grid">
         {visibleStories.length > 0 ? (
           visibleStories.map((story) => (
@@ -496,24 +555,22 @@ const ReleaseStories = () => {
           </p>
         )}
       </div>
-
       {filtered.length > ITEMS_PER_PAGE && (
         <div className="pagination-container">
           {visibleCount < filtered.length && (
-            <button 
-              className="load-more-btn" 
+            <button
+              className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
             >
               Load More
             </button>
           )}
-          
+
           <button className="back-top-btn" onClick={scrollToTop}>
             ⬆
           </button>
         </div>
       )}
-
       <MasterPrModal
         isOpen={isMasterModalOpen}
         onClose={() => setIsMasterModalOpen(false)}
@@ -540,14 +597,13 @@ const ReleaseStories = () => {
         onClose={() => setIsPrModalOpen(false)}
         selectedStory={selectedStoryForPr}
       />
-
+      
       <AddExistingStoryModal
         isOpen={isAddExistingModalOpen}
         onClose={() => setIsAddExistingModalOpen(false)}
         onSelectStory={handleSelectExistingStory}
         currentSprintStories={stories}
       />
-
       <EditReleaseModal
         isOpen={isReleaseModalOpen}
         onClose={() => setIsReleaseModalOpen(false)}
