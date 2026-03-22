@@ -39,6 +39,9 @@ const StoryList = () => {
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
 
+  // For load more at bottom
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
   /**
    * Effect hook to synchronize the current visible count with session storage
    * whenever the user clicks "Load More".
@@ -46,6 +49,28 @@ const StoryList = () => {
   useEffect(() => {
     sessionStorage.setItem(`storyList_count`, visibleCount);
   }, [visibleCount]);
+
+  /**
+   * Effect hook to basically make the isAtBottom state true when the user
+   * actually reaches the screen of the screen
+   */
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      if (windowHeight + scrollY >= documentHeight - 50) {
+        setIsAtBottom(true);
+      } else {
+        setIsAtBottom(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   /**
    * Fetches the complete list of stories from the backend API.
@@ -247,6 +272,11 @@ const StoryList = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              style={{
+                opacity: isAtBottom ? 1 : 0,
+                pointerEvents: isAtBottom ? "auto" : "none",
+                transition: "opacity 0.3s ease-in-out",
+              }}
             >
               Load More
             </button>
