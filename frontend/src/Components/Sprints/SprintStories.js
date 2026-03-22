@@ -41,6 +41,9 @@ const SprintStories = () => {
   const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
   const [releasesList, setReleasesList] = useState([]);
 
+  // For load more at bottom
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
   /**
    * Initializes the visible count for pagination from session storage to persist user state,
    * falling back to the default ITEMS_PER_PAGE if no cache exists.
@@ -49,6 +52,28 @@ const SprintStories = () => {
     const savedCount = sessionStorage.getItem(`sprint_${sprintId}_count`);
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
+
+  /**
+   * Effect hook to basically make the isAtBottom state true when the user
+   * actually reaches the screen of the screen
+   */
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      if (windowHeight + scrollY >= documentHeight - 50) {
+        setIsAtBottom(true);
+      } else {
+        setIsAtBottom(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   /**
    * Effect hook to synchronize the current visible count with session storage
@@ -110,7 +135,7 @@ const SprintStories = () => {
   };
 
   /**
-   * Utility function to format a raw ISO date string into a standard "YYYY-MM-DD" format 
+   * Utility function to format a raw ISO date string into a standard "YYYY-MM-DD" format
    * suitable for HTML date input fields.
    */
   const formatDateForInput = (dateString) => {
@@ -413,6 +438,11 @@ const SprintStories = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              style={{
+                opacity: isAtBottom ? 1 : 0,
+                pointerEvents: isAtBottom ? "auto" : "none",
+                transition: "opacity 0.3s ease-in-out",
+              }}
             >
               Load More
             </button>

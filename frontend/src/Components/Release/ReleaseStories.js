@@ -45,6 +45,9 @@ const ReleaseStories = () => {
   const [isAlphaModalOpen, setIsAlphaModalOpen] = useState(false);
   const [isHFXModalOpen, setIsHFXModalOpen] = useState(false);
 
+  // For load more at bottom
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
   const { releaseId } = useParams();
   const navigate = useNavigate();
 
@@ -59,6 +62,28 @@ const ReleaseStories = () => {
   useEffect(() => {
     sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
   }, [visibleCount, releaseId]);
+
+  /**
+   * Effect hook to basically make the isAtBottom state true when the user
+   * actually reaches the screen of the screen
+   */
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      if (windowHeight + scrollY >= documentHeight - 50) {
+        setIsAtBottom(true);
+      } else {
+        setIsAtBottom(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   /**
    * Fetches specific release metadata and all stories associated with that release tag.
@@ -407,7 +432,6 @@ const ReleaseStories = () => {
           Apps to be deployed:{" "}
         </strong>
 
-        
         {/* List of all the apps to be deployed present in the stories
         attached with the release tag
         */}
@@ -561,6 +585,11 @@ const ReleaseStories = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              style={{
+                opacity: isAtBottom ? 1 : 0,
+                pointerEvents: isAtBottom ? "auto" : "none",
+                transition: "opacity 0.3s ease-in-out",
+              }}
             >
               Load More
             </button>
@@ -597,7 +626,7 @@ const ReleaseStories = () => {
         onClose={() => setIsPrModalOpen(false)}
         selectedStory={selectedStoryForPr}
       />
-      
+
       <AddExistingStoryModal
         isOpen={isAddExistingModalOpen}
         onClose={() => setIsAddExistingModalOpen(false)}

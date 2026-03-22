@@ -27,6 +27,9 @@ const SprintList = () => {
   });
   const [savingSprint, setSavingSprint] = useState(false);
 
+  // For load more at bottom
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
   /**
    * Initializes the visible count for pagination from session storage to persist user state,
    * falling back to the default ITEMS_PER_PAGE if no cache exists.
@@ -43,6 +46,28 @@ const SprintList = () => {
   useEffect(() => {
     sessionStorage.setItem(`sprintList_count`, visibleCount);
   }, [visibleCount]);
+
+  /**
+   * Effect hook to basically make the isAtBottom state true when the user
+   * actually reaches the screen of the screen
+   */
+  useEffect(() => {
+    const handleScroll = () => {
+      const windowHeight = window.innerHeight;
+      const scrollY = window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+
+      if (windowHeight + scrollY >= documentHeight - 50) {
+        setIsAtBottom(true);
+      } else {
+        setIsAtBottom(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   /**
    * Initializes the form data to empty values and opens the "Create Sprint" modal.
@@ -66,7 +91,7 @@ const SprintList = () => {
 
   /**
    * Handles the submission of a new sprint.
-   * Sends data to the API, clears local caches, refreshes the sprint list, 
+   * Sends data to the API, clears local caches, refreshes the sprint list,
    * and displays a toast notification regarding the outcome.
    */
   const handleSprintSave = async (e) => {
@@ -202,6 +227,11 @@ const SprintList = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              style={{
+                opacity: isAtBottom ? 1 : 0,
+                pointerEvents: isAtBottom ? "auto" : "none",
+                transition: "opacity 0.3s ease-in-out",
+              }}
             >
               Load More
             </button>
