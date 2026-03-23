@@ -77,27 +77,47 @@ const ReleaseStories = () => {
     sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
   }, [visibleCount, releaseId]);
 
+  // Universal function to check scroll as well as height(for big viewport)
+  const checkBottom = () => {
+    const windowHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    if (
+      documentHeight <= windowHeight + 10 ||
+      windowHeight + scrollY >= documentHeight - 50
+    ) {
+      setIsAtBottom(true);
+    } else {
+      setIsAtBottom(false);
+    }
+  };
+
   /**
-   * Effect hook to basically make the isAtBottom state true when the user
-   * actually reaches the screen of the screen
+   * Effect hook to manage scroll and resize events
    */
   useEffect(() => {
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-      const documentHeight = document.documentElement.scrollHeight;
+    window.addEventListener("scroll", checkBottom);
+    window.addEventListener("resize", checkBottom);
 
-      if (windowHeight + scrollY >= documentHeight - 50) {
-        setIsAtBottom(true);
-      } else {
-        setIsAtBottom(false);
-      }
+    checkBottom();
+
+    return () => {
+      window.removeEventListener("scroll", checkBottom);
+      window.removeEventListener("resize", checkBottom);
     };
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  /**
+   * Effect hook to make sure whenever the data changes to
+   * recalculate the height
+   */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      checkBottom();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [stories, visibleCount, searchTerm, activeFilters]);
 
   /**
    * Fetches specific release metadata and all stories associated with that release tag.
