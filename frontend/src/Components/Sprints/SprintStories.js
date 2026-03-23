@@ -61,33 +61,53 @@ const SprintStories = () => {
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
 
+  // Universal function to check scroll as well as height(for big viewport)
+  const checkBottom = () => {
+    const windowHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    if (
+      documentHeight <= windowHeight + 10 ||
+      windowHeight + scrollY >= documentHeight - 50
+    ) {
+      setIsAtBottom(true);
+    } else {
+      setIsAtBottom(false);
+    }
+  };
+
+  /**
+   * Effect hook to manage scroll and resize events
+   */
+  useEffect(() => {
+    window.addEventListener("scroll", checkBottom);
+    window.addEventListener("resize", checkBottom);
+
+    checkBottom();
+
+    return () => {
+      window.removeEventListener("scroll", checkBottom);
+      window.removeEventListener("resize", checkBottom);
+    };
+  }, []);
+
+  /**
+   * Effect hook to make sure whenever the data changes to
+   * recalculate the height
+   */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      checkBottom();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [stories, visibleCount, searchTerm, activeFilters]);
+
   // This function apply filtering in the stories
   const handleApplyFilter = (newFilters) => {
     setActiveFilters(newFilters);
     setVisibleCount(ITEMS_PER_PAGE);
   };
-
-  /**
-   * Effect hook to basically make the isAtBottom state true when the user
-   * actually reaches the screen of the screen
-   */
-  useEffect(() => {
-    const handleScroll = () => {
-      const windowHeight = window.innerHeight;
-      const scrollY = window.scrollY;
-      const documentHeight = document.documentElement.scrollHeight;
-
-      if (windowHeight + scrollY >= documentHeight - 50) {
-        setIsAtBottom(true);
-      } else {
-        setIsAtBottom(false);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   /**
    * Effect hook to synchronize the current visible count with session storage
