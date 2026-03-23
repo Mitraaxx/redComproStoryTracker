@@ -19,6 +19,7 @@ import ReleasePrModal from "../Modals/ReleasePrModal";
 import MasterPrModal from "../Modals/MasterPrModal";
 import AlphaPrModal from "../Modals/AlphaPrModal";
 import HFXPrModal from "../Modals/HFXPrModal";
+import StoryFilter from "../Tools/StoryFilter";
 
 /**
  * Component to manage and display stories tied to a specific Release.
@@ -58,6 +59,19 @@ const ReleaseStories = () => {
     const savedCount = sessionStorage.getItem(`release_${releaseId}_count`);
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
+
+  // New State for active filters
+  const [activeFilters, setActiveFilters] = useState({
+    assignee: "",
+    status: "",
+    qaRelDate: "",
+  });
+
+  // Function to apply filter
+  const handleApplyFilter = (newFilters) => {
+    setActiveFilters(newFilters);
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
 
   useEffect(() => {
     sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
@@ -310,10 +324,48 @@ const ReleaseStories = () => {
   const filtered =
     stories
       ?.filter((item) => {
+        if (
+          activeFilters.assignee &&
+          item.responsibility !== activeFilters.assignee
+        )
+          return false;
+        if (activeFilters.status && item.status !== activeFilters.status)
+          return false;
+
+        if (activeFilters.qaRelDate) {
+          if (!item.qaEnvRelDate) return false;
+          const storyDate = new Date(item.qaEnvRelDate)
+            .toISOString()
+            .split("T")[0];
+          if (storyDate !== activeFilters.qaRelDate) return false;
+        }
+
         const search = searchTerm.trim().toLowerCase();
+        if (!search) return true;
+
         const storyName = item.storyName?.toLowerCase() || "";
         const storyId = item.storyId?.toLowerCase() || "";
-        return storyName.includes(search) || storyId.includes(search);
+        const responsibility = item.responsibility?.toLowerCase() || "";
+        const firstReview = item.firstReview?.toLowerCase() || "";
+        const releaseDate = item.qaEnvRelDate
+          ? new Date(item.qaEnvRelDate)
+              .toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+              .toLowerCase()
+          : "";
+        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
+
+        return (
+          storyName.includes(search) ||
+          storyId.includes(search) ||
+          responsibility.includes(search) ||
+          firstReview.includes(search) ||
+          releaseDate.includes(search) ||
+          storyPoints.includes(search)
+        );
       })
       .sort((a, b) => {
         const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
@@ -518,6 +570,10 @@ const ReleaseStories = () => {
             Add
           </button>
         </div>
+      </div>
+
+      <div className="filter-box">
+        <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
       {/*

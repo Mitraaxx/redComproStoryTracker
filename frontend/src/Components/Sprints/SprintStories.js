@@ -391,7 +391,6 @@ const SprintStories = () => {
                 setVisibleCount(ITEMS_PER_PAGE);
               }}
             />
-            <StoryFilter onApplyFilter={handleApplyFilter} />
             <button
               className="btn-add-existing"
               onClick={() => setIsAddExistingModalOpen(true)}
@@ -407,6 +406,10 @@ const SprintStories = () => {
             <MdArrowBack />
           </button>
         </section>
+      </div>
+
+      <div className="filter-box">
+        <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
       <div className="sprint-story-grid">
