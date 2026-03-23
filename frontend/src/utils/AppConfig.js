@@ -48,3 +48,16 @@ export const TEAM_MEMBERS = [
 ];
 
 export const ITEMS_PER_PAGE = 15;
+
+export const STATUS_MEMBERS = [
+  "Sahil",
+  "Namrata",
+  "Asad",
+  "Sidharth",
+  "Nishant",
+  "Paras",
+  "Kamakshi",
+  "Sushil",
+  "CQA",
+  "MQA"
+];

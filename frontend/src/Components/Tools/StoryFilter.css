@@ -1,0 +1,128 @@
+.filter-container {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #334155;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.filter-toggle-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.filter-dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 320px;
+  background-color: #ffffff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.filter-title {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.1rem;
+}
+
+.filter-close-icon {
+  cursor: pointer;
+  color: #64748b;
+  color: #ef4444;
+  transition: color 0.2s ease;
+}
+
+
+.filter-fields-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.filter-input:focus {
+  border-color: #3b82f6;
+}
+
+.filter-date-group {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.filter-clear-btn {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background-color: white;
+  color: #475569;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background-color 0.2s ease;
+}
+
+.filter-clear-btn:hover {
+  background-color: #f8fafc;
+}
+
+.filter-apply-btn {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.filter-apply-btn:hover {
+  background-color: #0056b3;
+}

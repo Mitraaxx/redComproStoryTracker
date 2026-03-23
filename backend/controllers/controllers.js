@@ -88,7 +88,7 @@ exports.getSprintStories = async (req, res) => {
     const sprint = await Sprint.findById(req.params.sprintId).select('name startDate endDate sprintNotes');
     
     const stories = await Story.find({ sprint: req.params.sprintId })
-     .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments') 
+     .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease') 
       .sort({ createdAt: -1 });
 
     res.json({ sprint, stories });
@@ -102,7 +102,7 @@ exports.getSprintStories = async (req, res) => {
 
 exports.getAllStories = async (req, res) => {
   const stories = await Story.find()
-    .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments')
+    .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease')
     .sort({ createdAt: -1 });
 
   res.json(stories);
@@ -443,7 +443,7 @@ exports.getReleaseStories = async (req, res) => {
 
     const stories = await Story.find({ releaseTag: release.name })
       // 👇 NAYA: Yahan select mein linkedApps add kiya
-      .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments appsToBeDeployed linkedApps')
+      .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments appsToBeDeployed linkedApps status liveEnvRelease')
       // 👇 NAYA: linkedApps ke andar app ka asli naam fetch karne ke liye populate kiya
       .populate('linkedApps.appRef', 'name')
       .sort({ createdAt: -1 });
@@ -505,7 +505,7 @@ exports.getAppStoriesByName = async (req, res) => {
     }
     
     const stories = await Story.find({ 'linkedApps.appRef': app._id })
-      .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments')
+      .select('_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments status liveEnvRelease')
       .sort({ createdAt: -1 });
 
     res.json({ app, stories });
