@@ -1,0 +1,73 @@
+/* Outer container jo poori screen cover karega */
+.clerk-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f7ff; ;
+  font-family: inherit;
+}
+
+/* Main Login Card */
+.clerk-card {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  padding: 2.5rem 2rem !important;
+}
+
+/* Headings */
+.clerk-header-title {
+  color: #1e293b !important;
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+}
+
+.clerk-header-subtitle {
+  color: #64748b !important;
+  font-size: 0.95rem !important;
+}
+
+/* Input Fields */
+.clerk-form-input {
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 12px 14px !important;
+  color: #334155 !important;
+  font-size: 0.95rem !important;
+  transition: all 0.2s ease !important;
+  background-color: #ffffff !important;
+}
+
+.clerk-form-input:focus {
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15) !important;
+  outline: none !important;
+}
+
+/* Labels (Email address, etc.) */
+.clerk-form-label {
+  color: #475569 !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  margin-bottom: 6px !important;
+}
+
+/* Primary Submit Button (Continue / Verify) */
+.clerk-primary-btn {
+  background-color: #007bff !important;
+  border-radius: 8px !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  font-size: 1rem !important;
+  padding: 12px !important;
+  transition: background-color 0.2s ease !important;
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(0, 123, 255, 0.2) !important;
+}
+
+.clerk-primary-btn:hover {
+  background-color: #0056b3 !important;
+  box-shadow: 0 6px 8px rgba(0, 123, 255, 0.3) !important;
+}
