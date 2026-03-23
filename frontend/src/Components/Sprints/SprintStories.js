@@ -18,6 +18,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CreateStoryModal from "../Modals/CreateStoryModal";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
+import StoryFilter from "../Tools/StoryFilter";
 
 /**
  * Component to manage and display all stories associated with a specific Sprint.
@@ -44,6 +45,13 @@ const SprintStories = () => {
   // For load more at bottom
   const [isAtBottom, setIsAtBottom] = useState(false);
 
+  // states for filtering
+  const [activeFilters, setActiveFilters] = useState({
+    assignee: "",
+    status: "",
+    qaRelDate: "",
+  });
+
   /**
    * Initializes the visible count for pagination from session storage to persist user state,
    * falling back to the default ITEMS_PER_PAGE if no cache exists.
@@ -52,6 +60,12 @@ const SprintStories = () => {
     const savedCount = sessionStorage.getItem(`sprint_${sprintId}_count`);
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
+
+  // This function apply filtering in the stories
+  const handleApplyFilter = (newFilters) => {
+    setActiveFilters(newFilters);
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
 
   /**
    * Effect hook to basically make the isAtBottom state true when the user
@@ -281,35 +295,37 @@ const SprintStories = () => {
    * Filters the stories array based on the current search term,
    * checking multiple fields (Name, ID, Responsibility, Reviewer, Date, Points).
    * It subsequently sorts the results by Story ID in descending numerical order.
+   * User Input ->  Update -> Array Test (Search + Filter) -> Sort -> Slice -> Render
    */
   const filtered =
     stories
       ?.filter((item) => {
         const search = searchTerm.trim().toLowerCase();
-
         const storyName = item.storyName?.toLowerCase() || "";
         const storyId = item.storyId?.toLowerCase() || "";
-        const responsibility = item.responsibility?.toLowerCase() || "";
-        const firstReview = item.firstReview?.toLowerCase() || "";
-        const releaseDate = item.qaEnvRelDate
-          ? new Date(item.qaEnvRelDate)
-              .toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-              .toLowerCase()
-          : "";
-        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
+        const matchesSearch =
+          storyName.includes(search) || storyId.includes(search);
 
-        return (
-          storyName.includes(search) ||
-          storyId.includes(search) ||
-          responsibility.includes(search) ||
-          firstReview.includes(search) ||
-          releaseDate.includes(search) ||
-          storyPoints.includes(search)
-        );
+        if (search && !matchesSearch) return false;
+
+        if (
+          activeFilters.assignee &&
+          item.responsibility !== activeFilters.assignee
+        )
+          return false;
+        if (activeFilters.status && item.status !== activeFilters.status)
+          return false;
+
+        if (activeFilters.qaRelDate) {
+          if (!item.qaEnvRelDate) return false;
+
+          const storyDate = new Date(item.qaEnvRelDate)
+            .toISOString()
+            .split("T")[0];
+          if (storyDate !== activeFilters.qaRelDate) return false;
+        }
+
+        return true;
       })
       .sort((a, b) => {
         const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
@@ -317,7 +333,6 @@ const SprintStories = () => {
         return numB - numA;
       }) || [];
 
-  // Applies pagination limit to the filtered array
   const visibleStories = filtered.slice(0, visibleCount);
 
   /**
@@ -391,6 +406,10 @@ const SprintStories = () => {
             <MdArrowBack />
           </button>
         </section>
+      </div>
+
+      <div className="filter-box">
+        <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
       <div className="sprint-story-grid">

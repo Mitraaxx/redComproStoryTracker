@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MdClose, MdAdd, MdDelete, MdEdit } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
 import "../Modals/CreateStoryHalfModal.css";
-import { APPS_CONFIG, TEAM_MEMBERS } from "../../utils/AppConfig";
+import { APPS_CONFIG, TEAM_MEMBERS,STATUS_MEMBERS } from "../../utils/AppConfig";
 
 
 const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sprintsList = [], releasesList = [] }) => {
@@ -202,8 +202,11 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
               </label>
 
               <label className="form-label">
-                Status
-                <input type="text" name="status" value={formData.status || ""} onChange={handleChange} className="form-input" />
+                <span>Status</span>
+                <input list="team-option" type="text" name="status" value={formData.status || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Story is with" />
+                <datalist id="team-option">
+                  {STATUS_MEMBERS.map((member, i) => <option key={i} value={member} />)}
+                </datalist>
               </label>
 
               <label className="form-label">
