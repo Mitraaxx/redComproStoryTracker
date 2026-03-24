@@ -2,13 +2,18 @@ import React, { useState, useEffect } from "react";
 import { MdClose, MdAdd, MdDelete, MdEdit } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
 import "../Modals/CreateStoryHalfModal.css";
-import { APPS_CONFIG, TEAM_MEMBERS,STATUS_MEMBERS } from "../../utils/AppConfig";
+import { APPS_CONFIG, TEAM_MEMBERS, STATUS_MEMBERS } from "../../utils/AppConfig";
 
-
+/**
+ * A comprehensive modal component used to edit all aspects of an existing story.
+ * It handles the story's main details, its assigned sprint, deployment apps, 
+ * and a nested form for editing linked application branches.
+ */
 const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sprintsList = [], releasesList = [] }) => {
   const [formData, setFormData] = useState({});
   const [appsList, setAppsList] = useState([]);
 
+  // States to hold the original data for detecting if changes were actually made
   const [originalFormData, setOriginalFormData] = useState({});
   const [originalAppsList, setOriginalAppsList] = useState({});
 
@@ -20,6 +25,10 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
   const [appFormData, setAppFormData] = useState({});
   const [editingAppIndex, setEditingAppIndex] = useState(null);
 
+  /**
+   * Effect hook to populate the form states whenever the modal opens with new initial data.
+   * Formats dates and normalizes array/string structures for the internal state.
+   */
   useEffect(() => {
     if (isOpen && initialData) {
       const formatDate = (dateString) => dateString ? new Date(dateString).toISOString().split("T")[0] : "";
@@ -70,14 +79,25 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
 
   if (!isOpen) return null;
 
+  /**
+   * Updates the main form's state when text inputs change.
+   */
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   
+  /**
+   * Prevents the modal form from submitting when Enter is pressed,
+   * unless the user is typing in a textarea or adding an app to the deploy list.
+   */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.name !== 'appsToBeDeployedInput') {
       e.preventDefault();
     }
   };
 
+  /**
+   * Adds the app currently typed in the input field to the deploy apps list,
+   * ensuring no duplicate entries exist.
+   */
   const addDeployApp = () => {
     if (deployAppInput.trim() && !deployAppsList.includes(deployAppInput.trim())) {
       setDeployAppsList([...deployAppsList, deployAppInput.trim()]);
@@ -85,10 +105,16 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
     setDeployAppInput("");
   };
 
+  /**
+   * Removes an app from the deploy apps list by its array index.
+   */
   const removeDeployApp = (indexToRemove) => {
     setDeployAppsList(deployAppsList.filter((_, index) => index !== indexToRemove));
   };
 
+  /**
+   * Captures the Enter key on the deploy app input to trigger the add function.
+   */
   const handleDeployAppKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -96,6 +122,11 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
     }
   };
 
+  /**
+   * Handles the submission of the entire edited story.
+   * Compares current state with original state to avoid unnecessary API calls,
+   * validates the assigned sprint, and triggers the parent save handler.
+   */
   const submitMainForm = (e) => {
     e.preventDefault();
 
@@ -103,6 +134,7 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
     const isAppsUnchanged = JSON.stringify(appsList) === JSON.stringify(originalAppsList);
     const isDeployAppsUnchanged = JSON.stringify(deployAppsList) === JSON.stringify(originalDeployAppsList);
 
+    // Skip saving if nothing was modified
     if (isFormUnchanged && isAppsUnchanged && isDeployAppsUnchanged) {
       console.log("No changes detected. Skipping API call.");
       onClose();
@@ -130,20 +162,33 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
     });
   };
 
+  /**
+   * Opens the nested modal for linking a completely new application.
+   */
   const openAppForm = () => {
     setAppFormData({ appName: "", featureBranches: "", baseBranch: "", dependencies: "", notes: "" });
     setEditingAppIndex(null);
     setIsAppFormOpen(true);
   };
   
+  /**
+   * Opens the nested modal and populates it with an existing linked app's data for editing.
+   */
   const editApp = (index) => {
     setAppFormData(appsList[index]); 
     setEditingAppIndex(index); 
     setIsAppFormOpen(true); 
   };
 
+  /**
+   * Updates state for inputs inside the nested application modal.
+   */
   const handleAppChange = (e) => setAppFormData({ ...appFormData, [e.target.name]: e.target.value });
 
+  /**
+   * Saves the changes made in the nested application modal.
+   * Either updates an existing app entry or pushes a new app into the state list.
+   */
   const saveAppToList = () => {
     if (!appFormData.appName) return alert("Please select an App Name!");
     
@@ -159,6 +204,9 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
     setEditingAppIndex(null); 
   };
 
+  /**
+   * Removes a linked application from the story.
+   */
   const removeApp = (index) => {
     const newList = [...appsList];
     newList.splice(index, 1);
