@@ -13,7 +13,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CreateStoryModal from "../Modals/CreateStoryModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
-import StoryFilter from "../Tools/StoryFilter";
 
 /**
  * Main component to render and manage the complete list of stories.
@@ -39,61 +38,6 @@ const StoryList = () => {
     const savedCount = sessionStorage.getItem(`storyList_count`);
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
-
-  // For load more at bottom
-  const [isAtBottom, setIsAtBottom] = useState(false);
-
-  // New State for active filters
-  const [activeFilters, setActiveFilters] = useState({
-    assignee: "",
-    status: "",
-    qaRelDate: "",
-  });
-
-  // Function to apply filter
-  const handleApplyFilter = (newFilters) => {
-    setActiveFilters(newFilters);
-    setVisibleCount(ITEMS_PER_PAGE);
-  };
-
-  // Universal function to check scroll as well as height(for big viewport)
-  const checkBottom = () => {
-    const windowHeight = window.innerHeight;
-    const scrollY = window.scrollY;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    if (documentHeight <= windowHeight + 10 || windowHeight + scrollY >= documentHeight - 50) {
-      setIsAtBottom(true);
-    } else {
-      setIsAtBottom(false);
-    }
-  };
-
-  /**
-   * Effect hook to manage scroll and resize events
-   */
-  useEffect(() => {
-    window.addEventListener("scroll", checkBottom);
-    window.addEventListener("resize", checkBottom);
-    
-    checkBottom();
-
-    return () => {
-      window.removeEventListener("scroll", checkBottom);
-      window.removeEventListener("resize", checkBottom);
-    };
-  }, []);
-
-  /**
-   * Effect hook to make sure whenever the data changes to 
-   * recalculate the height
-   */
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      checkBottom();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [stories, visibleCount, searchTerm, activeFilters]);
 
   /**
    * Effect hook to synchronize the current visible count with session storage
@@ -191,61 +135,43 @@ const StoryList = () => {
   };
 
   /**
-   * Filters the master stories array based on active filters and search term.
+   * Filters the master stories array based on the current search term.
+   * Checks multiple fields (Name, ID, Responsibility, Reviewer, Date, Points) for matches.
    */
   const filtered =
-    stories
-      ?.filter((item) => {
-        const search = searchTerm.trim().toLowerCase();
-        if (
-          activeFilters.assignee &&
-          item.responsibility !== activeFilters.assignee
-        )
-          return false;
-        if (activeFilters.status && item.status !== activeFilters.status)
-          return false;
+    stories?.filter((item) => {
+      const search = searchTerm.trim().toLowerCase();
 
-        if (activeFilters.qaRelDate) {
-          if (!item.qaEnvRelDate) return false;
-          const storyDate = new Date(item.qaEnvRelDate)
-            .toISOString()
-            .split("T")[0];
-          if (storyDate !== activeFilters.qaRelDate) return false;
-        }
+      const storyName = item.storyName?.toLowerCase() || "";
+      const storyId = item.storyId?.toLowerCase() || "";
+      const responsibility = item.responsibility?.toLowerCase() || "";
+      const firstReview = item.firstReview?.toLowerCase() || "";
+      const releaseDate = item.qaEnvRelDate
+        ? new Date(item.qaEnvRelDate)
+            .toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+            .toLowerCase()
+        : "";
+      const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
 
-        const search = searchTerm.trim().toLowerCase();
-        if (!search) return true;
-
-        const storyName = item.storyName?.toLowerCase() || "";
-        const storyId = item.storyId?.toLowerCase() || "";
-        const responsibility = item.responsibility?.toLowerCase() || "";
-        const firstReview = item.firstReview?.toLowerCase() || "";
-        const releaseDate = item.qaEnvRelDate
-          ? new Date(item.qaEnvRelDate)
-              .toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-              .toLowerCase()
-          : "";
-        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
-
-        return (
-          storyName.includes(search) ||
-          storyId.includes(search) ||
-          responsibility.includes(search) ||
-          firstReview.includes(search) ||
-          releaseDate.includes(search) ||
-          storyPoints.includes(search)
-        );
-      })
-      .sort((a, b) => {
-        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
-        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
-
-        return numB - numA;
-      }) || [];
+      return (
+        storyName.includes(search) ||
+        storyId.includes(search) ||
+        responsibility.includes(search) ||
+        firstReview.includes(search) ||
+        releaseDate.includes(search) ||
+        storyPoints.includes(search)
+      );
+    })
+    .sort((a, b) => {
+      const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+      const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+      
+      return numB - numA; 
+    }) || [];
 
   // Applies pagination limit to the filtered array
   const visibleStories = filtered.slice(0, visibleCount);
@@ -264,7 +190,6 @@ const StoryList = () => {
       <div className="story-container2">
         <h2 className="story-title">Story List</h2>
         <div className="story-search-header">
-          <StoryFilter onApplyFilter={handleApplyFilter} />
           <input
             type="text"
             className="story-search-input"
@@ -328,11 +253,6 @@ const StoryList = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-              style={{
-                opacity: isAtBottom ? 1 : 0,
-                pointerEvents: isAtBottom ? "auto" : "none",
-                transition: "opacity 0.3s ease-in-out",
-              }}
             >
               Load More
             </button>
