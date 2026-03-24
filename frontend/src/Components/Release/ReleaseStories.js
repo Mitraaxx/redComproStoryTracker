@@ -65,6 +65,7 @@ const ReleaseStories = () => {
     assignee: "",
     status: "",
     qaRelDate: "",
+    apps: ""
   });
 
   // Function to apply filter
@@ -349,6 +350,7 @@ const ReleaseStories = () => {
           item.responsibility !== activeFilters.assignee
         )
           return false;
+
         if (activeFilters.status && item.status !== activeFilters.status)
           return false;
 
@@ -358,6 +360,17 @@ const ReleaseStories = () => {
             .toISOString()
             .split("T")[0];
           if (storyDate !== activeFilters.qaRelDate) return false;
+        }
+
+        if (activeFilters.apps) {
+          const selectedApp = activeFilters.apps;
+
+          const hasLinkedApp = item.linkedApps?.some(
+            (app) => app.appName === selectedApp || app.appRef?.name === selectedApp
+          );
+          if (!hasLinkedApp) {
+            return false;
+          }
         }
 
         const search = searchTerm.trim().toLowerCase();

@@ -50,6 +50,7 @@ const SprintStories = () => {
     assignee: "",
     status: "",
     qaRelDate: "",
+    apps: "",
   });
 
   /**
@@ -343,6 +344,16 @@ const SprintStories = () => {
             .toISOString()
             .split("T")[0];
           if (storyDate !== activeFilters.qaRelDate) return false;
+        }
+
+        if (activeFilters.apps) {
+          const selectedApp = activeFilters.apps;
+          const hasLinkedApp = item.linkedApps?.some(
+            (app) => app.appName === selectedApp || app.appRef?.name === selectedApp
+          );
+          if (!hasLinkedApp) {
+            return false;
+          }
         }
 
         return true;

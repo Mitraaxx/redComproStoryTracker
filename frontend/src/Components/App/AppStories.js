@@ -36,6 +36,7 @@ const AppStories = () => {
     assignee: "",
     status: "",
     qaRelDate: "",
+    apps: "",
   });
 
   // Function to apply filter
@@ -150,6 +151,17 @@ const AppStories = () => {
           if (storyDate !== activeFilters.qaRelDate) return false;
         }
 
+        if (activeFilters.apps) {
+          const selectedApp = activeFilters.apps;
+          const hasLinkedApp = item.linkedApps?.some(
+            (app) =>
+              app.appName === selectedApp || app.appRef?.name === selectedApp,
+          );
+          if (!hasLinkedApp) {
+            return false;
+          }
+        }
+
         const search = searchTerm.trim().toLowerCase();
         if (!search) return true;
 
@@ -166,6 +178,7 @@ const AppStories = () => {
               })
               .toLowerCase()
           : "";
+
         const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
 
         return (

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdFilterList, MdClose } from "react-icons/md";
 import "./StoryFilter.css";
-import { TEAM_MEMBERS, STATUS_MEMBERS } from "../../utils/AppConfig";
+import { TEAM_MEMBERS, STATUS_MEMBERS, APPS_CONFIG} from "../../utils/AppConfig";
 
 /**
  * Reusable Filter Component for Stories.
@@ -15,6 +15,7 @@ const StoryFilter = ({ onApplyFilter }) => {
     assignee: "",
     status: "",
     qaRelDate: "",
+    apps: ""
   });
 
   /**
@@ -43,6 +44,7 @@ const StoryFilter = ({ onApplyFilter }) => {
       assignee: "",
       status: "",
       qaRelDate: "",
+      apps: ""
     };
     setFilters(cleared);
     onApplyFilter(cleared);
@@ -97,6 +99,23 @@ const StoryFilter = ({ onApplyFilter }) => {
                   <option key={s} value={s}>
                     {s}
                   </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="filter-label">Apps</label>
+              <select
+                name="apps"
+                value={filters.apps}
+                onChange={handleChange}
+                className="filter-input"
+              >
+                <option value="">All</option>
+                {APPS_CONFIG.map((app, i) => (
+                    <option key={i} value={app.repoName}>
+                      {app.repoName}
+                    </option>
                 ))}
               </select>
             </div>
