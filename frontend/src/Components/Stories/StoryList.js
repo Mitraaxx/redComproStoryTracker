@@ -196,6 +196,7 @@ const StoryList = () => {
   const filtered =
     stories
       ?.filter((item) => {
+        const search = searchTerm.trim().toLowerCase();
         if (
           activeFilters.assignee &&
           item.responsibility !== activeFilters.assignee
@@ -242,6 +243,7 @@ const StoryList = () => {
       .sort((a, b) => {
         const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
         const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+
         return numB - numA;
       }) || [];
 
