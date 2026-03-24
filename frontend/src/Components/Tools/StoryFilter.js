@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdFilterList, MdClose } from "react-icons/md";
-import "./StoryFilter.css"; 
-import { TEAM_MEMBERS,STATUS_MEMBERS } from "../../utils/AppConfig";
+import "./StoryFilter.css";
+import { TEAM_MEMBERS, STATUS_MEMBERS } from "../../utils/AppConfig";
 
 /**
  * Reusable Filter Component for Stories.
@@ -85,7 +85,7 @@ const StoryFilter = ({ onApplyFilter }) => {
             </div>
 
             <div>
-              <label className="filter-label">Status</label>
+              <label className="filter-label">Currently With</label>
               <select
                 name="status"
                 value={filters.status}
@@ -102,7 +102,7 @@ const StoryFilter = ({ onApplyFilter }) => {
             </div>
 
             <div>
-              <label className="filter-label">Release Date</label>
+              <label className="filter-label">Qa Release Date</label>
               <div className="filter-date-group">
                 <input
                   type="date"
@@ -127,6 +127,6 @@ const StoryFilter = ({ onApplyFilter }) => {
       )}
     </div>
   );
-};;
+};
 
 export default StoryFilter;

@@ -250,7 +250,7 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
               </label>
 
               <label className="form-label">
-                <span>Status</span>
+                <span>Currently With</span>
                 <input list="team-option" type="text" name="status" value={formData.status || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Story is with" />
                 <datalist id="team-option">
                   {STATUS_MEMBERS.map((member, i) => <option key={i} value={member} />)}
@@ -271,7 +271,7 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
               </label>
 
               <label className="form-label">
-                <span>QA Release Date</span>
+                <span>Qa Release Date</span>
                 <input type="date" name="qaEnvRelDate" value={formData.qaEnvRelDate || ""} onChange={handleChange} className="form-input" />
               </label>
 
