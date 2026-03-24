@@ -186,7 +186,7 @@ const StoryDetails = () => {
             <strong>First Review: </strong> <span>{storyData.firstReview}</span>
           </p>
           <p>
-            <strong>Release Date: </strong>{" "}
+            <strong>QA Release Date: </strong>{" "}
             <span>
               {storyData?.qaEnvRelDate
                 ? new Date(storyData.qaEnvRelDate).toLocaleDateString("en-IN", {
@@ -198,10 +198,10 @@ const StoryDetails = () => {
             </span>
           </p>
           <p>
-            <strong>Status: </strong> <span>{storyData.status}</span>
+            <strong>Currently With: </strong> <span>{storyData.status}</span>
           </p>
           <p>
-            <strong>Live Env release: </strong>{" "}
+            <strong>Live Release Date: </strong>{" "}
             <span>
               {storyData?.liveEnvRelease
                 ? new Date(storyData.liveEnvRelease).toLocaleDateString(

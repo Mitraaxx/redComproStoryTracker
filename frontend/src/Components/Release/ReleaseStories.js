@@ -622,7 +622,7 @@ const ReleaseStories = () => {
                 <strong>First Review: </strong> {story?.firstReview}
               </p>
               <p>
-                <strong>Release Date: </strong>
+                <strong>Qa Release Date: </strong>
                 {new Date(story?.qaEnvRelDate).toLocaleDateString("en-IN", {
                   day: "2-digit",
                   month: "short",

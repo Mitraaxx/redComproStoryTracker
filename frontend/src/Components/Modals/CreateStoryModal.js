@@ -274,7 +274,7 @@ const CreateStoryModal = ({
               )}
 
               <label className="form-label">
-                <span>Status</span>
+                <span>Currently With</span>
                 <input
                   list="team-option"
                   type="text"
@@ -319,7 +319,7 @@ const CreateStoryModal = ({
                 </datalist>
               </label>
               <label className="form-label">
-                <span>QA Release Date</span>
+                <span>Qa Release Date</span>
                 <input
                   type="date"
                   name="qaEnvRelDate"
