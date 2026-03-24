@@ -20,7 +20,7 @@ const App = () => {
       <div>
         
         {/* ==========================================
-            SIGNED OUT VIEW (Bina login wale users)
+                        SIGNED OUT VIEW 
             ========================================== */}
         <SignedOut>
           <div className="clerk-login-container">
@@ -41,7 +41,7 @@ const App = () => {
         </SignedOut>
 
         {/* ==========================================
-            SIGNED IN VIEW (Sirf authorized users)
+                        SIGNED IN VIEW 
             ========================================== */}
         <SignedIn>
           <Navbar />

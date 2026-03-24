@@ -1,14 +1,14 @@
-/* Outer container jo poori screen cover karega */
 .clerk-login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f0f7ff; ;
+  background-color: #f0f7ff;
+  ;
   font-family: inherit;
 }
 
-/* Main Login Card */
+
 .clerk-card {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
   border-radius: 12px !important;
@@ -17,7 +17,7 @@
   padding: 2.5rem 2rem !important;
 }
 
-/* Headings */
+
 .clerk-header-title {
   color: #1e293b !important;
   font-size: 1.75rem !important;
@@ -29,7 +29,7 @@
   font-size: 0.95rem !important;
 }
 
-/* Input Fields */
+
 .clerk-form-input {
   border-radius: 8px !important;
   border: 1px solid #cbd5e1 !important;
@@ -46,7 +46,6 @@
   outline: none !important;
 }
 
-/* Labels (Email address, etc.) */
 .clerk-form-label {
   color: #475569 !important;
   font-weight: 600 !important;
@@ -54,7 +53,6 @@
   margin-bottom: 6px !important;
 }
 
-/* Primary Submit Button (Continue / Verify) */
 .clerk-primary-btn {
   background-color: #007bff !important;
   border-radius: 8px !important;
