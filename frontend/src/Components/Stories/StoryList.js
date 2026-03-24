@@ -190,7 +190,7 @@ const StoryList = () => {
     navigate(`/stories/${storyDbId}`);
   };
 
-  /**
+   /**
    * Filters the master stories array based on active filters and search term.
    */
   const filtered =

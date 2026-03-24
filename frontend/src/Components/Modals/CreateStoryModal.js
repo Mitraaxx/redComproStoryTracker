@@ -8,6 +8,11 @@ import {
   STATUS_MEMBERS,
 } from "../../utils/AppConfig";
 
+/**
+ * A comprehensive modal component for creating a new story.
+ * Handles story metadata, assigning a sprint, managing a list of apps to be deployed,
+ * and linking multiple application repositories with their branch details via a nested modal.
+ */
 const CreateStoryModal = ({
   isOpen,
   onClose,
@@ -44,9 +49,16 @@ const CreateStoryModal = ({
 
   if (!isOpen) return null;
 
+  /**
+   * Captures general input changes for the main story form.
+   */
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
+  /**
+   * Prevents default form submission on Enter key, 
+   * except when typing in textareas or the specific deploy app input field.
+   */
   const handleKeyDown = (e) => {
     if (
       e.key === "Enter" &&
@@ -57,6 +69,10 @@ const CreateStoryModal = ({
     }
   };
 
+  /**
+   * Validates and adds a new app name to the `deployAppsList` state.
+   * Ensures no duplicates are added and clears the input field afterward.
+   */
   const addDeployApp = () => {
     if (
       deployAppInput.trim() &&
@@ -67,12 +83,18 @@ const CreateStoryModal = ({
     setDeployAppInput("");
   };
 
+  /**
+   * Removes an application from the `deployAppsList` based on its index.
+   */
   const removeDeployApp = (indexToRemove) => {
     setDeployAppsList(
       deployAppsList.filter((_, index) => index !== indexToRemove),
     );
   };
 
+  /**
+   * Triggers the `addDeployApp` function when the Enter key is pressed inside the deploy app input.
+   */
   const handleDeployAppKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -80,6 +102,11 @@ const CreateStoryModal = ({
     }
   };
 
+  /**
+   * Handles the final submission of the main story form.
+   * Validates the sprint selection and compiles all data (form data, linked apps, deploy apps) 
+   * before sending it to the parent component's save handler.
+   */
   const submitMainForm = (e) => {
     e.preventDefault();
 
@@ -111,6 +138,9 @@ const CreateStoryModal = ({
     });
   };
 
+  /**
+   * Opens the nested application form modal and resets its state to link a new app.
+   */
   const openAppForm = () => {
     setAppFormData({
       appName: "",
@@ -123,15 +153,25 @@ const CreateStoryModal = ({
     setIsAppFormOpen(true);
   };
 
+  /**
+   * Opens the nested application form modal and populates it with the details of an existing linked app for editing.
+   */
   const editApp = (index) => {
     setAppFormData(appsList[index]);
     setEditingAppIndex(index);
     setIsAppFormOpen(true);
   };
 
+  /**
+   * Captures input changes specifically for the nested application form.
+   */
   const handleAppChange = (e) =>
     setAppFormData({ ...appFormData, [e.target.name]: e.target.value });
 
+  /**
+   * Validates and saves the application details from the nested form.
+   * Updates an existing entry if editing, or adds a new entry to the `appsList`.
+   */
   const saveAppToList = () => {
     if (!appFormData.appName) return alert("Please select an App Name!");
 
@@ -147,6 +187,9 @@ const CreateStoryModal = ({
     setEditingAppIndex(null);
   };
 
+  /**
+   * Removes a linked application from the `appsList` based on its index.
+   */
   const removeApp = (index) => {
     const newList = [...appsList];
     newList.splice(index, 1);

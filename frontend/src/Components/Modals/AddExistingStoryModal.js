@@ -4,7 +4,10 @@ import { fetchAllStories } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import "../Modals/EditStoryModal.css";
 
-
+/**
+ * Modal component to search and add an existing story to the current sprint.
+ * It fetches all stories, filters out those already in the sprint, and supports search and infinite scrolling.
+ */
 const AddExistingStoryModal = ({
   isOpen,
   onClose,
@@ -16,8 +19,15 @@ const AddExistingStoryModal = ({
   const [loading, setLoading] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
 
+  /**
+   * Effect hook that triggers when the modal opens or closes.
+   * Fetches all available stories from the backend when opened, and resets state when closed.
+   */
   useEffect(() => {
     if (isOpen) {
+      /**
+       * Asynchronously fetches story data from the API and updates the local state.
+       */
       const getStories = async () => {
         setLoading(true);
         const data = await fetchAllStories();
@@ -31,19 +41,24 @@ const AddExistingStoryModal = ({
     }
   }, [isOpen]);
 
+  /**
+   * Effect hook to reset the visible item count to default (20)
+   * whenever the user types a new search term.
+   */
   useEffect(() => {
     setVisibleCount(20);
   }, [searchTerm]);
 
   if (!isOpen) return null;
 
-
-
- 
   const currentStoryIds = currentSprintStories.map((s) => s._id);
+
+  // Filter out stories that are already present in the current sprint
   const availableStoriesToLink = allStories.filter(
     (s) => !currentStoryIds.includes(s._id),
   );
+
+  // Apply search filter based on story ID or Name
   const filteredStories = availableStoriesToLink.filter(
     (s) =>
       (s.storyId &&
@@ -54,6 +69,10 @@ const AddExistingStoryModal = ({
 
   const visibleStories = filteredStories.slice(0, visibleCount);
 
+  /**
+   * Handles the scroll event on the list container to implement infinite scrolling.
+   * Increases the visible count by 20 when the user reaches the bottom of the list.
+   */
   const handleScroll = (e) => {
     const { scrollTop, clientHeight, scrollHeight } = e.target;
     if (scrollHeight - scrollTop <= clientHeight + 10) {

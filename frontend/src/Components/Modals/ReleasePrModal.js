@@ -3,6 +3,10 @@ import { MdClose } from "react-icons/md";
 import { APPS_CONFIG } from "../../utils/AppConfig";
 import "../Modals/ReleasePrModal.css";
 
+/**
+ * Modal component that lists all feature branches associated with a specific story.
+ * Provides buttons to automatically generate Release Pull Requests (feature branch ➔ env/release).
+ */
 const ReleasePrModal = ({ isOpen, onClose, selectedStory }) => {
   if (!isOpen || !selectedStory) return null;
 
@@ -35,6 +39,10 @@ const ReleasePrModal = ({ isOpen, onClose, selectedStory }) => {
                           <button
                             className="pr-create-btn"
                             onClick={() => {
+                              /**
+                               * Constructs the GitHub comparison URL to create a PR
+                               * merging the specific feature branch into 'env/release'.
+                               */
                               const githubUrl = `https://github.com/${orgName}/${repoName}/compare/env/release...${branch}`;
                               window.open(githubUrl, "_blank");
                             }}

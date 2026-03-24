@@ -2,6 +2,10 @@ import React from "react";
 import { MdClose } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
 
+/**
+ * Modal component for modifying the details of an existing sprint.
+ * Captures updates to the sprint's name, start/end dates, and sprint notes.
+ */
 const EditSprintModal = ({
   isOpen,
   onClose,
@@ -12,6 +16,10 @@ const EditSprintModal = ({
 }) => {
   if (!isOpen) return null;
 
+  /**
+   * Prevents accidental form submission on Enter key press, 
+   * allowing the default Enter key behavior ONLY inside textareas for line breaks.
+   */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
       e.preventDefault();
