@@ -19,6 +19,7 @@ import ReleasePrModal from "../Modals/ReleasePrModal";
 import MasterPrModal from "../Modals/MasterPrModal";
 import AlphaPrModal from "../Modals/AlphaPrModal";
 import HFXPrModal from "../Modals/HFXPrModal";
+import StoryFilter from "../Tools/StoryFilter";
 
 /**
  * Component to manage and display stories tied to a specific Release.
@@ -45,6 +46,9 @@ const ReleaseStories = () => {
   const [isAlphaModalOpen, setIsAlphaModalOpen] = useState(false);
   const [isHFXModalOpen, setIsHFXModalOpen] = useState(false);
 
+  // For load more at bottom
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
   const { releaseId } = useParams();
   const navigate = useNavigate();
 
@@ -56,9 +60,64 @@ const ReleaseStories = () => {
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
 
+  // New State for active filters
+  const [activeFilters, setActiveFilters] = useState({
+    assignee: "",
+    status: "",
+    qaRelDate: "",
+  });
+
+  // Function to apply filter
+  const handleApplyFilter = (newFilters) => {
+    setActiveFilters(newFilters);
+    setVisibleCount(ITEMS_PER_PAGE);
+  };
+
   useEffect(() => {
     sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
   }, [visibleCount, releaseId]);
+
+  // Universal function to check scroll as well as height(for big viewport)
+  const checkBottom = () => {
+    const windowHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    if (
+      documentHeight <= windowHeight + 10 ||
+      windowHeight + scrollY >= documentHeight - 50
+    ) {
+      setIsAtBottom(true);
+    } else {
+      setIsAtBottom(false);
+    }
+  };
+
+  /**
+   * Effect hook to manage scroll and resize events
+   */
+  useEffect(() => {
+    window.addEventListener("scroll", checkBottom);
+    window.addEventListener("resize", checkBottom);
+
+    checkBottom();
+
+    return () => {
+      window.removeEventListener("scroll", checkBottom);
+      window.removeEventListener("resize", checkBottom);
+    };
+  }, []);
+
+  /**
+   * Effect hook to make sure whenever the data changes to
+   * recalculate the height
+   */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      checkBottom();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [stories, visibleCount, searchTerm, activeFilters]);
 
   /**
    * Fetches specific release metadata and all stories associated with that release tag.
@@ -285,10 +344,48 @@ const ReleaseStories = () => {
   const filtered =
     stories
       ?.filter((item) => {
+        if (
+          activeFilters.assignee &&
+          item.responsibility !== activeFilters.assignee
+        )
+          return false;
+        if (activeFilters.status && item.status !== activeFilters.status)
+          return false;
+
+        if (activeFilters.qaRelDate) {
+          if (!item.qaEnvRelDate) return false;
+          const storyDate = new Date(item.qaEnvRelDate)
+            .toISOString()
+            .split("T")[0];
+          if (storyDate !== activeFilters.qaRelDate) return false;
+        }
+
         const search = searchTerm.trim().toLowerCase();
+        if (!search) return true;
+
         const storyName = item.storyName?.toLowerCase() || "";
         const storyId = item.storyId?.toLowerCase() || "";
-        return storyName.includes(search) || storyId.includes(search);
+        const responsibility = item.responsibility?.toLowerCase() || "";
+        const firstReview = item.firstReview?.toLowerCase() || "";
+        const releaseDate = item.qaEnvRelDate
+          ? new Date(item.qaEnvRelDate)
+              .toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
+              .toLowerCase()
+          : "";
+        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
+
+        return (
+          storyName.includes(search) ||
+          storyId.includes(search) ||
+          responsibility.includes(search) ||
+          firstReview.includes(search) ||
+          releaseDate.includes(search) ||
+          storyPoints.includes(search)
+        );
       })
       .sort((a, b) => {
         const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
@@ -407,7 +504,6 @@ const ReleaseStories = () => {
           Apps to be deployed:{" "}
         </strong>
 
-        
         {/* List of all the apps to be deployed present in the stories
         attached with the release tag
         */}
@@ -496,6 +592,10 @@ const ReleaseStories = () => {
         </div>
       </div>
 
+      <div className="filter-box">
+        <StoryFilter onApplyFilter={handleApplyFilter} />
+      </div>
+
       {/*
       This display all the stories in card format attached with the
       release tag 
@@ -561,6 +661,11 @@ const ReleaseStories = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              style={{
+                opacity: isAtBottom ? 1 : 0,
+                pointerEvents: isAtBottom ? "auto" : "none",
+                transition: "opacity 0.3s ease-in-out",
+              }}
             >
               Load More
             </button>
@@ -597,7 +702,7 @@ const ReleaseStories = () => {
         onClose={() => setIsPrModalOpen(false)}
         selectedStory={selectedStoryForPr}
       />
-      
+
       <AddExistingStoryModal
         isOpen={isAddExistingModalOpen}
         onClose={() => setIsAddExistingModalOpen(false)}

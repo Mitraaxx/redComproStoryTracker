@@ -26,6 +26,9 @@ const ReleaseList = () => {
   });
   const [saving, setSaving] = useState(false);
 
+  // For load more at bottom
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
   const navigate = useNavigate();
 
   /**
@@ -49,6 +52,48 @@ const ReleaseList = () => {
   const handleReleaseClick = (releaseId) => {
     navigate(`/releases/${releaseId}/stories`);
   };
+
+  // Universal function to check scroll as well as height(for big viewport)
+  const checkBottom = () => {
+    const windowHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    if (
+      documentHeight <= windowHeight + 10 ||
+      windowHeight + scrollY >= documentHeight - 50
+    ) {
+      setIsAtBottom(true);
+    } else {
+      setIsAtBottom(false);
+    }
+  };
+
+  /**
+   * Effect hook to manage scroll and resize events
+   */
+  useEffect(() => {
+    window.addEventListener("scroll", checkBottom);
+    window.addEventListener("resize", checkBottom);
+
+    checkBottom();
+
+    return () => {
+      window.removeEventListener("scroll", checkBottom);
+      window.removeEventListener("resize", checkBottom);
+    };
+  }, []);
+
+  /**
+   * Effect hook to make sure whenever the data changes to
+   * recalculate the height
+   */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      checkBottom();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [visibleCount, searchTerm]);
 
   /**
    * Fetches the complete list of available releases from the API.
@@ -120,12 +165,20 @@ const ReleaseList = () => {
   /**
    * Filters the release list based on search term (name or category).
    */
-  const filtered = releases.filter(
-    (item) =>
-      item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filtered = releases
+    .filter(
+      (item) =>
+        item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category?.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+    .sort((a, b) => {
+      // Agar date hai toh usko time (milliseconds) mein convert karo, warna 0 (TBD ke liye)
+      const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
+      const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
 
+      // Descending order (bade se chota / latest se oldest)
+      return dateB - dateA;
+    });
   const visibleRelease = filtered.slice(0, visibleCount);
 
   const scrollToTop = () => {
@@ -194,6 +247,11 @@ const ReleaseList = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              style={{
+                opacity: isAtBottom ? 1 : 0,
+                pointerEvents: isAtBottom ? "auto" : "none",
+                transition: "opacity 0.3s ease-in-out",
+              }}
             >
               Load More
             </button>

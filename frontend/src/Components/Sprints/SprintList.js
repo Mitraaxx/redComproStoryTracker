@@ -27,6 +27,9 @@ const SprintList = () => {
   });
   const [savingSprint, setSavingSprint] = useState(false);
 
+  // For load more at bottom
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
   /**
    * Initializes the visible count for pagination from session storage to persist user state,
    * falling back to the default ITEMS_PER_PAGE if no cache exists.
@@ -35,6 +38,48 @@ const SprintList = () => {
     const savedCount = sessionStorage.getItem(`sprintList_count`);
     return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
   });
+
+  // Universal function to check scroll as well as height(for big viewport)
+  const checkBottom = () => {
+    const windowHeight = window.innerHeight;
+    const scrollY = window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    if (
+      documentHeight <= windowHeight + 10 ||
+      windowHeight + scrollY >= documentHeight - 50
+    ) {
+      setIsAtBottom(true);
+    } else {
+      setIsAtBottom(false);
+    }
+  };
+
+  /**
+   * Effect hook to manage scroll and resize events
+   */
+  useEffect(() => {
+    window.addEventListener("scroll", checkBottom);
+    window.addEventListener("resize", checkBottom);
+
+    checkBottom();
+
+    return () => {
+      window.removeEventListener("scroll", checkBottom);
+      window.removeEventListener("resize", checkBottom);
+    };
+  }, []);
+
+  /**
+   * Effect hook to make sure whenever the data changes to
+   * recalculate the height
+   */
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      checkBottom();
+    }, 100);
+    return () => clearTimeout(timeout);
+  }, [ visibleCount, searchTerm]);
 
   /**
    * Effect hook to synchronize the current visible count with session storage
@@ -66,7 +111,7 @@ const SprintList = () => {
 
   /**
    * Handles the submission of a new sprint.
-   * Sends data to the API, clears local caches, refreshes the sprint list, 
+   * Sends data to the API, clears local caches, refreshes the sprint list,
    * and displays a toast notification regarding the outcome.
    */
   const handleSprintSave = async (e) => {
@@ -202,6 +247,11 @@ const SprintList = () => {
             <button
               className="load-more-btn"
               onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+              style={{
+                opacity: isAtBottom ? 1 : 0,
+                pointerEvents: isAtBottom ? "auto" : "none",
+                transition: "opacity 0.3s ease-in-out",
+              }}
             >
               Load More
             </button>
