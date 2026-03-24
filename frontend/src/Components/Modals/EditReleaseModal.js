@@ -2,11 +2,18 @@ import React from "react";
 import { MdClose } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
 
+/**
+ * Modal component designed for editing the details of an existing release tag.
+ * Allows users to update the release name, date, and category.
+ */
 const EditReleaseModal = ({
   isOpen, onClose, releaseFormData, handleReleaseChange, handleReleaseSave, saving
 }) => {
   if (!isOpen) return null;
 
+  /**
+   * Prevents accidental form submission when the user presses the Enter key.
+   */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') e.preventDefault();
   };
