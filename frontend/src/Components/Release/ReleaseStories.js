@@ -65,7 +65,7 @@ const ReleaseStories = () => {
     assignee: "",
     status: "",
     qaRelDate: "",
-    apps: ""
+    apps: "",
   });
 
   // Function to apply filter
@@ -366,7 +366,8 @@ const ReleaseStories = () => {
           const selectedApp = activeFilters.apps;
 
           const hasLinkedApp = item.linkedApps?.some(
-            (app) => app.appName === selectedApp || app.appRef?.name === selectedApp
+            (app) =>
+              app.appName === selectedApp || app.appRef?.name === selectedApp,
           );
           if (!hasLinkedApp) {
             return false;
@@ -414,6 +415,11 @@ const ReleaseStories = () => {
 
   return (
     <div className="sprint-story-container">
+      <div className="extra-box" style={{ justifyContent: "flex-start" }}>
+        <button onClick={handleBack} className="back-button">
+          <MdArrowBack />
+        </button>
+      </div>
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="sprint-story-container2">
         <section>
@@ -494,9 +500,6 @@ const ReleaseStories = () => {
             onClick={() => setIsAddExistingModalOpen(true)}
           >
             Add Existing
-          </button>
-          <button onClick={handleBack} className="back-button">
-            <MdArrowBack />
           </button>
         </section>
       </div>
@@ -605,7 +608,7 @@ const ReleaseStories = () => {
         </div>
       </div>
 
-      <div className="filter-box">
+      <div className="extra-box">
         <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
