@@ -153,6 +153,18 @@ const StoryDetails = () => {
 
   return (
     <div className="sprint-storyDetails-container">
+      <div
+        className="extra-box"
+        style={{
+          justifyContent: "flex-start",
+          marginLeft: "1rem",
+          marginBottom: "1rem",
+        }}
+      >
+        <button onClick={handleBack} className="back-button">
+          <MdArrowBack />
+        </button>
+      </div>
       <div className="sprint-storyDetails-container2">
         <div className="sprint-storyDetails-container2-5">
           <p>
@@ -247,9 +259,6 @@ const StoryDetails = () => {
             style={{ display: "flex", alignItems: "center", gap: "5px" }}
           >
             <MdEdit /> Edit
-          </button>
-          <button onClick={handleBack} className="back-button">
-            <MdArrowBack />
           </button>
         </section>
       </div>

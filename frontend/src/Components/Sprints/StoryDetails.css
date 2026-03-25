@@ -257,7 +257,6 @@
   border-radius: 6px;
 }
 
-/* 👇 NAYA: Teri purani file mein yeh typo .app-app-button tha, jisko theek kiya taaki hover kaam kare */
 .add-app-button:hover {
   box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
   background: linear-gradient(135deg, #16a34a, #15803d);

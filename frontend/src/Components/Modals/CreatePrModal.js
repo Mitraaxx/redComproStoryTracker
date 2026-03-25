@@ -14,20 +14,40 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
   if (!isOpen) return null;
 
   /**
-   * Handles the form submission. Validates the base branch selection,
-   * constructs the target GitHub PR URL, and opens it in a new browser tab.
+   * These are different functions to handle each 
+   * button submit action
    */
-  const handleGeneratePR = (e) => {
+  const handleThorSubmit = (e) => {
     e.preventDefault();
-    if (!baseBranch) {
-      alert("Please select a base branch!");
-      return;
-    }
 
     const matchedApp = APPS_CONFIG.find((a) => a.repoName === appName);
     const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
 
-    const prUrl = `https://github.com/${orgName}/${appName}/compare/${baseBranch}...${featureBranch}`;
+    const prUrl = `https://github.com/${orgName}/${appName}/compare/env/thor...${featureBranch}`;
+
+    window.open(prUrl, "_blank");
+    onClose();
+  };
+
+  const handleQaSubmit = (e) => {
+    e.preventDefault();
+
+    const matchedApp = APPS_CONFIG.find((a) => a.repoName === appName);
+    const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
+
+    const prUrl = `https://github.com/${orgName}/${appName}/compare/env/qa...${featureBranch}`;
+
+    window.open(prUrl, "_blank");
+    onClose();
+  };
+
+  const handleRelSubmit = (e) => {
+    e.preventDefault();
+
+    const matchedApp = APPS_CONFIG.find((a) => a.repoName === appName);
+    const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
+
+    const prUrl = `https://github.com/${orgName}/${appName}/compare/env/release...${featureBranch}`;
 
     window.open(prUrl, "_blank");
     onClose();
@@ -43,7 +63,7 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
           <MdClose size={28} className="close-icon" onClick={onClose} />
         </div>
 
-        <form onSubmit={handleGeneratePR} className="modal-form">
+        <form className="modal-form">
           <p>
             Generate a PR link for <strong>{appName}</strong>.
           </p>
@@ -56,29 +76,30 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
               className="form-input"
             />
           </label>
-          <label className="form-label full-width">
-            Select Base Branch
-            <select
-              value={baseBranch}
-              onChange={(e) => setBaseBranch(e.target.value)}
-              required
-              className="form-input"
-            >
-              <option value="">-- Choose Base Branch --</option>
-              {PR_BASE_BRANCHES.map((branch, idx) => (
-                <option key={idx} value={branch.value}>
-                  {branch.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="modal-actions">
+
+          <div className="modal-actions" style={{ justifyContent: "center" }}>
             <button
+              className="storyDetails-modal-btn-pr"
               type="submit"
-              className="btn-save"
-              style={{ backgroundColor: "#2ea44f" }}
+              onClick={handleThorSubmit}
             >
-              Create PR
+              PR Thor
+            </button>
+
+            <button
+              className="storyDetails-modal-btn-pr"
+              type="submit"
+              onClick={handleQaSubmit}
+            >
+              PR Qa
+            </button>
+
+            <button
+              className="storyDetails-modal-btn-pr"
+              type="submit"
+              onClick={handleRelSubmit}
+            >
+              PR Rel
             </button>
           </div>
         </form>

@@ -208,6 +208,11 @@ const AppStories = () => {
 
   return (
     <div className="sprint-story-container">
+      <div className="extra-box" style={{ justifyContent: "flex-start" }}>
+        <button onClick={() => navigate(-1)} className="back-button">
+          <MdArrowBack />
+        </button>
+      </div>
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
@@ -230,9 +235,6 @@ const AppStories = () => {
               }}
             />
           </div>
-          <button onClick={() => navigate(-1)} className="back-button">
-            <MdArrowBack />
-          </button>
         </section>
       </div>
 
