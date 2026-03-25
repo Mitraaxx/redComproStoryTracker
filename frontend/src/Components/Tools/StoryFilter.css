@@ -1,128 +1,161 @@
 .filter-container {
   position: relative;
-  display: inline-block;
 }
 
 .filter-toggle-btn {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 8px 12px;
-  background-color: #f8fafc;
-  border: 1px solid #cbd5e1;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
-  color: #334155;
-  font-size: 0.9rem;
+  font-weight: 600;
   transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
 .filter-toggle-btn:hover {
   background-color: #f1f5f9;
-  border-color: #94a3b8;
+  border-color: #cbd5e1;
 }
 
 .filter-dropdown {
   position: absolute;
-  top: 110%;
+  top: calc(100% + 10px);
   right: 0;
-  width: 320px;
   background-color: #ffffff;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 380px;
   z-index: 1000;
+  overflow: hidden;
+  animation: slideInDown 0.2s ease-out;
 }
 
 .filter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 10px;
-  margin-bottom: 15px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  background-color: #f0f7ff;
 }
 
 .filter-title {
   margin: 0;
-  color: #1e293b;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .filter-close-icon {
-  cursor: pointer;
-  color: #64748b;
   color: #ef4444;
+  cursor: pointer;
   transition: color 0.2s ease;
 }
 
-
 .filter-fields-container {
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .filter-label {
-  font-size: 0.8rem;
-  color: #64748b;
   display: block;
-  margin-bottom: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .filter-input {
-  width: 100%;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  font-size: 0.85rem;
-  outline: none;
-  transition: border-color 0.2s ease;
+  display: block;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 14px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem !important;
+  color: #334155 !important;
+  transition: border-color 0.2s ease !important;
+  background-color: #ffffff !important;
+  margin: 0 !important;
 }
 
 .filter-input:focus {
-  border-color: #3b82f6;
+  outline: none;
+  border-color: #3b82f6 !important
+}
+
+.filter-input:hover {
+  border-color: #94a3b8 !important;
 }
 
 .filter-date-group {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .filter-actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 15px;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .filter-clear-btn {
-  padding: 8px 12px;
+  background: none;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background-color: white;
-  color: #475569;
+  color: #64748b;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 0.8rem;
-  transition: background-color 0.2s ease;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
 }
 
 .filter-clear-btn:hover {
-  background-color: #f8fafc;
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+  color: #1e293b;
 }
 
 .filter-apply-btn {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
+  background-color: #3b82f6;
   border: none;
-  border-radius: 6px;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: bold;
+  font-size: 0.85rem;
   transition: background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
 .filter-apply-btn:hover {
-  background-color: #0056b3;
+  background-color: #2563eb;
+  box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
