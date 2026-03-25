@@ -5,7 +5,7 @@ import { TEAM_MEMBERS, STATUS_MEMBERS, APPS_CONFIG} from "../../utils/AppConfig"
 
 /**
  * Reusable Filter Component for Stories.
- * Exposes a generic UI to filter by Assignee, Status, and exact Release Date.
+ * Exposes a generic UI to filter by Assignee, Status, Apps, and exact Release Date using Datalists.
  */
 const StoryFilter = ({ onApplyFilter }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,27 +18,15 @@ const StoryFilter = ({ onApplyFilter }) => {
     apps: ""
   });
 
-  /**
-   * Handles user input changes across all filter fields.
-   * Dynamically updates the specific field in the local state based on the input's 'name' attribute.
-   */
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  /**
-   * Confirms and applies the selected filters.
-   * Passes the current local filter state up to the parent component and closes the dropdown.
-   */
   const handleApply = () => {
     onApplyFilter(filters);
     setIsOpen(false);
   };
 
-  /**
-   * Resets all filter criteria to their default empty states.
-   * Immediately notifies the parent component to remove all active filters and closes the dropdown.
-   */
   const handleClear = () => {
     const cleared = {
       assignee: "",
@@ -69,57 +57,64 @@ const StoryFilter = ({ onApplyFilter }) => {
           </div>
 
           <div className="filter-fields-container">
+            {/* ASSIGNEE DATALIST */}
             <div>
               <label className="filter-label">Assignee</label>
-              <select
+              <input
+                list="filter-assignee-options"
                 name="assignee"
                 value={filters.assignee}
                 onChange={handleChange}
                 className="filter-input"
-              >
-                <option value="">All</option>
+                placeholder="Search"
+                autoComplete="off"
+              />
+              <datalist id="filter-assignee-options">
                 {TEAM_MEMBERS.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
+                  <option key={a} value={a} />
                 ))}
-              </select>
+              </datalist>
             </div>
 
+            {/* STATUS DATALIST */}
             <div>
               <label className="filter-label">Currently With</label>
-              <select
+              <input
+                list="filter-status-options"
                 name="status"
                 value={filters.status}
                 onChange={handleChange}
                 className="filter-input"
-              >
-                <option value="">All</option>
+                placeholder="Search"
+                autoComplete="off"
+              />
+              <datalist id="filter-status-options">
                 {STATUS_MEMBERS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                  <option key={s} value={s} />
                 ))}
-              </select>
+              </datalist>
             </div>
 
+            {/* APPS DATALIST */}
             <div>
               <label className="filter-label">Apps</label>
-              <select
+              <input
+                list="filter-apps-options"
                 name="apps"
                 value={filters.apps}
                 onChange={handleChange}
                 className="filter-input"
-              >
-                <option value="">All</option>
+                placeholder="Search"
+                autoComplete="off"
+              />
+              <datalist id="filter-apps-options">
                 {APPS_CONFIG.map((app, i) => (
-                    <option key={i} value={app.repoName}>
-                      {app.repoName}
-                    </option>
+                    <option key={i} value={app.repoName} />
                 ))}
-              </select>
+              </datalist>
             </div>
 
+            {/* QA RELEASE DATE  */}
             <div>
               <label className="filter-label">Qa Release Date</label>
               <div className="filter-date-group">
