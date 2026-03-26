@@ -275,8 +275,8 @@ export const repoConfig = {
       rel: "generic-content-develop",
     },
   },
-  "support-admin": {
-    baseUrl: "https://github.com/comprodls/support-admin/compare/",
+  "nemo-micro-support-admin": {
+    baseUrl: "https://github.com/comprodls/nemo-micro-support-admin/compare/",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
