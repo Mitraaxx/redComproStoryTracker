@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdFilterList, MdClose } from "react-icons/md";
 import "./StoryFilter.css";
-import { TEAM_MEMBERS, STATUS_MEMBERS, APPS_CONFIG} from "../../utils/AppConfig";
+import { TEAM_MEMBERS, STATUS_MEMBERS, repoConfig } from "../../utils/AppConfig";
 
 /**
  * Reusable Filter Component for Stories.
@@ -108,8 +108,8 @@ const StoryFilter = ({ onApplyFilter }) => {
                 autoComplete="off"
               />
               <datalist id="filter-apps-options">
-                {APPS_CONFIG.map((app, i) => (
-                    <option key={i} value={app.repoName} />
+                {Object.keys(repoConfig).map((appName, i) => (
+                    <option key={i} value={appName} />
                 ))}
               </datalist>
             </div>

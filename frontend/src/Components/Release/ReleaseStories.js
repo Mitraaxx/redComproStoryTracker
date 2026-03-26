@@ -14,7 +14,7 @@ import "react-toastify/dist/ReactToastify.css";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import EditReleaseModal from "../Modals/EditReleaseModal";
 import "./ReleaseStories.css"; 
-import { APPS_CONFIG, ITEMS_PER_PAGE } from "../../utils/AppConfig";
+import { repoConfig, ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import MasterPrModal from "../Modals/MasterPrModal";
 import AlphaPrModal from "../Modals/AlphaPrModal";
 import HFXPrModal from "../Modals/HFXPrModal";
@@ -175,8 +175,8 @@ const ReleaseStories = () => {
   const manualReleaseApps = release?.appsToBeDeployed || [];
   const combinedUniqueApps = [...new Set([...storyApps, ...manualReleaseApps])];
 
-  const availableAppsForManualAdd = APPS_CONFIG.filter(
-    (app) => !combinedUniqueApps.includes(app.repoName),
+  const availableAppsForManualAdd = Object.keys(repoConfig).filter(
+    (appName) => !combinedUniqueApps.includes(appName),
   );
 
   /**
@@ -594,9 +594,9 @@ const ReleaseStories = () => {
             }}
           />
           <datalist id="release-apps-options">
-            {availableAppsForManualAdd.map((app, i) => (
-              <option key={i} value={app.repoName}>
-                {app.repoName}
+            {availableAppsForManualAdd.map((appName, i) => (
+              <option key={i} value={appName}>
+                {appName}
               </option>
             ))}
           </datalist>
@@ -686,10 +686,10 @@ const ReleaseStories = () => {
                   {story.linkedApps.map((appItem, idx) => {
                     const repoName =
                       appItem.appRef?.name || appItem.appName || "Unknown";
-                    const matchedApp = APPS_CONFIG.find(
-                      (a) => a.repoName === repoName,
-                    );
-                    const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
+                    
+                    const appConfig = repoConfig[repoName] || {};
+                    const targetBranch = appConfig.envBranches?.rel || "";
+                    const baseUrl = appConfig.baseUrl || `https://github.com/comprodls/${repoName}/compare/`;
 
                     return (
                       <div key={idx} style={{ marginBottom: "12px" }}>
@@ -739,7 +739,7 @@ const ReleaseStories = () => {
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const githubUrl = `https://github.com/${orgName}/${repoName}/compare/env/release...${branch}`;
+                                    const githubUrl = `${baseUrl}${targetBranch}...${branch}`;
                                     window.open(githubUrl, "_blank");
                                   }}
                                   className="relBottom-btn-pr"

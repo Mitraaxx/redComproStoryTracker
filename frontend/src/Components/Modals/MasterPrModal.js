@@ -1,14 +1,19 @@
 import React from "react";
 import { MdClose } from "react-icons/md";
-import { APPS_CONFIG } from "../../utils/AppConfig";
+import { repoConfig } from "../../utils/AppConfig";
 import "../Modals/ReleasePrModal.css"; 
 
 /**
  * Modal component that displays a list of apps slated for deployment.
- * Provides quick-action buttons to generate Master Pull Requests (env/rel ➔ master) on GitHub.
+ * Provides quick-action buttons to generate Master Pull Requests (rel ➔ master) on GitHub.
  */
 const MasterPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
   if (!isOpen) return null;
+
+  const validApps = appsToBeDeployed?.filter((repoName) => {
+    const branches = repoConfig[repoName]?.envBranches;
+    return branches && branches.master && branches.rel;
+  }) || [];
 
   return (
     <div className="modal-overlay">
@@ -19,15 +24,15 @@ const MasterPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
         </div>
 
         <div className="pr-modal-body">
-          {appsToBeDeployed && appsToBeDeployed.length > 0 ? (
-            appsToBeDeployed.map((repoName, idx) => {
-              
-              const matchedApp = APPS_CONFIG.find((a) => a.repoName === repoName);
-              const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
+          {validApps.length > 0 ? (
+            validApps.map((repoName, idx) => {
+              const appConfig = repoConfig[repoName];
+              const targetBranch = appConfig.envBranches.master; 
+              const sourceBranch = appConfig.envBranches.rel; 
+              const baseUrl = appConfig.baseUrl || `https://github.com/comprodls/${repoName}/compare/`;
 
               return (
                 <div key={idx} className="pr-repo-card">
-                  
                   <div className="pr-repo-title-wrapper">
                     <strong className="pr-repo-title">{repoName}</strong>
                   </div>
@@ -35,16 +40,12 @@ const MasterPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
                   <div className="pr-branch-list">
                     <div className="pr-branch-item">
                       <span className="pr-branch-name" style={{ color: "#2563eb" }}>
-                        env/rel ➔ master
+                        {sourceBranch} ➔ {targetBranch}
                       </span>
                       <button
                         className="pr-create-btn"
                         onClick={() => {
-                          /**
-                           * Constructs the GitHub URL to compare and create a PR 
-                           * from 'env/release' into the 'master' branch.
-                           */
-                          const githubUrl = `https://github.com/${orgName}/${repoName}/compare/master...env/release`;
+                          const githubUrl = `${baseUrl}${targetBranch}...${sourceBranch}`;
                           window.open(githubUrl, "_blank");
                         }}
                       >
@@ -57,7 +58,7 @@ const MasterPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
             })
           ) : (
             <p className="pr-empty-text" style={{ marginTop: "20px" }}>
-              No apps to be deployed for this release yet.
+              No apps with both master and rel branches found for this release.
             </p>
           )}
         </div>

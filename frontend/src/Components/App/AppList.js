@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { APPS_CONFIG } from "../../utils/AppConfig";
+import { repoConfig } from "../../utils/AppConfig";
 import "../Sprints/SprintList.css";
 import "../App/AppList.css";
 
@@ -15,8 +15,9 @@ const AppList = () => {
   /**
    * Filters the globally configured applications based on the search term input.
    */
-  const filteredApps = APPS_CONFIG.filter((app) => {
-    return app.repoName.toLowerCase().includes(searchTerm.toLowerCase());
+  const appNames = Object.keys(repoConfig);
+  const filteredApps = appNames.filter((appName) => {
+    return appName.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -37,13 +38,13 @@ const AppList = () => {
 
       <div className="sprint-grid">
         {filteredApps.length > 0 ? (
-          filteredApps.map((app, index) => (
+          filteredApps.map((appName, index) => (
             <div
               key={index}
               className="sprint-card app-card-aligned"
-              onClick={() => navigate(`/apps/${app.repoName}/stories`)}
+              onClick={() => navigate(`/apps/${appName}/stories`)}
             >
-              <h3 className="app-name-text">{app.repoName}</h3>
+              <h3 className="app-name-text">{appName}</h3>
             </div>
           ))
         ) : (

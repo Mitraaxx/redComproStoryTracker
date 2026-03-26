@@ -1,53 +1,29 @@
-import React, { useState } from "react";
+import React from "react";
 import { MdClose } from "react-icons/md";
 import { FaGithub } from "react-icons/fa";
-import { PR_BASE_BRANCHES, APPS_CONFIG } from "../../utils/AppConfig";
-import "../Modals//EditStoryModal.css";
+import { repoConfig } from "../../utils/AppConfig";
+import "../Modals/EditStoryModal.css";
 
 /**
  * Modal component used to generate and open a GitHub Pull Request link
- * for a specific feature branch against a user-selected base branch.
+ * for a specific feature branch against dynamically fetched base branches.
  */
 const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
-  const [baseBranch, setBaseBranch] = useState("");
-
   if (!isOpen) return null;
 
+  const appConfig = repoConfig[appName] || {};
+  const appBranches = appConfig.envBranches || {};
+  
+  const baseUrl = appConfig.baseUrl || `https://github.com/comprodls/${appName}/compare/`;
+
   /**
-   * These are different functions to handle each 
-   * button submit action
+   * Common handle for all the buttons
    */
-  const handleThorSubmit = (e) => {
+  const handleGeneratePR = (e, targetBranch) => {
     e.preventDefault();
+    if (!targetBranch) return;
 
-    const matchedApp = APPS_CONFIG.find((a) => a.repoName === appName);
-    const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
-
-    const prUrl = `https://github.com/${orgName}/${appName}/compare/env/thor...${featureBranch}`;
-
-    window.open(prUrl, "_blank");
-    onClose();
-  };
-
-  const handleQaSubmit = (e) => {
-    e.preventDefault();
-
-    const matchedApp = APPS_CONFIG.find((a) => a.repoName === appName);
-    const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
-
-    const prUrl = `https://github.com/${orgName}/${appName}/compare/env/qa...${featureBranch}`;
-
-    window.open(prUrl, "_blank");
-    onClose();
-  };
-
-  const handleRelSubmit = (e) => {
-    e.preventDefault();
-
-    const matchedApp = APPS_CONFIG.find((a) => a.repoName === appName);
-    const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
-
-    const prUrl = `https://github.com/${orgName}/${appName}/compare/env/release...${featureBranch}`;
+    const prUrl = `${baseUrl}${targetBranch}...${featureBranch}`;
 
     window.open(prUrl, "_blank");
     onClose();
@@ -77,30 +53,36 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
             />
           </label>
 
-          <div className="modal-actions" style={{ justifyContent: "center" }}>
-            <button
-              className="storyDetails-modal-btn-pr"
-              type="submit"
-              onClick={handleThorSubmit}
-            >
-              PR Thor
-            </button>
+          <div className="modal-actions" style={{ justifyContent: "center" }}>  
+            {appBranches.thor && (
+              <button
+                className="storyDetails-modal-btn-pr"
+                type="button"
+                onClick={(e) => handleGeneratePR(e, appBranches.thor)}
+              >
+                PR Thor
+              </button>
+            )}
 
-            <button
-              className="storyDetails-modal-btn-pr"
-              type="submit"
-              onClick={handleQaSubmit}
-            >
-              PR Qa
-            </button>
+            {appBranches.qa && (
+              <button
+                className="storyDetails-modal-btn-pr"
+                type="button"
+                onClick={(e) => handleGeneratePR(e, appBranches.qa)}
+              >
+                PR Qa
+              </button>
+            )}
 
-            <button
-              className="storyDetails-modal-btn-pr"
-              type="submit"
-              onClick={handleRelSubmit}
-            >
-              PR Rel
-            </button>
+            {appBranches.rel && (
+              <button
+                className="storyDetails-modal-btn-pr"
+                type="button"
+                onClick={(e) => handleGeneratePR(e, appBranches.rel)}
+              >
+                PR Rel
+              </button>
+            )}
           </div>
         </form>
       </div>
