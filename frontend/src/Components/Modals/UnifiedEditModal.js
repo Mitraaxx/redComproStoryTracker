@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MdClose, MdAdd, MdDelete, MdEdit } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
 import "../Modals/CreateStoryHalfModal.css";
-import { APPS_CONFIG, TEAM_MEMBERS, STATUS_MEMBERS } from "../../utils/AppConfig";
+import { repoConfig, TEAM_MEMBERS, STATUS_MEMBERS } from "../../utils/AppConfig";
 
 /**
  * A comprehensive modal component used to edit all aspects of an existing story.
@@ -213,16 +213,17 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
     setAppsList(newList);
   };
 
-  const availableApps = APPS_CONFIG.filter((appObj) => {
-    const isAlreadyAdded = appsList?.some((addedApp) => addedApp.appName === appObj.repoName);
-    const isCurrentlyEditing = editingAppIndex !== null && appsList[editingAppIndex]?.appName === appObj.repoName;
+  
+  const availableApps = Object.keys(repoConfig).filter((appName) => {
+    const isAlreadyAdded = appsList?.some((addedApp) => addedApp.appName === appName);
+    const isCurrentlyEditing = editingAppIndex !== null && appsList[editingAppIndex]?.appName === appName;
     return !isAlreadyAdded || isCurrentlyEditing;
   });
 
-  const isAllAppsAdded = appsList.length >= APPS_CONFIG.length;
+  const isAllAppsAdded = appsList.length >= Object.keys(repoConfig).length;
 
-  const availableDeployApps = APPS_CONFIG.filter(
-    (app) => !deployAppsList.includes(app.repoName)
+  const availableDeployApps = Object.keys(repoConfig).filter(
+    (appName) => !deployAppsList.includes(appName)
   );
 
   return (
@@ -332,8 +333,8 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
                   </button>
                 </div>
                 <datalist id="deploy-apps-options">
-                  {availableDeployApps.map((app, i) => (
-                    <option key={i} value={app.repoName}>{app.repoName}</option>
+                  {availableDeployApps.map((appName, i) => (
+                    <option key={i} value={appName}>{appName}</option>
                   ))}
                 </datalist>
                 
@@ -405,8 +406,8 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
                 <span>Select App <span className="required-asterisk">*</span></span>
                 <input list="app-options" name="appName" value={appFormData.appName || ""} onChange={handleAppChange} className="form-input" placeholder="Type to search app..." autoComplete="off" />
                 <datalist id="app-options">
-                  {availableApps.map((app, i) => (
-                    <option key={i} value={app.repoName}>{app.repoName}</option>
+                  {availableApps.map((appName, i) => (
+                    <option key={i} value={appName}>{appName}</option>
                   ))}
                 </datalist>
               </label>
