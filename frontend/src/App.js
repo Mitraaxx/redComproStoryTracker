@@ -19,7 +19,8 @@ const App = () => {
       <div>
         <Navbar />
         <div>
-            <Routes>
+          {/* for */}
+          <Routes>
             <Route path="/" element={<SprintList />} />
             <Route path="/sprints" element={<SprintList />} />
 
