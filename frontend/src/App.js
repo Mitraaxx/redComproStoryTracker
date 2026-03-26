@@ -19,8 +19,7 @@ const App = () => {
       <div>
         <Navbar />
         <div>
-          {/* for conflict -- go*/}
-          <Routes>
+            <Routes>
             <Route path="/" element={<SprintList />} />
             <Route path="/sprints" element={<SprintList />} />
 
