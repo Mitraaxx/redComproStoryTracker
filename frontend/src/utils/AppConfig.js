@@ -291,7 +291,7 @@ export const repoConfig = {
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
-      master: "master",
+      rel: "master",
       alpha: "env/alpha",
       hotfix: "env/hotfix",
     },
