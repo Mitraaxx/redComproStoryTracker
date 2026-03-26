@@ -154,21 +154,21 @@
 }
 
 .storyDetails-modal-btn-pr {
-  padding: 6px;
-  font-size: 11px;
+  padding: 8px;
+  font-size: 0.85rem;
   cursor: pointer;
-  background-color: transparent;   
-  color: #24292F;                 
-  
-  border: 1.5px solid #24292F;  
-  border-radius: 5px;
-  font-weight: 600;
+  background-color: #24292F;
+  color: #ffffff;
+  border-radius: 10px;
+  font-weight: 500;
   letter-spacing: 0.5px;
-  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
 }
 
 .storyDetails-modal-btn-pr:hover {
-  background-color: #24292F;     
+  background-color: #4A515B;
   color: #ffffff;
-  border-color: #24292F;
 }
