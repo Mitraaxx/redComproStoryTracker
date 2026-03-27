@@ -53,7 +53,7 @@
   gap: 4px;
 }
 
-.release-story-container2 section p:last-child {
+#rel-date-badge{
   font-size: .75rem;
   background: #ffffff;
   border-left: 3px solid #3b82f6;
