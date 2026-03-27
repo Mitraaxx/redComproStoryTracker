@@ -2,7 +2,7 @@
   width: calc(33.333% - 20px); 
   min-width: 250px; 
   max-width: 400px; 
-  min-height: 110px;
+  min-height: 200px;
   
   box-sizing: border-box;
   padding: 16px;

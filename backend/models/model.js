@@ -44,6 +44,8 @@ const Story = mongoose.model('Story', storySchema);
 const releaseSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true }, 
   releaseDate: { type: Date },
+  devCutoff: { type: Date }, 
+  qaSignoff: { type: Date }, 
   category: { type: String },
   appsToBeDeployed: [{ type: String }] 
 }, { timestamps: true });

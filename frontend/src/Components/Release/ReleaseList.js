@@ -22,6 +22,8 @@ const ReleaseList = () => {
   const [formData, setFormData] = useState({
     name: "",
     releaseDate: "",
+    devCutoff: "",
+    qaSignoff: "",
     category: "",
   });
   const [saving, setSaving] = useState(false);
@@ -226,6 +228,40 @@ const ReleaseList = () => {
               <strong>Date: </strong>
               {release.releaseDate
                 ? new Date(release.releaseDate).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "TBD"}
+            </div>
+
+            <div
+              style={{
+                color: "#64748b",
+                fontSize: "0.85rem",
+                marginTop: "4px",
+              }}
+            >
+              <strong>Dev Cutoff: </strong>
+              {release.devCutoff
+                ? new Date(release.devCutoff).toLocaleDateString("en-IN", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "TBD"}
+            </div>
+
+            <div
+              style={{
+                color: "#64748b",
+                fontSize: "0.85rem",
+                marginTop: "4px",
+              }}
+            >
+              <strong>QA Signoff: </strong>
+              {release.qaSignoff
+                ? new Date(release.qaSignoff).toLocaleDateString("en-IN", {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",

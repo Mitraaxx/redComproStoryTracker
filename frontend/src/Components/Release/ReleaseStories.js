@@ -299,6 +299,8 @@ const ReleaseStories = () => {
     setReleaseFormData({
       name: release?.name || "",
       releaseDate: formatDateForInput(release?.releaseDate),
+      devCutoff: formatDateForInput(release?.devCutoff), 
+      qaSignoff: formatDateForInput(release?.qaSignoff), 
       category: release?.category || "",
     });
     setIsReleaseModalOpen(true);
@@ -321,7 +323,11 @@ const ReleaseStories = () => {
     const isCatSame =
       (releaseFormData.category || "") === (release?.category || "");
 
-    if (isNameSame && isDateSame && isCatSame) {
+    
+    const isDevSame = (releaseFormData.devCutoff || "") === formatDateForInput(release?.devCutoff);
+    const isQaSame = (releaseFormData.qaSignoff || "") === formatDateForInput(release?.qaSignoff);
+
+    if (isNameSame && isDateSame && isCatSame && isDevSame && isQaSame) {
       setIsReleaseModalOpen(false);
       return;
     }
@@ -444,26 +450,51 @@ const ReleaseStories = () => {
               <MdEdit size={15} />
             </button>
           </div>
-          <p
-            className="release-date-badge"
-            style={{ padding: "4px 8px", fontSize: "0.75rem" }}
-          >
-            <strong>Release Date: </strong>
-            {release?.releaseDate
-              ? new Date(release.releaseDate).toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "TBD"}
-          </p>
-          <p
-            className="release-date-badge"
-            style={{ padding: "4px 8px", fontSize: "0.75rem" }}
-          >
-            <strong>Category: </strong>
-            {release?.category || "General"}
-          </p>
+
+          <div style={{ display: "flex", gap: "25px", marginTop: "12px", alignItems: "flex-start", flexWrap: "wrap" }}>            
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <p className="release-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}>
+                <strong>Release Date: </strong>
+                {release?.releaseDate
+                  ? new Date(release.releaseDate).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "TBD"}
+              </p>
+              
+              <p className="release-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}>
+                <strong>Dev Cutoff: </strong>
+                {release?.devCutoff
+                  ? new Date(release.devCutoff).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "TBD"}
+              </p>
+              
+              <p className="release-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}>
+                <strong>QA Signoff: </strong>
+                {release?.qaSignoff
+                  ? new Date(release.qaSignoff).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "TBD"}
+              </p>
+            </div>
+
+            <div>
+              <p className="release-date-badge" id="rel-date-badge" style={{ padding: "6px 12px", fontSize: "0.8rem", margin: 0 }}>
+                <strong>Category: </strong>
+                {release?.category || "General"}
+              </p>
+            </div>
+
+          </div>
         </section>
 
         <div className="relTop-btn-group">
@@ -523,6 +554,7 @@ const ReleaseStories = () => {
           gap: "10px",
           flexWrap: "wrap",
           marginBottom: "25px",
+          marginTop: "15px",
           padding: "12px 18px",
           backgroundColor: "#f8fafc",
           borderRadius: "10px",

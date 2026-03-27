@@ -62,6 +62,28 @@ const CreateReleaseModal = ({
           </label>
 
           <label className="form-label full-width">
+            <span>Dev Cutoff Date</span>
+            <input
+              type="date"
+              name="devCutoff"
+              value={formData.devCutoff || ""}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </label>
+
+          <label className="form-label full-width">
+            <span>QA Signoff Date</span>
+            <input
+              type="date"
+              name="qaSignoff"
+              value={formData.qaSignoff || ""}
+              onChange={handleChange}
+              className="form-input"
+            />
+          </label>
+
+          <label className="form-label full-width">
             <span>Category</span>
             <select
               name="category"
