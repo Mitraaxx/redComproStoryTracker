@@ -97,6 +97,7 @@
   min-width: 320px; 
   max-width: 450px; 
   
+  margin-top: 10px;
   box-sizing: border-box;
   padding: 16px;
   background-color: #ffffff;
