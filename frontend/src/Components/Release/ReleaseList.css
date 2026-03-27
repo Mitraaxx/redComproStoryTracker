@@ -1,6 +1,10 @@
 .release-card {
-  min-width: 220px;
+  width: calc(33.333% - 20px); 
+  min-width: 250px; 
+  max-width: 400px; 
   min-height: 110px;
+  
+  box-sizing: border-box;
   padding: 16px;
   background-color: #ffffff;
   border: 1px solid #3b82f6;
@@ -8,7 +12,6 @@
   cursor: pointer;
   font-weight: 500;
   
- 
   text-align: center; 
   display: flex;
   flex-direction: column;
@@ -38,7 +41,7 @@
 .release-category-tag {
   background-color: #eff6ff; 
   color: #2563eb; 
-  padding: 4px;
+  padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.70rem;
   font-weight: 600;

@@ -2,6 +2,9 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .release-story-container2 {
@@ -50,7 +53,6 @@
   gap: 4px;
 }
 
-/* notes styling */
 .release-story-container2 section p:last-child {
   font-size: .75rem;
   background: #ffffff;
@@ -61,7 +63,6 @@
   max-width: 500px;
 }
 
-/* Title aur button ko ek line mein laane ke liye */
 .release-title-group {
   display: flex;
   align-items: center;
@@ -76,35 +77,27 @@
 }
 
 /* ==========================================
-   MASONRY GRID LAYOUT FOR CARDS (ISLAND EFFECT)
+   FLEXBOX GRID LAYOUT FOR CARDS (CENTERED)
    ========================================== */
 .release-story-grid {
-  display: block; 
-  column-count: 3; 
-  column-gap: 20px; 
-  width: 75%;
-}
+  display: flex;
+  flex-wrap: wrap;
 
-@media (max-width: 1200px) {
-  .release-story-grid {
-    column-count: 2;
-  }
-}
-
-@media (max-width: 768px) {
-  .release-story-grid {
-    column-count: 1;
-  }
+  gap: 20px; 
+  width: 100%;
+  max-width: 1400px; 
+  margin: 0 auto; 
 }
 
 .release-story-card {
-  break-inside: avoid; 
-  page-break-inside: avoid;
-  display: inline-block; 
-  margin-bottom: 20px; 
-  width: 100%; 
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   
+  width: calc(33.333% - 20px); 
+  min-width: 320px; 
+  max-width: 450px; 
+  
+  box-sizing: border-box;
   padding: 16px;
   background-color: #ffffff;
   border: 1px solid #3b82f6;
