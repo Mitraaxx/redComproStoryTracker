@@ -28,6 +28,7 @@ export const STATUS_MEMBERS = [
   "Sushil",
   "CQA",
   "MQA",
+  "Released",
 ];
 
 export const repoConfig = {
@@ -319,7 +320,7 @@ export const repoConfig = {
     },
   },
   "contentful-testbench": {
-    baseUrl: "https://github.com/comprodls/contentful-testbench/compare/",
+    baseUrl: "https://github.com/compro-cup-central/contentful-testbench/",
     envBranches: {
       thor: "develop",
       rel: "master",
