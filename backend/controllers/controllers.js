@@ -591,3 +591,72 @@ exports.getAppStoriesByName = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+const { clerkClient } = require('@clerk/express')
+
+// ================= GITHUB BRANCH MERGE STATUS (DYNAMIC) =================
+exports.getBranchMergeStatus = async (req, res) => {
+  try {
+    // 1. Frontend se teeno cheezein dynamic aayengi
+    const { orgName, repoName, branchName } = req.body; 
+
+    // 2. Clerk se logged-in user ki ID nikal
+    const userId = req.auth?.userId; 
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized: User ID not found" });
+    }
+
+    // 3. Clerk se us user ka GitHub token fetch kar
+    const oauthTokens = await clerkClient.users.getUserOauthAccessToken(userId, 'oauth_github');
+    
+    // Clerk SDK ke version ke hisaab se response check
+    const tokensArray = oauthTokens.data || oauthTokens;
+    if (!tokensArray || tokensArray.length === 0) {
+      return res.status(400).json({ error: "GitHub account is not connected" });
+    }
+    const userGithubToken = tokensArray[0].token;
+
+    // 4. GitHub API Call (Dynamic URL)
+    const githubUrl = `https://api.github.com/repos/${orgName}/${repoName}/pulls?head=${orgName}:${branchName}&state=all`;
+    
+    const githubResponse = await fetch(githubUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${userGithubToken}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!githubResponse.ok) {
+      const errData = await githubResponse.json();
+      throw new Error(`GitHub API Error: ${errData.message}`);
+    }
+
+    const prs = await githubResponse.json();
+
+    // 5. Dynamic Filtering Logic (Bina kisi hardcoded array ke)
+    let mergedInto = [];
+
+    prs.forEach(pr => {
+      // GitHub jo bhi base branch dega, hum wahi utha lenge
+      const targetBranch = pr.base.ref; 
+      
+      // Agar PR actually merge hui hai aur array mein pehle se nahi hai
+      if (pr.merged_at !== null && !mergedInto.includes(targetBranch)) {
+        mergedInto.push(targetBranch);
+      }
+    });
+
+    // 6. Array ko string mein convert ("thor, qa, master")
+    const mergedTillString = mergedInto.length > 0 ? mergedInto.join(", ") : "Not Merged";
+
+    res.status(200).json({
+      branch: branchName,
+      mergedTill: mergedTillString
+    });
+
+  } catch (err) {
+    console.error("Error fetching branch status:", err);
+    res.status(500).json({ error: err.message });
+  }
+};
