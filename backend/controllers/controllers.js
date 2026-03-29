@@ -591,32 +591,29 @@ exports.getAppStoriesByName = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+const { clerkClient, getAuth } = require('@clerk/express');
 
-const { clerkClient } = require('@clerk/express')
-
-// ================= GITHUB BRANCH MERGE STATUS (DYNAMIC) =================
+// ================= GITHUB BRANCH MERGE STATUS (LATEST ONLY) =================
 exports.getBranchMergeStatus = async (req, res) => {
   try {
-    // 1. Frontend se teeno cheezein dynamic aayengi
     const { orgName, repoName, branchName } = req.body; 
-
-    // 2. Clerk se logged-in user ki ID nikal
-    const userId = req.auth?.userId; 
+    
+    // Extract User ID from Clerk Auth Middleware
+    const { userId } = getAuth(req); 
+    
     if (!userId) {
       return res.status(401).json({ error: "Unauthorized: User ID not found" });
     }
 
-    // 3. Clerk se us user ka GitHub token fetch kar
+    // Fetch User's GitHub OAuth Token from Clerk
     const oauthTokens = await clerkClient.users.getUserOauthAccessToken(userId, 'oauth_github');
-    
-    // Clerk SDK ke version ke hisaab se response check
     const tokensArray = oauthTokens.data || oauthTokens;
     if (!tokensArray || tokensArray.length === 0) {
-      return res.status(400).json({ error: "GitHub account is not connected" });
+      return res.status(400).json({ error: "GitHub account connect nahi hai!" });
     }
     const userGithubToken = tokensArray[0].token;
 
-    // 4. GitHub API Call (Dynamic URL)
+    // GitHub API Call to fetch pull requests for the specific branch
     const githubUrl = `https://api.github.com/repos/${orgName}/${repoName}/pulls?head=${orgName}:${branchName}&state=all`;
     
     const githubResponse = await fetch(githubUrl, {
@@ -629,30 +626,43 @@ exports.getBranchMergeStatus = async (req, res) => {
 
     if (!githubResponse.ok) {
       const errData = await githubResponse.json();
-      throw new Error(`GitHub API Error: ${errData.message}`);
+      throw new Error(`GitHub API Error: ${errData.message || "Not Found"}`);
     }
 
     const prs = await githubResponse.json();
 
-    // 5. Dynamic Filtering Logic (Bina kisi hardcoded array ke)
-    let mergedInto = [];
+    /* // ================= PURANA LOGIC (Reference ke liye) =================
+    // Isme hum saari merged branches ka ek array banate the
+    const mergedBranches = prs
+      .filter(pr => pr.merged_at !== null)
+      .map(pr => pr.base.ref);
+    
+    // Duplicate branches hatane ke liye Set use karte the
+    let uniqueMergedBranches = [...new Set(mergedBranches)]; 
+    */
+
+    // 👇 NAYA LOGIC: Sirf latest merge nikalne ke liye
+    let latestMergeTime = 0; // Timestamp compare karne ke liye
+    let latestMergedBranch = "Not Merged"; // Default status
 
     prs.forEach(pr => {
-      // GitHub jo bhi base branch dega, hum wahi utha lenge
-      const targetBranch = pr.base.ref; 
-      
-      // Agar PR actually merge hui hai aur array mein pehle se nahi hai
-      if (pr.merged_at !== null && !mergedInto.includes(targetBranch)) {
-        mergedInto.push(targetBranch);
+      // Agar PR actually merge hui hai
+      if (pr.merged_at !== null) {
+        const mergeTime = new Date(pr.merged_at).getTime(); // Date ko number (milliseconds) mein convert karo
+        
+        // Agar yeh wali merge date pichli wali se nayi (badi) hai
+        if (mergeTime > latestMergeTime) {
+          latestMergeTime = mergeTime; // Nayi date ko save kar lo
+          latestMergedBranch = pr.base.ref; // Branch ka naam update kar do (e.g., 'qa')
+        }
       }
     });
-
-    // 6. Array ko string mein convert ("thor, qa, master")
-    const mergedTillString = mergedInto.length > 0 ? mergedInto.join(", ") : "Not Merged";
+    // 👆 Bas! Ab array ki koi zarurat nahi.
 
     res.status(200).json({
       branch: branchName,
-      mergedTill: mergedTillString
+      // mergedBranches: uniqueMergedBranches, // Purana response (commented)
+      mergedTill: latestMergedBranch // Return only the single latest branch
     });
 
   } catch (err) {
