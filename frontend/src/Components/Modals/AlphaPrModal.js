@@ -1,6 +1,6 @@
 import React from "react";
 import { MdClose } from "react-icons/md";
-import { APPS_CONFIG } from "../../utils/AppConfig";
+import { repoConfig } from "../../utils/AppConfig";
 import "../Modals/ReleasePrModal.css";
 
 /**
@@ -9,6 +9,11 @@ import "../Modals/ReleasePrModal.css";
  */
 const AlphaPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
   if (!isOpen) return null;
+
+  const validApps = appsToBeDeployed?.filter((repoName) => {
+    const branches = repoConfig[repoName]?.envBranches;
+    return branches && branches.alpha && branches.master;
+  }) || [];
 
   return (
     <div className="modal-overlay">
@@ -19,12 +24,12 @@ const AlphaPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
         </div>
 
         <div className="pr-modal-body">
-          {appsToBeDeployed && appsToBeDeployed.length > 0 ? (
-            appsToBeDeployed.map((repoName, idx) => {
-              const matchedApp = APPS_CONFIG.find(
-                (a) => a.repoName === repoName,
-              );
-              const orgName = matchedApp?.orgName || "YOUR_ORG_NAME";
+          {validApps.length > 0 ? (
+            validApps.map((repoName, idx) => {
+              const appConfig = repoConfig[repoName];
+              const targetBranch = appConfig.envBranches.alpha;
+              const sourceBranch = appConfig.envBranches.master;
+              const baseUrl = appConfig.baseUrl || `https://github.com/comprodls/${repoName}/compare/`;
 
               return (
                 <div key={idx} className="pr-repo-card">
@@ -34,16 +39,13 @@ const AlphaPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
 
                   <div className="pr-branch-list">
                     <div className="pr-branch-item">
-                      <span
-                        className="pr-branch-name"
-                        style={{ color: "#2563eb" }}
-                      >
-                        master ➔ alpha
+                      <span className="pr-branch-name" style={{ color: "#2563eb" }}>
+                        {sourceBranch} ➔ {targetBranch}
                       </span>
                       <button
                         className="pr-create-btn"
                         onClick={() => {
-                          const githubUrl = `https://github.com/${orgName}/${repoName}/compare/env/alpha...master`;
+                          const githubUrl = `${baseUrl}${targetBranch}...${sourceBranch}`;
                           window.open(githubUrl, "_blank");
                         }}
                       >
@@ -56,7 +58,7 @@ const AlphaPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
             })
           ) : (
             <p className="pr-empty-text" style={{ marginTop: "20px" }}>
-              No apps to be deployed for this release yet.
+              No apps with both alpha and master branches found for this release.
             </p>
           )}
         </div>

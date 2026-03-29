@@ -3,7 +3,7 @@ import { MdClose, MdAdd, MdDelete, MdEdit } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
 import "../Modals/CreateStoryHalfModal.css";
 import {
-  APPS_CONFIG,
+  repoConfig,
   TEAM_MEMBERS,
   STATUS_MEMBERS,
 } from "../../utils/AppConfig";
@@ -196,20 +196,21 @@ const CreateStoryModal = ({
     setAppsList(newList);
   };
 
-  const availableApps = APPS_CONFIG.filter((appObj) => {
+  
+  const availableApps = Object.keys(repoConfig).filter((appName) => {
     const isAlreadyAdded = appsList?.some(
-      (addedApp) => addedApp.appName === appObj.repoName,
+      (addedApp) => addedApp.appName === appName,
     );
     const isCurrentlyEditing =
       editingAppIndex !== null &&
-      appsList[editingAppIndex]?.appName === appObj.repoName;
+      appsList[editingAppIndex]?.appName === appName;
     return !isAlreadyAdded || isCurrentlyEditing;
   });
 
-  const isAllAppsAdded = appsList.length >= APPS_CONFIG.length;
+  const isAllAppsAdded = appsList.length >= Object.keys(repoConfig).length;
 
-  const availableDeployApps = APPS_CONFIG.filter(
-    (app) => !deployAppsList.includes(app.repoName),
+  const availableDeployApps = Object.keys(repoConfig).filter(
+    (appName) => !deployAppsList.includes(appName),
   );
 
   return (
@@ -274,7 +275,7 @@ const CreateStoryModal = ({
               )}
 
               <label className="form-label">
-                <span>Status</span>
+                <span>Currently With</span>
                 <input
                   list="team-option"
                   type="text"
@@ -319,7 +320,7 @@ const CreateStoryModal = ({
                 </datalist>
               </label>
               <label className="form-label">
-                <span>QA Release Date</span>
+                <span>Qa Release Date</span>
                 <input
                   type="date"
                   name="qaEnvRelDate"
@@ -433,9 +434,9 @@ const CreateStoryModal = ({
                   </button>
                 </div>
                 <datalist id="deploy-apps-options">
-                  {availableDeployApps.map((app, i) => (
-                    <option key={i} value={app.repoName}>
-                      {app.repoName}
+                  {availableDeployApps.map((appName, i) => (
+                    <option key={i} value={appName}>
+                      {appName}
                     </option>
                   ))}
                 </datalist>
@@ -582,9 +583,9 @@ const CreateStoryModal = ({
                   autoComplete="off"
                 />
                 <datalist id="app-options">
-                  {availableApps.map((app, i) => (
-                    <option key={i} value={app.repoName}>
-                      {app.repoName}
+                  {availableApps.map((appName, i) => (
+                    <option key={i} value={appName}>
+                      {appName}
                     </option>
                   ))}
                 </datalist>

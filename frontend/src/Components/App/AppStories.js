@@ -36,6 +36,7 @@ const AppStories = () => {
     assignee: "",
     status: "",
     qaRelDate: "",
+    apps: "",
   });
 
   // Function to apply filter
@@ -150,6 +151,17 @@ const AppStories = () => {
           if (storyDate !== activeFilters.qaRelDate) return false;
         }
 
+        if (activeFilters.apps) {
+          const selectedApp = activeFilters.apps;
+          const hasLinkedApp = item.linkedApps?.some(
+            (app) =>
+              app.appName === selectedApp || app.appRef?.name === selectedApp,
+          );
+          if (!hasLinkedApp) {
+            return false;
+          }
+        }
+
         const search = searchTerm.trim().toLowerCase();
         if (!search) return true;
 
@@ -166,6 +178,7 @@ const AppStories = () => {
               })
               .toLowerCase()
           : "";
+
         const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
 
         return (
@@ -195,6 +208,11 @@ const AppStories = () => {
 
   return (
     <div className="sprint-story-container">
+      <div className="extra-box" style={{ justifyContent: "flex-start" }}>
+        <button onClick={() => navigate(-1)} className="back-button">
+          <MdArrowBack />
+        </button>
+      </div>
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
@@ -217,9 +235,6 @@ const AppStories = () => {
               }}
             />
           </div>
-          <button onClick={() => navigate(-1)} className="back-button">
-            <MdArrowBack />
-          </button>
         </section>
       </div>
 
@@ -245,7 +260,7 @@ const AppStories = () => {
                 <strong>First Review: </strong> {story?.firstReview}
               </p>
               <p>
-                <strong>Release Date: </strong>
+                <strong>Qa Release Date: </strong>
                 {story?.qaEnvRelDate
                   ? new Date(story.qaEnvRelDate).toLocaleDateString("en-IN", {
                       day: "2-digit",

@@ -50,6 +50,7 @@ const SprintStories = () => {
     assignee: "",
     status: "",
     qaRelDate: "",
+    apps: "",
   });
 
   /**
@@ -345,6 +346,17 @@ const SprintStories = () => {
           if (storyDate !== activeFilters.qaRelDate) return false;
         }
 
+        if (activeFilters.apps) {
+          const selectedApp = activeFilters.apps;
+          const hasLinkedApp = item.linkedApps?.some(
+            (app) =>
+              app.appName === selectedApp || app.appRef?.name === selectedApp,
+          );
+          if (!hasLinkedApp) {
+            return false;
+          }
+        }
+
         return true;
       })
       .sort((a, b) => {
@@ -364,6 +376,11 @@ const SprintStories = () => {
 
   return (
     <div className="sprint-story-container">
+      <div className="extra-box" style={{ justifyContent: "flex-start" }}>
+        <button onClick={handleBack} className="back-button">
+          <MdArrowBack />
+        </button>
+      </div>
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="sprint-story-container2">
         <section>
@@ -421,14 +438,10 @@ const SprintStories = () => {
               New Story
             </button>
           </div>
-
-          <button onClick={handleBack} className="back-button">
-            <MdArrowBack />
-          </button>
         </section>
       </div>
 
-      <div className="filter-box">
+      <div className="extra-box">
         <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
@@ -453,7 +466,7 @@ const SprintStories = () => {
               <strong>First Review: </strong> {story?.firstReview}
             </p>
             <p>
-              <strong>Release Date: </strong>
+              <strong>Qa Release Date: </strong>
               {new Date(story?.qaEnvRelDate).toLocaleDateString("en-IN", {
                 day: "2-digit",
                 month: "short",

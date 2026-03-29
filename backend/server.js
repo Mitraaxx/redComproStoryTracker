@@ -11,6 +11,11 @@ app.use(cors());
 app.use(express.json()); 
 app.use("/api", trackerRoutes); 
 
+// Simple Ping Route to keep Render server awake
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Server is awake and running!' });
+});
+
 const server = () => {
     db()
     app.listen(PORT, ()=>{
