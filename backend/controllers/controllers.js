@@ -94,7 +94,7 @@ exports.createStoryEntry = async (req, res) => {
 // ================= SPRINT =================
 
 exports.getAllSprints = async (req, res) => {
-  const sprints = await Sprint.find().select("_id name").sort({ name: 1 });
+  const sprints = await Sprint.find().select("_id name startDate endDate").sort({ name: 1 });
   res.json(sprints);
 };
 
