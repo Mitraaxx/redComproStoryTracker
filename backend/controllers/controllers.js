@@ -94,7 +94,7 @@ exports.createStoryEntry = async (req, res) => {
 // ================= SPRINT =================
 
 exports.getAllSprints = async (req, res) => {
-  const sprints = await Sprint.find().select("_id name").sort({ name: 1 });
+  const sprints = await Sprint.find().select("_id name startDate endDate").sort({ name: 1 });
   res.json(sprints);
 };
 
@@ -588,6 +588,85 @@ exports.getAppStoriesByName = async (req, res) => {
 
     res.json({ app, stories });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+const { clerkClient, getAuth } = require('@clerk/express');
+
+// ================= GITHUB BRANCH MERGE STATUS (LATEST ONLY) =================
+exports.getBranchMergeStatus = async (req, res) => {
+  try {
+    const { orgName, repoName, branchName } = req.body; 
+    
+    // Extract User ID from Clerk Auth Middleware
+    const { userId } = getAuth(req); 
+    
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized: User ID not found" });
+    }
+
+    // Fetch User's GitHub OAuth Token from Clerk
+    const oauthTokens = await clerkClient.users.getUserOauthAccessToken(userId, 'oauth_github');
+    const tokensArray = oauthTokens.data || oauthTokens;
+    if (!tokensArray || tokensArray.length === 0) {
+      return res.status(400).json({ error: "GitHub account connect nahi hai!" });
+    }
+    const userGithubToken = tokensArray[0].token;
+
+    // GitHub API Call to fetch pull requests for the specific branch
+    const githubUrl = `https://api.github.com/repos/${orgName}/${repoName}/pulls?head=${orgName}:${branchName}&state=all`;
+    
+    const githubResponse = await fetch(githubUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${userGithubToken}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (!githubResponse.ok) {
+      const errData = await githubResponse.json();
+      throw new Error(`GitHub API Error: ${errData.message || "Not Found"}`);
+    }
+
+    const prs = await githubResponse.json();
+
+    /* // ================= PURANA LOGIC (Reference ke liye) =================
+    // Isme hum saari merged branches ka ek array banate the
+    const mergedBranches = prs
+      .filter(pr => pr.merged_at !== null)
+      .map(pr => pr.base.ref);
+    
+    // Duplicate branches hatane ke liye Set use karte the
+    let uniqueMergedBranches = [...new Set(mergedBranches)]; 
+    */
+
+    // 👇 NAYA LOGIC: Sirf latest merge nikalne ke liye
+    let latestMergeTime = 0; // Timestamp compare karne ke liye
+    let latestMergedBranch = "Not Merged"; // Default status
+
+    prs.forEach(pr => {
+      // Agar PR actually merge hui hai
+      if (pr.merged_at !== null) {
+        const mergeTime = new Date(pr.merged_at).getTime(); // Date ko number (milliseconds) mein convert karo
+        
+        // Agar yeh wali merge date pichli wali se nayi (badi) hai
+        if (mergeTime > latestMergeTime) {
+          latestMergeTime = mergeTime; // Nayi date ko save kar lo
+          latestMergedBranch = pr.base.ref; // Branch ka naam update kar do (e.g., 'qa')
+        }
+      }
+    });
+    // 👆 Bas! Ab array ki koi zarurat nahi.
+
+    res.status(200).json({
+      branch: branchName,
+      // mergedBranches: uniqueMergedBranches, // Purana response (commented)
+      mergedTill: latestMergedBranch // Return only the single latest branch
+    });
+
+  } catch (err) {
+    console.error("Error fetching branch status:", err);
     res.status(500).json({ error: err.message });
   }
 };

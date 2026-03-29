@@ -19,7 +19,8 @@ const {
   createRelease,
   getReleaseStories,
   updateRelease,
-  getAppStoriesByName
+  getAppStoriesByName,
+  getBranchMergeStatus
 } = require('../controllers/controllers');
 
 router.post('/stories', createStoryEntry);
@@ -47,5 +48,7 @@ router.get('/releases/:releaseId/stories', getReleaseStories);
 router.put('/releases/:releaseId', updateRelease);
 
 router.get('/apps/name/:appName/stories', getAppStoriesByName);
+
+router.post('/github/branch-status', getBranchMergeStatus);
 
 module.exports = router;
