@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   fetchReleaseStories,
   fetchStoryDetails,
@@ -368,83 +368,93 @@ const ReleaseStories = () => {
   };
 
   /**
-   * Filters stories based on the search query, active filters (including strict App check), 
-   * and orders them by ID number in descending order.
+   * Filters and sorts the stories based on active filters and search terms.
+   * useMemo caches this heavy calculation so it only re-runs when inputs actually change.
    */
-  const filtered =
-    stories
-      ?.filter((item) => {
-        if (
-          activeFilters.assignee &&
-          item.responsibility !== activeFilters.assignee
-        )
-          return false;
-
-        if (activeFilters.status && item.status !== activeFilters.status)
-          return false;
-
-        if (activeFilters.qaRelDate) {
-          if (!item.qaEnvRelDate) return false;
-          const storyDate = new Date(item.qaEnvRelDate)
-            .toISOString()
-            .split("T")[0];
-          if (storyDate !== activeFilters.qaRelDate) return false;
-        }
-
-        if (activeFilters.apps) {
-          const selectedApp = activeFilters.apps;
-
-          const hasLinkedApp = item.linkedApps?.some(
-            (app) =>
-              app.appName === selectedApp || app.appRef?.name === selectedApp,
-          );
-          if (!hasLinkedApp) {
+  const filtered = useMemo(() => {
+    return (
+      stories
+        ?.filter((item) => {
+          if (
+            activeFilters.assignee &&
+            item.responsibility !== activeFilters.assignee
+          )
             return false;
+          if (activeFilters.status && item.status !== activeFilters.status)
+            return false;
+
+          if (activeFilters.qaRelDate) {
+            if (!item.qaEnvRelDate) return false;
+            const storyDate = new Date(item.qaEnvRelDate)
+              .toISOString()
+              .split("T")[0];
+            if (storyDate !== activeFilters.qaRelDate) return false;
           }
-        }
 
-        const search = searchTerm.trim().toLowerCase();
-        if (!search) return true;
+          if (activeFilters.apps) {
+            const selectedApp = activeFilters.apps;
+            const hasLinkedApp = item.linkedApps?.some(
+              (app) =>
+                app.appName === selectedApp || app.appRef?.name === selectedApp,
+            );
+            if (!hasLinkedApp) return false;
+          }
 
-        const storyName = item.storyName?.toLowerCase() || "";
-        const storyId = item.storyId?.toLowerCase() || "";
-        const responsibility = item.responsibility?.toLowerCase() || "";
-        const firstReview = item.firstReview?.toLowerCase() || "";
-        const releaseDate = item.qaEnvRelDate
-          ? new Date(item.qaEnvRelDate)
-              .toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-              .toLowerCase()
-          : "";
-        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
+          const search = searchTerm.trim().toLowerCase();
+          if (!search) return true;
 
-        return (
-          storyName.includes(search) ||
-          storyId.includes(search) ||
-          responsibility.includes(search) ||
-          firstReview.includes(search) ||
-          releaseDate.includes(search) ||
-          storyPoints.includes(search)
-        );
-      })
-      .sort((a, b) => {
-        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
-        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
-        return numB - numA;
-      }) || [];
+          const storyName = item.storyName?.toLowerCase() || "";
+          const storyId = item.storyId?.toLowerCase() || "";
+          const responsibility = item.responsibility?.toLowerCase() || "";
+          const firstReview = item.firstReview?.toLowerCase() || "";
+          const releaseDate = item.qaEnvRelDate
+            ? new Date(item.qaEnvRelDate)
+                .toLocaleDateString("en-IN", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
+                .toLowerCase()
+            : "";
+          const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
 
-  const visibleStories = filtered.slice(0, visibleCount);
+          return (
+            storyName.includes(search) ||
+            storyId.includes(search) ||
+            responsibility.includes(search) ||
+            firstReview.includes(search) ||
+            releaseDate.includes(search) ||
+            storyPoints.includes(search)
+          );
+        })
+        .sort((a, b) => {
+          const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
+          const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
+          return numB - numA;
+        }) || []
+    );
+  }, [stories, activeFilters, searchTerm]);
 
+  /**
+   * Slices the filtered array for infinite scrolling/pagination.
+   * useMemo prevents the array's memory address from resetting on every page re-render.
+   */
+  const visibleStories = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]); 
+
+  /**
+   * Fetches GitHub merge statuses exclusively for the currently visible stories.
+   * Batches state updates using a temporary object to prevent infinite re-render loops.
+   */
   useEffect(() => {
     const fetchAllStatuses = async () => {
       if (!visibleStories || visibleStories.length === 0) return;
 
       try {
         const token = await getToken();
-        const newStatuses = { ...mergeStatuses };
+        let hasNewData = false;
+        const fetchedStatuses = {};
 
         for (const story of visibleStories) {
           if (!story.linkedApps) continue;
@@ -458,23 +468,32 @@ const ReleaseStories = () => {
 
               for (const branch of appItem.featureBranches) {
                 const key = `${appName}-${branch}`;
-                
-                if (!newStatuses[key]) {
-                  const res = await fetchBranchMergeStatus(orgName, repoName, branch, token);
-                  newStatuses[key] = res.mergedTill || "Not Merged";
+
+                if (mergeStatuses[key] === undefined) {
+                  const res = await fetchBranchMergeStatus(
+                    orgName,
+                    repoName,
+                    branch,
+                    token,
+                  );
+                  fetchedStatuses[key] = res.mergedTill || "Not Merged";
+                  hasNewData = true;
                 }
               }
             }
           }
         }
-        setMergeStatuses(newStatuses);
+
+        if (hasNewData) {
+          setMergeStatuses((prev) => ({ ...prev, ...fetchedStatuses }));
+        }
       } catch (err) {
         console.error("Error fetching statuses:", err);
       }
     };
 
     fetchAllStatuses();
-  }, [visibleStories, getToken]); 
+  }, [visibleStories, getToken]);
 
   /**
    * Utility to smoothly scroll the page back to the top.

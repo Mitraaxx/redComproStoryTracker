@@ -50,17 +50,18 @@ const StoryDetails = () => {
   const [mergeStatuses, setMergeStatuses] = useState({});
 
   /**
-   * Effect hook fetches all fields required for githubstatus api call
+   * Effect hook fetches all fields required for github-status api call
    * and gives post request to the api whenever new user is logged in or
    * any storyData is changed
    */
-  useEffect(() => {
+ useEffect(() => {
     const fetchAllStatuses = async () => {
       if (!storyData?.linkedApps) return;
 
       try {
         const token = await getToken();
-        const newStatuses = { ...mergeStatuses };
+        let hasNewData = false;
+        const fetchedStatuses = {};
 
         for (const appItem of storyData.linkedApps) {
           const appName = appItem.appRef?.name;
@@ -72,20 +73,26 @@ const StoryDetails = () => {
             for (const branch of appItem.featureBranches) {
               const key = `${appName}-${branch}`;
               
-              if (!newStatuses[key]) {
+    
+              if (mergeStatuses[key] === undefined) {
                 const res = await fetchBranchMergeStatus(orgName, repoName, branch, token);
-                newStatuses[key] = res.mergedTill || "Not Merged";
+                fetchedStatuses[key] = res.mergedTill || "Not Merged";
+                hasNewData = true; 
               }
             }
           }
         }
-        setMergeStatuses(newStatuses);
+        
+        if (hasNewData) {
+          setMergeStatuses(prev => ({ ...prev, ...fetchedStatuses }));
+        }
       } catch (err) {
         console.error("Error fetching statuses:", err);
       }
     };
 
     fetchAllStatuses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storyData, getToken]);
 
   /**
