@@ -34,6 +34,8 @@ export const STATUS_MEMBERS = [
 export const repoConfig = {
   "c1-2024": {
     baseUrl: "https://github.com/comprodls/c1-2024/compare/",
+    orgName: "comprodls",
+    repoName: "c1-2024",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -45,6 +47,8 @@ export const repoConfig = {
   },
   "nemo-micro-class": {
     baseUrl: "https://github.com/comprodls/nemo-micro-class/compare/",
+    orgName: "comprodls",
+    repoName: "nemo-micro-class",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -56,6 +60,8 @@ export const repoConfig = {
   },
   "nemo-micro-learning-path": {
     baseUrl: "https://github.com/comprodls/nemo-micro-learning-path/compare/",
+    orgName: "comprodls",
+    repoName: "nemo-micro-learning-path",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -67,6 +73,8 @@ export const repoConfig = {
   },
   "nemo-micro-nlp": {
     baseUrl: "https://github.com/comprodls/nemo-micro-nlp/compare/",
+    orgName: "comprodls",
+    repoName: "nemo-micro-nlp",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -79,6 +87,8 @@ export const repoConfig = {
   "nemo-micro-notifications-component": {
     baseUrl:
       "https://github.com/comprodls/nemo-micro-notifications-component/compare/",
+    orgName: "comprodls",
+    repoName: "nemo-micro-notifications-component",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -91,6 +101,8 @@ export const repoConfig = {
   "sam-contentful-app": {
     baseUrl:
       "https://github.com/compro-cup-central/sam-contentful-app/compare/",
+    orgName: "compro-cup-central",
+    repoName: "sam-contentful-app",
     envBranches: {
       thor: "env/dev",
       qa: "env/staging",
@@ -101,6 +113,8 @@ export const repoConfig = {
   "sam-contentful-ilayer": {
     baseUrl:
       "https://github.com/compro-cup-central/sam-contentful-ilayer/compare/",
+    orgName: "compro-cup-central",
+    repoName: "sam-contentful-ilayer",
     envBranches: {
       thor: "env/dev",
       qa: "env/qa",
@@ -113,6 +127,8 @@ export const repoConfig = {
   "sam-audio-streaming-lyr": {
     baseUrl:
       "https://github.com/compro-cup-central/sam-audio-streaming-lyr/compare/",
+    orgName: "compro-cup-central",
+    repoName: "sam-audio-streaming-lyr",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -125,6 +141,8 @@ export const repoConfig = {
   "sam-large-reports-lyr": {
     baseUrl:
       "https://github.com/compro-cup-central/sam-large-reports-lyr/compare/",
+    orgName: "compro-cup-central",
+    repoName: "sam-large-reports-lyr",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -136,6 +154,8 @@ export const repoConfig = {
   },
   "sam-school-reports-lyr": {
     baseUrl: "https://github.com/comprodls/sam-school-reports-lyr/compare/",
+    orgName: "comprodls",
+    repoName: "sam-school-reports-lyr",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -147,6 +167,8 @@ export const repoConfig = {
   },
   "sam-sch-notification-layer": {
     baseUrl: "https://github.com/comprodls/sam-sch-notification-layer/compare/",
+    orgName: "comprodls",
+    repoName: "sam-sch-notification-layer",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -159,6 +181,8 @@ export const repoConfig = {
   "service-class-settings-timeseries": {
     baseUrl:
       "https://github.com/comprodls/service-class-settings-timeseries/compare/",
+    orgName: "comprodls",
+    repoName: "service-class-settings-timeseries",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -170,6 +194,8 @@ export const repoConfig = {
   },
   "sam-setup-schedules-lyr": {
     baseUrl: "https://github.com/comprodls/sam-setup-schedules-lyr/compare/",
+    orgName: "comprodls",
+    repoName: "sam-setup-schedules-lyr",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -181,6 +207,8 @@ export const repoConfig = {
   },
   ispai: {
     baseUrl: "https://github.com/ELTTechnology/ispai/compare/",
+    orgName: "ELTTechnology",
+    repoName: "ispai",
     envBranches: {
       thor: "main",
       qa: "env/qa",
@@ -193,6 +221,8 @@ export const repoConfig = {
   "HALO-APP-Speech-Vocabulary": {
     baseUrl:
       "https://github.com/ELTTechnology/HALO-APP-Speech-Vocabulary/compare/",
+    orgName: "ELTTechnology",
+    repoName: "HALO-APP-Speech-Vocabulary",
     envBranches: {
       thor: "dev",
       qa: "qa",
@@ -203,6 +233,8 @@ export const repoConfig = {
   "HALO-APP-Speech-Dialogue": {
     baseUrl:
       "https://github.com/ELTTechnology/HALO-APP-Speech-Dialogue/compare/",
+    orgName: "ELTTechnology",
+    repoName: "HALO-APP-Speech-Dialogue",
     envBranches: {
       thor: "dev",
       qa: "qa",
@@ -212,65 +244,52 @@ export const repoConfig = {
   },
   "HALO-lambda-authorizer": {
     baseUrl: "https://github.com/ELTTechnology/HALO-lambda-authorizer/compare/",
-    envBranches: {
-      thor: "dev",
-      qa: "qa",
-      rel: "release/all",
-      master: "main",
-    },
+    orgName: "ELTTechnology",
+    repoName: "HALO-lambda-authorizer",
+    envBranches: { thor: "dev", qa: "qa", rel: "release/all", master: "main" },
   },
   "libs-content-helper": {
     baseUrl: "https://github.com/comprodls/libs-content-helper/compare/",
-    envBranches: {
-      thor: "env/thor",
-      qa: "env/qa",
-      rel: "master",
-    },
+    orgName: "comprodls",
+    repoName: "libs-content-helper",
+    envBranches: { thor: "env/thor", qa: "env/qa", rel: "master" },
   },
   "libs-adv-cross-product-aggregations": {
     baseUrl:
       "https://github.com/comprodls/libs-adv-cross-product-aggregations/compare/",
-    envBranches: {
-      thor: "env/thor",
-      qa: "env/qa",
-      rel: "main",
-    },
+    orgName: "comprodls",
+    repoName: "libs-adv-cross-product-aggregations",
+    envBranches: { thor: "env/thor", qa: "env/qa", rel: "main" },
   },
   "libs-reports-helper": {
     baseUrl: "https://github.com/comprodls/libs-reports-helper/compare/",
-    envBranches: {
-      thor: "env/thor",
-      qa: "env/qa",
-      rel: "main",
-    },
+    orgName: "comprodls",
+    repoName: "libs-reports-helper",
+    envBranches: { thor: "env/thor", qa: "env/qa", rel: "main" },
   },
   "libs-frontend-xapi": {
     baseUrl: "https://github.com/comprodls/libs-frontend-xapi/compare/",
-    envBranches: {
-      thor: "env/thor",
-      qa: "env/qa",
-      rel: "master",
-    },
+    orgName: "comprodls",
+    repoName: "libs-frontend-xapi",
+    envBranches: { thor: "env/thor", qa: "env/qa", rel: "master" },
   },
   "libs-frontend-basic-chart": {
     baseUrl:
       "https://github.com/compro-cup-central/libs-frontend-basic-chart/compare/",
-    envBranches: {
-      thor: "dev",
-      qa: "qa",
-      rel: "master",
-    },
+    orgName: "compro-cup-central",
+    repoName: "libs-frontend-basic-chart",
+    envBranches: { thor: "dev", qa: "qa", rel: "master" },
   },
   "module-cefr": {
     baseUrl: "https://github.com/compro-cup-central/module-cefr/compare/",
-    envBranches: {
-      thor: "dev",
-      qa: "qa",
-      rel: "master",
-    },
+    orgName: "compro-cup-central",
+    repoName: "module-cefr",
+    envBranches: { thor: "dev", qa: "qa", rel: "master" },
   },
   "cup-content-testbench": {
     baseUrl: "https://github.com/comprodls/cup-content-testbench/compare/",
+    orgName: "comprodls",
+    repoName: "cup-content-testbench",
     envBranches: {
       thor: "generic-content-develop",
       rel: "generic-content-develop",
@@ -278,6 +297,8 @@ export const repoConfig = {
   },
   "nemo-micro-support-admin": {
     baseUrl: "https://github.com/comprodls/nemo-micro-support-admin/compare/",
+    orgName: "comprodls",
+    repoName: "nemo-micro-support-admin",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -289,6 +310,8 @@ export const repoConfig = {
   },
   "module-app-micro-base": {
     baseUrl: "https://github.com/comprodls/module-app-micro-base/compare/",
+    orgName: "comprodls",
+    repoName: "module-app-micro-base",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -299,6 +322,8 @@ export const repoConfig = {
   },
   "c1-2023": {
     baseUrl: "https://github.com/comprodls/c1-2023/compare/",
+    orgName: "comprodls",
+    repoName: "c1-2023",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -310,6 +335,8 @@ export const repoConfig = {
   },
   "nemo-micro-admin": {
     baseUrl: "https://github.com/comprodls/nemo-micro-admin/compare/",
+    orgName: "comprodls",
+    repoName: "nemo-micro-admin",
     envBranches: {
       thor: "env/thor",
       qa: "env/qa",
@@ -320,10 +347,15 @@ export const repoConfig = {
     },
   },
   "contentful-testbench": {
-    baseUrl: "https://github.com/compro-cup-central/contentful-testbench/",
-    envBranches: {
-      thor: "develop",
-      rel: "master",
-    },
+    baseUrl: "https://github.com/compro-cup-central/contentful-testbench/compare/",
+    orgName: "compro-cup-central",
+    repoName: "contentful-testbench",
+    envBranches: { thor: "develop", rel: "master" },
+  },
+  "redComproStoryTracker": {
+    baseUrl: "https://github.com/Mitraaxx/redComproStoryTracker/compare/",
+    orgName: "Mitraaxx",
+    repoName: "redComproStoryTracker",
+    envBranches: { qa: "env/qa", rel: "master" },
   },
 };

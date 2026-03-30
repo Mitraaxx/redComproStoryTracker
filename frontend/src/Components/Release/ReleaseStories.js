@@ -5,8 +5,10 @@ import {
   updateStory,
   clearAllCaches,
   updateRelease,
+  fetchBranchMergeStatus, 
 } from "../../Api/api";
 import { MdArrowBack, MdEdit, MdClose } from "react-icons/md";
+import { FaCodeBranch, FaSync } from "react-icons/fa"; 
 import { HashLoader } from "react-spinners";
 import { useParams, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
@@ -19,7 +21,7 @@ import MasterPrModal from "../Modals/MasterPrModal";
 import AlphaPrModal from "../Modals/AlphaPrModal";
 import HFXPrModal from "../Modals/HFXPrModal";
 import StoryFilter from "../Tools/StoryFilter";
-import { FaCodeBranch } from "react-icons/fa";
+import { useAuth } from "@clerk/clerk-react"; 
 
 /**
  * Component to manage and display stories tied to a specific Release.
@@ -43,11 +45,13 @@ const ReleaseStories = () => {
   const [isAlphaModalOpen, setIsAlphaModalOpen] = useState(false);
   const [isHFXModalOpen, setIsHFXModalOpen] = useState(false);
 
-  // For load more at bottom
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   const { releaseId } = useParams();
   const navigate = useNavigate();
+
+  const { getToken } = useAuth();
+  const [mergeStatuses, setMergeStatuses] = useState({});
 
   /**
    * Initializes and persists pagination limits in session storage.
@@ -144,21 +148,6 @@ const ReleaseStories = () => {
       getStories();
     }
   }, [releaseId]);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <HashLoader color="#007bff" size={80} />
-      </div>
-    );
-  }
 
   /**
    * Dynamically aggregates a unique list of all applications that need to be deployed
@@ -323,7 +312,6 @@ const ReleaseStories = () => {
     const isCatSame =
       (releaseFormData.category || "") === (release?.category || "");
 
-    
     const isDevSame = (releaseFormData.devCutoff || "") === formatDateForInput(release?.devCutoff);
     const isQaSame = (releaseFormData.qaSignoff || "") === formatDateForInput(release?.qaSignoff);
 
@@ -349,6 +337,33 @@ const ReleaseStories = () => {
       toast.error(error.message || "Release Name exists");
     } finally {
       setSavingRelease(false);
+    }
+  };
+
+  /**
+   * Specific refresh button ka logic - Fetches single branch update
+   */
+  const handleSpecificRefresh = async (appName, orgName, repoName, branch) => {
+    const statusKey = `${appName}-${branch}`;
+    const token = await getToken();
+
+    setMergeStatuses(prev => ({
+      ...prev,
+      [statusKey]: null, 
+    }));
+
+    try {
+      const res = await fetchBranchMergeStatus(orgName, repoName, branch, token, true);
+      setMergeStatuses(prev => ({
+        ...prev,
+        [statusKey]: res.mergedTill || "Not Merged",
+      }));
+    } catch (error) {
+      console.error("Error refreshing specific status:", error);
+      setMergeStatuses(prev => ({
+        ...prev,
+        [statusKey]: "Error",
+      }));
     }
   };
 
@@ -423,12 +438,65 @@ const ReleaseStories = () => {
 
   const visibleStories = filtered.slice(0, visibleCount);
 
+  useEffect(() => {
+    const fetchAllStatuses = async () => {
+      if (!visibleStories || visibleStories.length === 0) return;
+
+      try {
+        const token = await getToken();
+        const newStatuses = { ...mergeStatuses };
+
+        for (const story of visibleStories) {
+          if (!story.linkedApps) continue;
+
+          for (const appItem of story.linkedApps) {
+            const appName = appItem.appRef?.name || appItem.appName;
+            const config = repoConfig[appName];
+
+            if (config && appItem.featureBranches?.length > 0) {
+              const { orgName, repoName } = config;
+
+              for (const branch of appItem.featureBranches) {
+                const key = `${appName}-${branch}`;
+                
+                if (!newStatuses[key]) {
+                  const res = await fetchBranchMergeStatus(orgName, repoName, branch, token);
+                  newStatuses[key] = res.mergedTill || "Not Merged";
+                }
+              }
+            }
+          }
+        }
+        setMergeStatuses(newStatuses);
+      } catch (err) {
+        console.error("Error fetching statuses:", err);
+      }
+    };
+
+    fetchAllStatuses();
+  }, [visibleStories, getToken]); 
+
   /**
    * Utility to smoothly scroll the page back to the top.
    */
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <HashLoader color="#007bff" size={80} />
+      </div>
+    );
+  }
 
   return (
     <div className="release-story-container">
@@ -744,43 +812,96 @@ const ReleaseStories = () => {
                               marginTop: "6px",
                             }}
                           >
-                            {appItem.featureBranches.map((branch, bIdx) => (
-                              <div
-                                key={bIdx}
-                                style={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "center",
-                                  backgroundColor: "#f8fafc",
-                                  border: "1px solid #e2e8f0",
-                                  padding: "6px 10px",
-                                  borderRadius: "6px",
-                                }}
-                              >
-                                <span
+                            {appItem.featureBranches.map((branch, bIdx) => {
+                              const statusKey = `${repoName}-${branch}`;
+                              const currentStatus = mergeStatuses[statusKey];
+                              const config = repoConfig[repoName];
+
+                              return (
+                                <div
+                                  key={bIdx}
                                   style={{
-                                    fontSize: "0.75rem",
-                                    fontFamily: "monospace",
-                                    color: "#334155",
-                                    wordBreak: "break-all",
-                                    marginRight: "10px",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "10px",
+                                    backgroundColor: "#f8fafc",
+                                    border: "1px solid #e2e8f0",
+                                    padding: "8px 10px",
+                                    borderRadius: "6px",
                                   }}
                                 >
-                                  <FaCodeBranch color="#3b82f6" /> {branch}
-                                </span>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const githubUrl = `${baseUrl}${targetBranch}...${branch}`;
-                                    window.open(githubUrl, "_blank");
-                                  }}
-                                  className="relBottom-btn-pr"
-                                  title="Create Release PR"
-                                >
-                                  PR Rel
-                                </button>
-                              </div>
-                            ))}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: "0.75rem",
+                                        fontFamily: "monospace",
+                                        color: "#334155",
+                                        wordBreak: "break-all",
+                                        marginRight: "10px",
+                                      }}
+                                    >
+                                      <FaCodeBranch color="#3b82f6" /> {branch}
+                                    </span>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation(); 
+                                        const githubUrl = `${baseUrl}${targetBranch}...${branch}`;
+                                        window.open(githubUrl, "_blank");
+                                      }}
+                                      className="relBottom-btn-pr"
+                                      title="Create Release PR"
+                                    >
+                                      PR Rel
+                                    </button>
+                                  </div>
+
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <div className="merged-till-badge" style={{ margin: 0 }}>
+                                      Merged Till:{" "}
+                                      <strong>
+                                        {currentStatus ? (
+                                          currentStatus
+                                        ) : (
+                                          <FaSync className="spin-icon" color="#15803d" />
+                                        )}
+                                      </strong>
+                                    </div>
+
+                                    {currentStatus && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation(); 
+                                          if (config) {
+                                            handleSpecificRefresh(
+                                              repoName, 
+                                              config.orgName, 
+                                              repoName, 
+                                              branch
+                                            );
+                                          }
+                                        }}
+                                        style={{
+                                          background: "none",
+                                          border: "none",
+                                          cursor: "pointer",
+                                          display: "flex",
+                                          padding: "2px",
+                                        }}
+                                        title="Refresh branch status"
+                                      >
+                                        <FaSync color="#15803d" size={14} />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         ) : (
                           <div
