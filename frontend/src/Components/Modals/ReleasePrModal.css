@@ -66,22 +66,24 @@
   font-family: monospace;
 }
 
-
 .pr-create-btn {
-  padding: 8px 16px;
-  background-color: #16a34a;
-  color: #ffffff;
-  border: none;
-  border-radius: 6px;
+  padding: 8px 14px;
   font-size: 0.85rem;
   cursor: pointer;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  background-color: #24292F;
+  color: #ffffff;
+  border-radius: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
 }
 
 .pr-create-btn:hover {
-  background-color: #15803d;
+  background-color: #4A515B;
+  color: #ffffff;
 }
 
 .pr-empty-text {

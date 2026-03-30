@@ -2,7 +2,11 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
+
 .sprint-container2{
   display: flex;
   justify-content: space-between;
@@ -37,33 +41,63 @@
   font-weight: 600;
 }
 
+/* ==========================================
+   FLEXBOX GRID FOR SPRINT LIST (CENTERED CARDS)
+   ========================================== */
 .sprint-grid {
   display: flex;
-  gap: 15px;
   flex-wrap: wrap;
+  gap: 20px;
+  width: 100%;
+  max-width: 1400px; 
+  margin: 0 auto; 
 }
 
+
 .sprint-card {
-  height: 15px;
-  width: 150px;
-  padding: 50px;
+  width: calc(25% - 20px); 
+  min-width: 200px;
+  max-width: 300px;
+  min-height: 130px;
+  box-sizing: border-box;
+  padding: 20px;
   background-color: #ffffff;
-  border: 1px solid;
-  border-color: #3b82f6;
+  border: 1px solid #3b82f6;
   border-radius: 15px;
   cursor: pointer;
-  font-weight: 600;
   text-align: center;
+
+  display: flex;
+  flex-direction: column; 
+  justify-content: center;
+  align-items: center;
+  gap: 8px; 
+  
   transition: all 0.3s ease;
-  box-shadow: 
-  0 7px 18px rgba(59,130,246,0.07),
-  0 3px 6px rgba(59,130,246,0.04);
+  box-shadow: 0 7px 18px rgba(59,130,246,0.07), 0 3px 6px rgba(59,130,246,0.04);
 }
 
 .sprint-card:hover {
   transform: scale(1.05);
   border-color: #3b82f6;
   box-shadow: 0 8px 16px rgba(59, 130, 246, 0.15);
+}
+
+
+.sprint-card-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sprint-card-dates {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #475569;
+  background-color: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
 }
 
 .sprint-search-input {

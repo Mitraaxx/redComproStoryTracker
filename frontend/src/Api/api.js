@@ -5,8 +5,9 @@ let cachedSprintStories = {};
 let storyDetailsCache = {};
 let cachedStoryList = null;
 let cachedReleaseList = null;
-let cachedReleaseStories = {}; 
-let cachedAppStories = {}; 
+let cachedReleaseStories = {};
+let cachedAppStories = {};
+let cachedBranchStatuses = {};
 
 export const clearAllCaches = () => {
   cachedSprintList = null;
@@ -14,15 +15,16 @@ export const clearAllCaches = () => {
   storyDetailsCache = {};
   cachedStoryList = null;
   cachedReleaseList = null;
-  cachedReleaseStories = {}; 
-  cachedAppStories = {};     
+  cachedReleaseStories = {};
+  cachedAppStories = {};
+  cachedBranchStatuses = {};
 };
 
 export const fetchAllSprints = async () => {
   try {
     if (cachedSprintList) return cachedSprintList;
     const response = await fetch(`${BASE_URL}/sprints`);
-    if (!response.ok) throw new Error('Error in fetching all the sprints');
+    if (!response.ok) throw new Error("Error in fetching all the sprints");
     const data = await response.json();
     cachedSprintList = data;
     return data;
@@ -37,7 +39,8 @@ export const fetchSprintStories = async (sprintId, forceRefresh = false) => {
     if (cachedSprintStories[sprintId]) return cachedSprintStories[sprintId];
 
     const response = await fetch(`${BASE_URL}/sprints/${sprintId}/stories`);
-    if (!response.ok) throw new Error('Error in fetching sprint specific stories');
+    if (!response.ok)
+      throw new Error("Error in fetching sprint specific stories");
     const data = await response.json();
     cachedSprintStories[sprintId] = data;
     return data;
@@ -46,7 +49,7 @@ export const fetchSprintStories = async (sprintId, forceRefresh = false) => {
   }
 };
 
-export const fetchStoryDetails = async (storyId, forceRefresh = false) => { 
+export const fetchStoryDetails = async (storyId, forceRefresh = false) => {
   try {
     if (forceRefresh) delete storyDetailsCache[storyId];
     if (storyDetailsCache[storyId]) {
@@ -55,10 +58,10 @@ export const fetchStoryDetails = async (storyId, forceRefresh = false) => {
     }
 
     const response = await fetch(`${BASE_URL}/stories/${storyId}`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    
+    if (!response.ok) throw new Error("Network response was not ok");
+
     const data = await response.json();
-    storyDetailsCache[storyId] = data; 
+    storyDetailsCache[storyId] = data;
     return data;
   } catch (error) {
     console.error("API Error:", error);
@@ -70,7 +73,7 @@ export const fetchAllStories = async () => {
   try {
     if (cachedStoryList) return cachedStoryList;
     const response = await fetch(`${BASE_URL}/stories`);
-    if (!response.ok) throw new Error('Error in fetching all the stories');
+    if (!response.ok) throw new Error("Error in fetching all the stories");
     const data = await response.json();
     cachedStoryList = data;
     return data;
@@ -105,7 +108,7 @@ export const updateStoryApps = async (storyId, appsData) => {
     });
     if (!response.ok) throw new Error("Apps update failed");
     const data = await response.json();
-    delete storyDetailsCache[storyId]; 
+    delete storyDetailsCache[storyId];
     return data;
   } catch (error) {
     console.error("API Error:", error);
@@ -113,22 +116,22 @@ export const updateStoryApps = async (storyId, appsData) => {
   }
 };
 
-export const updateSprint = async(sprintId, sprintFormData) => {
+export const updateSprint = async (sprintId, sprintFormData) => {
   try {
     const response = await fetch(`${BASE_URL}/sprints/${sprintId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(sprintFormData),
     });
-    if(!response.ok) throw new Error("Sprint update failed");
+    if (!response.ok) throw new Error("Sprint update failed");
     const data = await response.json();
     delete cachedSprintStories[sprintId];
     return data;
-  } catch(err) {
+  } catch (err) {
     console.log("API Error:", err);
     throw err;
   }
-}
+};
 
 export const createSprint = async (sprintData) => {
   try {
@@ -144,7 +147,7 @@ export const createSprint = async (sprintData) => {
     return await response.json();
   } catch (error) {
     console.error("API Error in createSprint:", error);
-    throw error; 
+    throw error;
   }
 };
 
@@ -170,7 +173,7 @@ export const fetchAllReleases = async () => {
   try {
     if (cachedReleaseList) return cachedReleaseList;
     const response = await fetch(`${BASE_URL}/releases`);
-    if (!response.ok) throw new Error('Error fetching releases');
+    if (!response.ok) throw new Error("Error fetching releases");
     const data = await response.json();
     cachedReleaseList = data;
     return data;
@@ -190,7 +193,7 @@ export const createRelease = async (releaseData) => {
       const errorData = await response.json();
       throw new Error(errorData.error || "Failed to create release");
     }
-    cachedReleaseList = null; 
+    cachedReleaseList = null;
     return await response.json();
   } catch (error) {
     console.error("API Error in createRelease:", error);
@@ -198,14 +201,14 @@ export const createRelease = async (releaseData) => {
   }
 };
 
-
 export const fetchReleaseStories = async (releaseId, forceRefresh = false) => {
   try {
     if (forceRefresh) delete cachedReleaseStories[releaseId];
     if (cachedReleaseStories[releaseId]) return cachedReleaseStories[releaseId];
 
     const response = await fetch(`${BASE_URL}/releases/${releaseId}/stories`);
-    if (!response.ok) throw new Error('Error in fetching release specific stories');
+    if (!response.ok)
+      throw new Error("Error in fetching release specific stories");
     const data = await response.json();
     cachedReleaseStories[releaseId] = data;
     return data;
@@ -225,7 +228,7 @@ export const updateRelease = async (releaseId, releaseData) => {
       const errorData = await response.json();
       throw new Error(errorData.error || "Release update failed");
     }
-    cachedReleaseList = null; 
+    cachedReleaseList = null;
     return await response.json();
   } catch (error) {
     console.error("API Error:", error);
@@ -233,18 +236,55 @@ export const updateRelease = async (releaseId, releaseData) => {
   }
 };
 
-
 export const fetchAppStories = async (appName, forceRefresh = false) => {
   try {
     if (forceRefresh) delete cachedAppStories[appName];
     if (cachedAppStories[appName]) return cachedAppStories[appName];
 
     const response = await fetch(`${BASE_URL}/apps/name/${appName}/stories`);
-    if (!response.ok) throw new Error('Error fetching app stories');
+    if (!response.ok) throw new Error("Error fetching app stories");
     const data = await response.json();
     cachedAppStories[appName] = data;
     return data;
   } catch (error) {
     console.error("API Error:", error);
+  }
+};
+
+export const fetchBranchMergeStatus = async (
+  orgName,
+  repoName,
+  branchName,
+  token,
+  forceRefresh = false,
+) => {
+  const cacheKey = `${orgName}-${repoName}-${branchName}`;
+
+  try {
+    if (forceRefresh) delete cachedBranchStatuses[cacheKey];
+
+    if (cachedBranchStatuses[cacheKey]) {
+      return cachedBranchStatuses[cacheKey];
+    }
+
+    const response = await fetch(`${BASE_URL}/github/branch-status`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ orgName, repoName, branchName }),
+    });
+
+    if (!response.ok) throw new Error("Failed to fetch merge status");
+
+    const data = await response.json();
+
+    cachedBranchStatuses[cacheKey] = data;
+
+    return data;
+  } catch (error) {
+    console.error("API Error in fetchBranchMergeStatus:", error);
+    return { mergedTill: "Error" };
   }
 };

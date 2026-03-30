@@ -204,6 +204,13 @@ const SprintList = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Helper function to format the date
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const options = { day: "numeric", month: "short", year: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-GB", options);
+  };
+
   return (
     <div className="sprint-container">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -236,7 +243,17 @@ const SprintList = () => {
             onClick={() => handleSprintClick(sprint._id)}
             className="sprint-card"
           >
-            {sprint.name}
+            {/* Sprint ka naam */}
+            <span className="sprint-card-name">{sprint.name}</span>
+            
+            {/* Sprint ki Date Range */}
+            {(sprint.startDate || sprint.endDate) && (
+              <span className="sprint-card-dates">
+                {sprint.startDate ? formatDate(sprint.startDate) : "TBD"} 
+                {" - "} 
+                {sprint.endDate ? formatDate(sprint.endDate) : "TBD"}
+              </span>
+            )}
           </div>
         ))}
       </div>

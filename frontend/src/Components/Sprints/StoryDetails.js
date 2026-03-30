@@ -6,10 +6,11 @@ import {
   clearAllCaches,
   fetchAllSprints,
   fetchAllReleases,
+  fetchBranchMergeStatus ,
 } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { MdArrowBack, MdSource, MdNotes, MdEdit } from "react-icons/md";
-import { FaCodeBranch } from "react-icons/fa";
+import { FaCodeBranch,FaSync } from "react-icons/fa";
 import { AiOutlineLink } from "react-icons/ai";
 import { useParams, useNavigate } from "react-router-dom";
 import "../Sprints/StoryDetails.css";
@@ -17,6 +18,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CreatePrModal from "../Modals/CreatePrModal";
 import UnifiedEditModal from "../Modals/UnifiedEditModal";
+import { useAuth } from "@clerk/clerk-react"; 
+import { repoConfig } from "../../utils/AppConfig"; 
 
 /**
  * Component to display the comprehensive details of a specific story.
@@ -42,6 +45,48 @@ const StoryDetails = () => {
   const [savingChanges, setSavingChanges] = useState(false);
 
   const [releasesList, setReleasesList] = useState([]);
+
+  const { getToken } = useAuth();
+  const [mergeStatuses, setMergeStatuses] = useState({});
+
+  /**
+   * Effect hook fetches all fields required for githubstatus api call
+   * and gives post request to the api whenever new user is logged in or
+   * any storyData is changed
+   */
+  useEffect(() => {
+    const fetchAllStatuses = async () => {
+      if (!storyData?.linkedApps) return;
+
+      try {
+        const token = await getToken();
+        const newStatuses = { ...mergeStatuses };
+
+        for (const appItem of storyData.linkedApps) {
+          const appName = appItem.appRef?.name;
+          const config = repoConfig[appName];
+
+          if (config && appItem.featureBranches?.length > 0) {
+            const { orgName, repoName } = config;
+
+            for (const branch of appItem.featureBranches) {
+              const key = `${appName}-${branch}`;
+              
+              if (!newStatuses[key]) {
+                const res = await fetchBranchMergeStatus(orgName, repoName, branch, token);
+                newStatuses[key] = res.mergedTill || "Not Merged";
+              }
+            }
+          }
+        }
+        setMergeStatuses(newStatuses);
+      } catch (err) {
+        console.error("Error fetching statuses:", err);
+      }
+    };
+
+    fetchAllStatuses();
+  }, [storyData, getToken]);
 
   /**
    * Opens the Pull Request modal and sets the context for the selected app and branch.
@@ -131,6 +176,35 @@ const StoryDetails = () => {
     navigate(-1);
   };
 
+  /**
+   * This function only refresh a single github status of merge till
+   */
+  const handleSpecificRefresh = async (appName, orgName, repoName, branch) => {
+    const statusKey = `${appName}-${branch}`;
+    const token = await getToken();
+
+    setMergeStatuses(prev => ({
+      ...prev,
+      [statusKey]: null, 
+    }));
+
+    try {
+      console.log(`Force refreshing status for: ${statusKey}`);
+      const res = await fetchBranchMergeStatus(orgName, repoName, branch, token, true);
+
+      setMergeStatuses(prev => ({
+        ...prev,
+        [statusKey]: res.mergedTill || "Not Merged",
+      }));
+    } catch (error) {
+      console.error("Error refreshing specific status:", error);
+      setMergeStatuses(prev => ({
+        ...prev,
+        [statusKey]: "Error",
+      }));
+    }
+  };
+
   if (loading) {
     return (
       <div
@@ -153,6 +227,18 @@ const StoryDetails = () => {
 
   return (
     <div className="sprint-storyDetails-container">
+      <div
+        className="extra-box"
+        style={{
+          justifyContent: "flex-start",
+          marginLeft: "1rem",
+          marginBottom: "1rem",
+        }}
+      >
+        <button onClick={handleBack} className="back-button">
+          <MdArrowBack />
+        </button>
+      </div>
       <div className="sprint-storyDetails-container2">
         <div className="sprint-storyDetails-container2-5">
           <p>
@@ -186,7 +272,7 @@ const StoryDetails = () => {
             <strong>First Review: </strong> <span>{storyData.firstReview}</span>
           </p>
           <p>
-            <strong>Release Date: </strong>{" "}
+            <strong>QA Release Date: </strong>{" "}
             <span>
               {storyData?.qaEnvRelDate
                 ? new Date(storyData.qaEnvRelDate).toLocaleDateString("en-IN", {
@@ -198,10 +284,10 @@ const StoryDetails = () => {
             </span>
           </p>
           <p>
-            <strong>Status: </strong> <span>{storyData.status}</span>
+            <strong>Currently With: </strong> <span>{storyData.status}</span>
           </p>
           <p>
-            <strong>Live Env release: </strong>{" "}
+            <strong>Live Release Date: </strong>{" "}
             <span>
               {storyData?.liveEnvRelease
                 ? new Date(storyData.liveEnvRelease).toLocaleDateString(
@@ -248,9 +334,6 @@ const StoryDetails = () => {
           >
             <MdEdit /> Edit
           </button>
-          <button onClick={handleBack} className="back-button">
-            <MdArrowBack />
-          </button>
         </section>
       </div>
 
@@ -288,26 +371,79 @@ const StoryDetails = () => {
                 <div>
                   <strong>Feature Branch:</strong> <br />
                   {appItem.featureBranches && appItem.featureBranches.length > 0
-                    ? appItem.featureBranches.map((branch, i) => (
-                        <div
-                          key={i}
-                          className="storyDetails-feature-branch-item"
-                        >
-                          <div className="storyDetails-feature-branch-name">
-                            <FaCodeBranch color="#3b82f6" />
-                            <span className="storyDetails-feature-branch-text">
-                              {branch}
-                            </span>
-                          </div>
-                          <button
-                            onClick={() => openPrModal(repoName, branch)}
-                            className="storyDetails-btn-pr"
-                            title="Create Pull Request"
+                    ? appItem.featureBranches.map((branch, i) => {
+                        const statusKey = `${repoName}-${branch}`;
+                        const currentStatus = mergeStatuses[statusKey];
+
+                        return (
+                          <div
+                            key={i}
+                            className="storyDetails-feature-branch-item"
+                            style={{
+                              flexDirection: "column",
+                              alignItems: "stretch",
+                              gap: "10px",
+                            }}
                           >
-                            PR
-                          </button>
-                        </div>
-                      ))
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                width: "100%",
+                              }}
+                            >
+                              <div className="storyDetails-feature-branch-name">
+                                <FaCodeBranch color="#3b82f6" />
+                                <span className="storyDetails-feature-branch-text">
+                                  {branch}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => openPrModal(repoName, branch)}
+                                className="storyDetails-btn-pr"
+                                title="Create Pull Request"
+                              >
+                                PR
+                              </button>
+                            </div>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <div className="merged-till-badge" style={{ margin: 0 }}>
+                                Merged Till:{" "}
+                                <strong>
+                                  {currentStatus ? (
+                                    currentStatus 
+                                  ) : (
+                                    <FaSync className="spin-icon" color="#15803d" /> 
+                                  )}
+                                </strong>
+                              </div>
+
+                              {currentStatus && (
+                                <button
+                                  onClick={() => {
+                                    const config = repoConfig[repoName];
+                                    if (config) {
+                                      handleSpecificRefresh(repoName, config.orgName, repoName, branch);
+                                    }
+                                  }}
+                                  style={{
+                                    background: "none",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    padding: "2px",
+                                  }}
+                                  title="Refresh branch status"
+                                >
+                                  <FaSync color="#15803d" size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
                     : "N/A"}
                 </div>
                 <p>

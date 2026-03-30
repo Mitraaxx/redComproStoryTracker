@@ -2,6 +2,9 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .story-container2 {
@@ -16,16 +19,25 @@
   font-weight: 600;
 }
 
-
+/* ==========================================
+   FLEXBOX GRID LAYOUT FOR STORY CARDS
+   ========================================== */
 .story-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 25px;
+  gap: 25px; 
+  width: 100%;
+  max-width: 1400px; 
+  margin: 0 auto; 
 }
 
 .story-card {
-  width: 320px;         
-  height: 240px;
+  width: calc(33.333% - 25px); 
+  min-width: 300px; 
+  max-width: 450px; 
+  height: 280px;
+  box-sizing: border-box;
+  
   padding: 16px;
   background-color: #ffffff;
   border: 1px solid #3b82f6;
@@ -112,3 +124,4 @@
   display: block; 
   margin-bottom: 4px;
 }
+

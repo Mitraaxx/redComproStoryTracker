@@ -1,59 +1,136 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MdFilterList, MdClose } from "react-icons/md";
-import "./StoryFilter.css"; 
-import { TEAM_MEMBERS,STATUS_MEMBERS } from "../../utils/AppConfig";
+import { useSearchParams } from "react-router-dom"; 
+import "./StoryFilter.css";
+import { TEAM_MEMBERS, STATUS_MEMBERS, repoConfig } from "../../utils/AppConfig";
 
 /**
  * Reusable Filter Component for Stories.
- * Exposes a generic UI to filter by Assignee, Status, and exact Release Date.
+ * Exposes a generic UI to filter by Assignee, Status, Apps, and exact Release Date using Datalists.
  */
 const StoryFilter = ({ onApplyFilter }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Local state for filter inputs
+  
   const [filters, setFilters] = useState({
-    assignee: "",
-    status: "",
-    qaRelDate: "",
+    assignee: searchParams.get("assignee") || "",
+    status: searchParams.get("status") || "",
+    qaRelDate: searchParams.get("qaRelDate") || "",
+    apps: searchParams.get("apps") || ""
   });
 
-  /**
-   * Handles user input changes across all filter fields.
-   * Dynamically updates the specific field in the local state based on the input's 'name' attribute.
-   */
+/**
+ * Whenever new component gets mount which happens when you go back 
+ * the url filters are sent to the parent. So it can keep the filter
+ */
+  useEffect(() => {
+    const urlFilters = {
+      assignee: searchParams.get("assignee") || "",
+      status: searchParams.get("status") || "",
+      qaRelDate: searchParams.get("qaRelDate") || "",
+      apps: searchParams.get("apps") || ""
+    };
+    
+    const hasFilters = Object.values(urlFilters).some(val => val !== "");
+    if (hasFilters) {
+      onApplyFilter(urlFilters); 
+    }
+  }, []);
+
+  // This function handles any change in the filter fields and add them in filters state
   const handleChange = (e) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
+  // This function clears the changes and resets value to empty
+  const handleClearField = (fieldName) => {
+    setFilters({ ...filters, [fieldName]: "" });
+  };
+
   /**
-   * Confirms and applies the selected filters.
-   * Passes the current local filter state up to the parent component and closes the dropdown.
+   * Applies the current filters selected by the user.
+   * Updates the URL search parameters for persistence, sends the filter 
+   * data to the parent component, and closes the dropdown menu.
    */
   const handleApply = () => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) {
+        newParams.set(key, filters[key]);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    setSearchParams(newParams);
+
     onApplyFilter(filters);
     setIsOpen(false);
   };
 
   /**
-   * Resets all filter criteria to their default empty states.
-   * Immediately notifies the parent component to remove all active filters and closes the dropdown.
+   * Clears all applied filters completely.
+   * Resets local state to empty values, removes the parameters from the URL,
+   * updates the parent component with the cleared state, and closes the dropdown.
    */
   const handleClear = () => {
     const cleared = {
       assignee: "",
       status: "",
       qaRelDate: "",
+      apps: ""
     };
     setFilters(cleared);
+
+    const newParams = new URLSearchParams(searchParams);
+    Object.keys(cleared).forEach(key => newParams.delete(key));
+    setSearchParams(newParams);
+
     onApplyFilter(cleared);
     setIsOpen(false);
   };
 
+  const clearIconStyle = {
+    position: "absolute",
+    right: "2.5rem",
+    top: "50%",
+    transform: "translateY(-50%)",
+    cursor: "pointer",
+    color: "#94a3b8",
+  };
+
+  const activeFiltersCount = ["assignee", "status", "qaRelDate", "apps"].filter(
+    key => searchParams.get(key)
+  ).length;
+
   return (
     <div className="filter-container">
-      <button className="filter-toggle-btn" onClick={() => setIsOpen(!isOpen)}>
-        <MdFilterList size={20} /> Filter
-      </button>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <button 
+          className="filter-toggle-btn" 
+          onClick={() => setIsOpen(!isOpen)}
+          style={{ display: "flex", alignItems: "center", gap: "8px" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <MdFilterList size={20} /> Filter
+          </div>
+          
+          {activeFiltersCount > 0 && (
+            <span style={{
+              color: "#16a34a",
+              backgroundColor: "#f0fdf4",
+              border: "1px solid #16a34a",
+              borderRadius: "999px",
+              padding: "2px 8px",
+              fontSize: "0.7rem",
+              fontWeight: "700",
+              marginLeft: "4px"
+            }}>
+              Filled
+            </span>
+          )}
+        </button>
+      </div>
 
       {isOpen && (
         <div className="filter-dropdown">
@@ -67,56 +144,122 @@ const StoryFilter = ({ onApplyFilter }) => {
           </div>
 
           <div className="filter-fields-container">
+            {/* ASSIGNEE DATALIST */}
             <div>
               <label className="filter-label">Assignee</label>
-              <select
-                name="assignee"
-                value={filters.assignee}
-                onChange={handleChange}
-                className="filter-input"
-              >
-                <option value="">All</option>
-                {TEAM_MEMBERS.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
+              <div style={{ position: "relative" }}>
+                <input
+                  list="filter-assignee-options"
+                  name="assignee"
+                  value={filters.assignee}
+                  onChange={handleChange}
+                  className="filter-input"
+                  placeholder="Search"
+                  autoComplete="off"
+                  style={{ paddingRight: "30px" }} 
+                />
+                {filters.assignee && (
+                  <MdClose
+                    size={18}
+                    style={clearIconStyle}
+                    onClick={() => handleClearField("assignee")}
+                    title="Clear Assignee"
+                  />
+                )}
+                <datalist id="filter-assignee-options">
+                  {TEAM_MEMBERS.map((a) => (
+                    <option key={a} value={a} />
+                  ))}
+                </datalist>
+              </div>
             </div>
 
+            {/* STATUS DATALIST */}
             <div>
-              <label className="filter-label">Status</label>
-              <select
-                name="status"
-                value={filters.status}
-                onChange={handleChange}
-                className="filter-input"
-              >
-                <option value="">All</option>
-                {STATUS_MEMBERS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
+              <label className="filter-label">Currently With</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  list="filter-status-options"
+                  name="status"
+                  value={filters.status}
+                  onChange={handleChange}
+                  className="filter-input"
+                  placeholder="Search"
+                  autoComplete="off"
+                  style={{ paddingRight: "30px" }}
+                />
+                {filters.status && (
+                  <MdClose
+                    size={18}
+                    style={clearIconStyle}
+                    onClick={() => handleClearField("status")}
+                    title="Clear Status"
+                  />
+                )}
+                <datalist id="filter-status-options">
+                  {STATUS_MEMBERS.map((s) => (
+                    <option key={s} value={s} />
+                  ))}
+                </datalist>
+              </div>
             </div>
 
+            {/* APPS DATALIST */}
             <div>
-              <label className="filter-label">Release Date</label>
-              <div className="filter-date-group">
+              <label className="filter-label">Apps</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  list="filter-apps-options"
+                  name="apps"
+                  value={filters.apps}
+                  onChange={handleChange}
+                  className="filter-input"
+                  placeholder="Search"
+                  autoComplete="off"
+                  style={{ paddingRight: "30px" }}
+                />
+                {filters.apps && (
+                  <MdClose
+                    size={18}
+                    style={clearIconStyle}
+                    onClick={() => handleClearField("apps")}
+                    title="Clear Apps"
+                  />
+                )}
+                <datalist id="filter-apps-options">
+                  {Object.keys(repoConfig).map((appName, i) => (
+                    <option key={i} value={appName} />
+                  ))}
+                </datalist>
+              </div>
+            </div>
+
+            {/* QA RELEASE DATE  */}
+            <div>
+              <label className="filter-label">Qa Release Date</label>
+              <div className="filter-date-group" style={{ position: "relative" }}>
                 <input
                   type="date"
                   name="qaRelDate"
                   value={filters.qaRelDate}
                   onChange={handleChange}
                   className="filter-input"
+                  style={{ paddingRight: "30px" }}
                 />
+                {filters.qaRelDate && (
+                  <MdClose
+                    size={18}
+                    style={{...clearIconStyle, right: "25px"}} 
+                    onClick={() => handleClearField("qaRelDate")}
+                    title="Clear Date"
+                  />
+                )}
               </div>
             </div>
 
             <div className="filter-actions">
               <button className="filter-clear-btn" onClick={handleClear}>
-                Clear
+                Clear All
               </button>
               <button className="filter-apply-btn" onClick={handleApply}>
                 Apply
@@ -127,6 +270,6 @@ const StoryFilter = ({ onApplyFilter }) => {
       )}
     </div>
   );
-};;
+};
 
 export default StoryFilter;
