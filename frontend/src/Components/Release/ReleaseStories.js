@@ -50,7 +50,6 @@ const ReleaseStories = () => {
   const { releaseId } = useParams();
   const navigate = useNavigate();
 
-  const { getToken } = useAuth();
   const [mergeStatuses, setMergeStatuses] = useState({});
 
   /**
@@ -345,7 +344,6 @@ const ReleaseStories = () => {
    */
   const handleSpecificRefresh = async (appName, orgName, repoName, branch) => {
     const statusKey = `${appName}-${branch}`;
-    const token = await getToken();
 
     setMergeStatuses(prev => ({
       ...prev,
@@ -353,7 +351,7 @@ const ReleaseStories = () => {
     }));
 
     try {
-      const res = await fetchBranchMergeStatus(orgName, repoName, branch, token, true);
+      const res = await fetchBranchMergeStatus(orgName, repoName, branch, true);
       setMergeStatuses(prev => ({
         ...prev,
         [statusKey]: res.mergedTill || "Not Merged",
@@ -452,7 +450,6 @@ const ReleaseStories = () => {
       if (!visibleStories || visibleStories.length === 0) return;
 
       try {
-        const token = await getToken();
         let hasNewData = false;
         const fetchedStatuses = {};
 
@@ -474,7 +471,6 @@ const ReleaseStories = () => {
                     orgName,
                     repoName,
                     branch,
-                    token,
                   );
                   fetchedStatuses[key] = res.mergedTill || "Not Merged";
                   hasNewData = true;
@@ -493,7 +489,7 @@ const ReleaseStories = () => {
     };
 
     fetchAllStatuses();
-  }, [visibleStories, getToken]);
+  }, [visibleStories]);
 
   /**
    * Utility to smoothly scroll the page back to the top.

@@ -46,7 +46,6 @@ const StoryDetails = () => {
 
   const [releasesList, setReleasesList] = useState([]);
 
-  const { getToken } = useAuth();
   const [mergeStatuses, setMergeStatuses] = useState({});
 
   /**
@@ -59,7 +58,6 @@ const StoryDetails = () => {
       if (!storyData?.linkedApps) return;
 
       try {
-        const token = await getToken();
         let hasNewData = false;
         const fetchedStatuses = {};
 
@@ -75,7 +73,7 @@ const StoryDetails = () => {
               
     
               if (mergeStatuses[key] === undefined) {
-                const res = await fetchBranchMergeStatus(orgName, repoName, branch, token);
+                const res = await fetchBranchMergeStatus(orgName, repoName, branch);
                 fetchedStatuses[key] = res.mergedTill || "Not Merged";
                 hasNewData = true; 
               }
@@ -93,7 +91,7 @@ const StoryDetails = () => {
 
     fetchAllStatuses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storyData, getToken]);
+  }, [storyData]);
 
   /**
    * Opens the Pull Request modal and sets the context for the selected app and branch.
@@ -188,7 +186,6 @@ const StoryDetails = () => {
    */
   const handleSpecificRefresh = async (appName, orgName, repoName, branch) => {
     const statusKey = `${appName}-${branch}`;
-    const token = await getToken();
 
     setMergeStatuses(prev => ({
       ...prev,
@@ -197,7 +194,7 @@ const StoryDetails = () => {
 
     try {
       console.log(`Force refreshing status for: ${statusKey}`);
-      const res = await fetchBranchMergeStatus(orgName, repoName, branch, token, true);
+      const res = await fetchBranchMergeStatus(orgName, repoName, branch, true);
 
       setMergeStatuses(prev => ({
         ...prev,

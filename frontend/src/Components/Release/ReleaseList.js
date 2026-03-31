@@ -8,6 +8,7 @@ import "../Sprints/SprintList.css";
 import "../Release/ReleaseList.css";
 import { useNavigate } from "react-router-dom";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
+import { AiOutlineArrowUp } from "react-icons/ai";
 
 /**
  * Main component to render and manage the global list of software releases.
@@ -294,7 +295,7 @@ const ReleaseList = () => {
           )}
 
           <button className="back-top-btn" onClick={scrollToTop}>
-            ⬆
+            <AiOutlineArrowUp/>
           </button>
         </div>
       )}
