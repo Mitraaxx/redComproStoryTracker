@@ -5,12 +5,15 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+  box-sizing: border-box; 
+  overflow-x: hidden;
 }
 
 .story-container2 {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  flex-wrap: wrap;
 }
 
 .story-title {
@@ -125,3 +128,21 @@
   margin-bottom: 4px;
 }
 
+@media (max-width: 767px) {
+  .story-container2{
+    margin-bottom: 10px;
+  }
+
+  .story-grid {
+    justify-content: center; 
+  }
+
+  .create-story-button{
+    padding: 8px 15px;
+  }
+
+  .story-search-header{
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

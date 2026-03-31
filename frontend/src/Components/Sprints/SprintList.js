@@ -7,6 +7,7 @@ import CreateSprintModal from "../Modals/CreateSprintModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
+import { AiOutlineArrowUp } from "react-icons/ai";
 
 /**
  * Main component to render and manage the complete list of sprints.
@@ -275,7 +276,7 @@ const SprintList = () => {
           )}
 
           <button className="back-top-btn" onClick={scrollToTop}>
-            ⬆
+            <AiOutlineArrowUp/>
           </button>
         </div>
       )}

@@ -20,6 +20,10 @@ export const clearAllCaches = () => {
   cachedBranchStatuses = {};
 };
 
+export const clearGitHubCache = () => {
+  cachedBranchStatuses = {};
+}
+
 export const fetchAllSprints = async () => {
   try {
     if (cachedSprintList) return cachedSprintList;
@@ -255,7 +259,6 @@ export const fetchBranchMergeStatus = async (
   orgName,
   repoName,
   branchName,
-  token,
   forceRefresh = false,
 ) => {
   const cacheKey = `${orgName}-${repoName}-${branchName}`;
@@ -267,19 +270,24 @@ export const fetchBranchMergeStatus = async (
       return cachedBranchStatuses[cacheKey];
     }
 
+    const token = localStorage.getItem("github_pat");
+
+    if (!token) {
+      return { mergedTill: "Add Token" };
+    }
+
     const response = await fetch(`${BASE_URL}/github/branch-status`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ orgName, repoName, branchName }),
+
+      body: JSON.stringify({ orgName, repoName, branchName, token }), 
     });
 
     if (!response.ok) throw new Error("Failed to fetch merge status");
 
     const data = await response.json();
-
     cachedBranchStatuses[cacheKey] = data;
 
     return data;
