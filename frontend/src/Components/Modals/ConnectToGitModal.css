@@ -1,0 +1,109 @@
+.git-modal-content {
+  max-width: 420px;
+  padding: 20px;
+}
+
+.git-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.git-modal-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e293b;
+}
+
+.git-modal-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  transition: color 0.2s ease;
+}
+
+.git-modal-body {
+  text-align: center;
+  padding: 10px 0;
+}
+
+.git-connected-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.git-connected-title {
+  color: #16a34a;
+  margin: 10px 0 5px 0;
+}
+
+.git-connected-text {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.git-disconnect-btn {
+  background-color: #ef4444;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+  transition: background-color 0.2s ease;
+}
+
+.git-disconnect-btn:hover {
+  background-color: #dc2626;
+}
+
+.git-setup-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  text-align: left;
+}
+
+.git-setup-text {
+  font-size: 0.85rem;
+  color: #475569;
+  margin: 0;
+}
+
+.git-setup-input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.git-setup-input:focus {
+  border-color: #3b82f6;
+}
+
+.git-connect-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.git-connect-btn:hover {
+  background-color: #1d4ed8;
+}

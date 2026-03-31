@@ -14,6 +14,9 @@ import "react-toastify/dist/ReactToastify.css";
 import CreateStoryModal from "../Modals/CreateStoryModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import StoryFilter from "../Tools/StoryFilter";
+import { AiOutlineArrowUp } from "react-icons/ai"; 
+
+
 
 /**
  * Main component to render and manage the complete list of stories.
@@ -347,7 +350,7 @@ const StoryList = () => {
             </button>
           )}
           <button className="back-top-btn" onClick={scrollToTop}>
-            ⬆
+            <AiOutlineArrowUp/>
           </button>
         </div>
       )}
