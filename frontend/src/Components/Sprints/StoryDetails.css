@@ -7,10 +7,12 @@
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .sprint-storyDetails-container2 {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
@@ -311,4 +313,50 @@
   animation: spin 1s linear infinite;
   vertical-align: middle;
   margin-left: 4px;
+}
+
+@media (max-width: 600px) {
+  .sprint-storyDetails-container2{
+    margin-bottom: 10px;
+  }
+
+  .sprint-storyDetails-grid {
+    justify-content: center; 
+  }
+
+  .sprint-storyDetails-button{
+    padding: 8px 15px;
+  }
+
+  .sprint-storyDetails-header{
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .sprint-storyDetails-card{
+    min-width: 290px;
+  }
+  
+  .sprint-storyDetails-container2-5 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); 
+    width: 100%;
+    padding: 15px;
+    gap: 12px 10px; 
+    box-sizing: border-box;
+  }
+
+  .sprint-storyDetails-container2-5 p.comments-field {
+    grid-column: 1 / -1; 
+    max-width: 100%;
+    width: 100%;
+    min-height: auto;
+    grid-row: auto;
+  }
+
+  .sprint-storyDetails-container2-5 p:last-child:not(.comments-field) {
+    grid-column: auto;
+    grid-row: auto;
+    margin-top: 0;
+  }
 }

@@ -128,7 +128,7 @@
   margin-bottom: 4px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 600px) {
   .story-container2{
     margin-bottom: 10px;
   }

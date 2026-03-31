@@ -534,7 +534,7 @@ const ReleaseStories = () => {
             </button>
           </div>
 
-          <div style={{ display: "flex", gap: "25px", marginTop: "12px", alignItems: "flex-start", flexWrap: "wrap" }}>            
+          <div className="release-Date-group">            
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <p className="release-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}>
                 <strong>Release Date: </strong>

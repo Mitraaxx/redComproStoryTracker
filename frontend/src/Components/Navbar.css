@@ -97,7 +97,7 @@
   background-color: #dcfce7;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .navbar {
     padding: 8px 5px;
   }

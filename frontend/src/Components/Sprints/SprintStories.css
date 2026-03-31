@@ -5,10 +5,13 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
+  box-sizing: border-box; 
+  overflow-x: hidden;
 }
 
 .sprint-story-container2{
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: baseline;
 }
@@ -357,4 +360,24 @@
     justify-content: flex-end;
     width: 100%;
     margin-bottom: 5px;
+}
+
+
+@media (max-width: 600px) {
+  .sprint-story-container2{
+    margin-bottom: 10px;
+  }
+
+  .sprint-story-grid {
+    justify-content: center; 
+  }
+
+  .sprint-create-story-button{
+    padding: 8px 15px;
+  }
+
+  .sprint-story-search-header{
+    display: flex;
+    flex-wrap: wrap;
+  }
 }
