@@ -215,9 +215,9 @@ const CreateStoryModal = ({
 
   return (
     <>
-      <div className="modal-overlay">
-        <div className="modal-content main-modal relative-modal">
-          <div className="modal-header">
+      <div className="custom-modal-overlay">
+        <div className="custom-modal-content main-modal relative-modal">
+          <div className="custom-modal-header">
             <h2>Create New Story</h2>
             <MdClose size={28} className="close-icon" onClick={onClose} />
           </div>
@@ -225,7 +225,7 @@ const CreateStoryModal = ({
           <form
             onSubmit={submitMainForm}
             onKeyDown={handleKeyDown}
-            className="modal-form"
+            className="custom-modal-form"
           >
             <div className="form-grid">
               <label className="form-label">
@@ -536,7 +536,7 @@ const CreateStoryModal = ({
               )}
             </div>
 
-            <div className="modal-actions main-actions">
+            <div className="custom-modal-actions main-actions">
               <button
                 type="submit"
                 disabled={saving}
@@ -550,9 +550,9 @@ const CreateStoryModal = ({
       </div>
 
       {isAppFormOpen && (
-        <div className="modal-overlay nested-overlay">
-          <div className="modal-content nested-modal-content">
-            <div className="modal-header">
+        <div className="custom-modal-overlay nested-overlay">
+          <div className="custom-modal-content nested-modal-content">
+            <div className="custom-modal-header">
               <h2>
                 {editingAppIndex !== null
                   ? "Edit App Details"
@@ -568,7 +568,7 @@ const CreateStoryModal = ({
               />
             </div>
 
-            <div className="modal-form">
+            <div className="custom-modal-form">
               <label className="form-label full-width">
                 <span>
                   Select App <span className="required-asterisk">*</span>
@@ -631,7 +631,7 @@ const CreateStoryModal = ({
                 ></textarea>
               </label>
 
-              <div className="modal-actions nested-actions">
+              <div className="custom-modal-actions nested-actions">
                 <button
                   type="button"
                   onClick={saveAppToList}

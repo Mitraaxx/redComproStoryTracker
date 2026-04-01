@@ -216,7 +216,7 @@ const AppStories = () => {
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
-            <h2 className="sprint-story-title">{appName}</h2>
+            <h3 className="sprint-story-title">{appName}</h3>
           </div>
         </section>
 

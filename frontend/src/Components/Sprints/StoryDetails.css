@@ -1,6 +1,6 @@
 
 .sprint-storyDetails-container {
-  padding: 20px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -17,6 +17,7 @@
   align-items: flex-start;
   gap: 20px;
   margin-bottom: 30px;
+  padding: 10px;
 }
 
 

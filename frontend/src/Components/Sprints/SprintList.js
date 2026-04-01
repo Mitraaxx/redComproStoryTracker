@@ -216,7 +216,7 @@ const SprintList = () => {
     <div className="sprint-container">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="sprint-container2">
-        <h2 className="sprint-title">Sprint List</h2>
+        <h3 className="sprint-title">Sprint List</h3>
         <div className="sprint-search-header">
           <input
             type="text"

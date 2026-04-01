@@ -16,9 +16,9 @@ const AlphaPrModal = ({ isOpen, onClose, appsToBeDeployed, releaseName }) => {
   }) || [];
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content pr-modal-custom-content">
-        <div className="modal-header">
+    <div className="custom-modal-overlay">
+      <div className="custom-modal-content pr-modal-custom-content">
+        <div className="custom-modal-header">
           <h2>Alpha PRs {releaseName ? `for: ${releaseName}` : ""}</h2>
           <MdClose size={28} className="close-icon" onClick={onClose} />
         </div>

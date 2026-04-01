@@ -524,7 +524,7 @@ const ReleaseStories = () => {
       <div className="release-story-container2">
         <section>
           <div className="release-title-group">
-            <h2 className="release-story-title">{release?.name}</h2>
+            <h3 className="release-story-title">{release?.name}</h3>
             <button
               onClick={openReleaseEditModal}
               className="release-edit-btn"

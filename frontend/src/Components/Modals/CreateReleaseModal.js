@@ -24,17 +24,43 @@ const CreateReleaseModal = ({
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ width: "450px" }}>
-        <div className="modal-header">
+    <div className="custom-modal-overlay">
+      <div 
+        className="custom-modal-content" 
+        style={{ 
+          width: "600px", 
+          padding: 0, 
+          maxHeight: "85vh", 
+          display: "flex", 
+          flexDirection: "column",
+          overflow: "hidden" 
+        }}
+      >
+        <div 
+          className="custom-modal-header" 
+          style={{ 
+            padding: "20px 20px 15px 20px", 
+            margin: 0, 
+            borderBottom: "1px solid #e2e8f0", 
+            backgroundColor: "#fff", 
+            zIndex: 10 
+          }}
+        >
           <h2>Create Release Tag</h2>
-          <MdClose size={28} className="close-icon" onClick={onClose} />
+          <MdClose size={24} className="close-icon" onClick={onClose} style={{ cursor: "pointer" }} />
         </div>
 
         <form
           onSubmit={handleSave}
           onKeyDown={handleKeyDown}
-          className="modal-form"
+          className="custom-modal-form"
+          style={{ 
+            overflowY: "auto", 
+            padding: "20px", 
+            margin: 0,
+            display: "flex",
+            flexDirection: "column"
+          }}
         >
           <label className="form-label full-width">
             <span>
@@ -97,11 +123,12 @@ const CreateReleaseModal = ({
             </select>
           </label>
 
-          <div className="modal-actions" style={{ marginTop: "20px" }}>
+          <div className="custom-modal-actions" style={{ marginTop: "10px" }}>
             <button
               type="submit"
               disabled={saving}
               className="btn-save primary"
+              style={{ padding: "8px 16px", width: "100%" }}
             >
               {saving ? "Creating..." : "Create Release"}
             </button>

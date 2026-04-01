@@ -27,9 +27,9 @@ const CreateSprintModal = ({
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ width: "500px" }}>
-        <div className="modal-header">
+    <div className="custom-modal-overlay">
+      <div className="custom-modal-content" style={{ width: "500px" }}>
+        <div className="custom-modal-header">
           <h2>Create New Sprint</h2>
           <MdClose size={28} className="close-icon" onClick={onClose} />
         </div>
@@ -37,7 +37,7 @@ const CreateSprintModal = ({
         <form
           onSubmit={handleSave}
           onKeyDown={handleKeyDown}
-          className="modal-form"
+          className="custom-modal-form"
         >
           <label className="form-label full-width">
             <span>
@@ -90,7 +90,7 @@ const CreateSprintModal = ({
             ></textarea>
           </label>
 
-          <div className="modal-actions">
+          <div className="custom-modal-actions">
             <button
               type="submit"
               disabled={saving}

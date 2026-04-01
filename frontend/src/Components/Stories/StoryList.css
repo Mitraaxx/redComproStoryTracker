@@ -1,5 +1,5 @@
 .story-container {
-  padding: 20px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -14,6 +14,7 @@
   justify-content: space-between;
   align-items: baseline;
   flex-wrap: wrap;
+  padding: 10px;
 }
 
 .story-title {
@@ -117,7 +118,7 @@
   white-space: pre-wrap;
   word-break: break-word;
 
-  max-height: 40px;
+  max-height: 60px;
   overflow-y: auto;
 }
 

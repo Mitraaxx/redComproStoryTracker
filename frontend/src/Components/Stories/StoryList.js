@@ -274,7 +274,7 @@ const StoryList = () => {
       <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="story-container2">
-        <h2 className="story-title">Story List</h2>
+        <h3 className="story-title">Story List</h3>
         <div className="story-search-header">
           <StoryFilter onApplyFilter={handleApplyFilter} />
           <input

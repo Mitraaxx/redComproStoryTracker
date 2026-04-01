@@ -83,9 +83,9 @@ const AddExistingStoryModal = ({
   };
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 1040 }}>
+    <div className="custom-modal-overlay" style={{ zIndex: 1040 }}>
       <div
-        className="modal-content"
+        className="custom-modal-content"
         style={{
           width: "500px",
           height: "80vh",
@@ -93,7 +93,7 @@ const AddExistingStoryModal = ({
           flexDirection: "column",
         }}
       >
-        <div className="modal-header">
+        <div className="custom-modal-header">
           <h2>Add Existing Story</h2>
           <MdClose size={28} className="close-icon" onClick={onClose} />
         </div>

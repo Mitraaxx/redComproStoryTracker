@@ -228,14 +228,14 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
 
   return (
     <>
-      <div className="modal-overlay">
-        <div className="modal-content main-modal relative-modal">
-          <div className="modal-header">
+      <div className="custom-modal-overlay">
+        <div className="custom-modal-content main-modal relative-modal">
+          <div className="custom-modal-header">
             <h2>Edit Story & Apps</h2>
             <MdClose size={28} className="close-icon" onClick={onClose} />
           </div>
 
-          <form onSubmit={submitMainForm} onKeyDown={handleKeyDown} className="modal-form">
+          <form onSubmit={submitMainForm} onKeyDown={handleKeyDown} className="custom-modal-form">
             <div className="form-grid">
               <label className="form-label">
                 <span>Story Name <span className="required-asterisk">*</span></span>
@@ -384,7 +384,7 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
               )}
             </div>
 
-            <div className="modal-actions main-actions">
+            <div className="custom-modal-actions main-actions">
               <button type="submit" disabled={saving} className="btn-save primary">
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -394,9 +394,9 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
       </div>
 
       {isAppFormOpen && (
-        <div className="modal-overlay nested-overlay">
-          <div className="modal-content nested-modal-content">
-            <div className="modal-header">
+        <div className="custom-modal-overlay nested-overlay">
+          <div className="custom-modal-content nested-modal-content">
+            <div className="custom-modal-header">
               <h2>{editingAppIndex !== null ? "Edit App Details" : "Add App Details"}</h2>
               <MdClose size={28} className="close-icon" onClick={() => { setIsAppFormOpen(false); setEditingAppIndex(null); }} />
             </div>
@@ -428,7 +428,7 @@ const UnifiedEditModal = ({ isOpen, onClose, handleSave, saving, initialData, sp
                 <textarea name="notes" value={appFormData.notes || ""} onChange={handleAppChange} rows="2" className="form-input textarea-input"></textarea>
               </label>
 
-              <div className="modal-actions nested-actions">
+              <div className="custom-modal-actions nested-actions">
                 <button type="button" onClick={saveAppToList} disabled={isAllAppsAdded && editingAppIndex === null} className="btn-save primary">
                   Save
                 </button>

@@ -27,14 +27,14 @@ const EditSprintModal = ({
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ width: '500px' }}>
-        <div className="modal-header">
+    <div className="custom-modal-overlay">
+      <div className="custom-modal-content" style={{ width: '500px' }}>
+        <div className="custom-modal-header">
           <h2>Edit Sprint Details</h2>
           <MdClose size={28} className="close-icon" onClick={onClose} />
         </div>
 
-        <form onSubmit={handleSprintSave} onKeyDown={handleKeyDown} className="modal-form">
+        <form onSubmit={handleSprintSave} onKeyDown={handleKeyDown} className="custom-modal-form">
           <label className="form-label full-width">
             Sprint Name
             <input 
@@ -82,7 +82,7 @@ const EditSprintModal = ({
             ></textarea>
           </label>
 
-          <div className="modal-actions">
+          <div className="custom-modal-actions">
             <button type="submit" disabled={saving} className="btn-save primary">
               {saving ? "Saving..." : "Save Changes"}
             </button>

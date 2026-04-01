@@ -38,9 +38,9 @@ const ConnectToGitModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content git-modal-content">
-        <div className="modal-header git-modal-header">
+    <div className="custom-modal-overlay">
+      <div className="custom-modal-content git-modal-content">
+        <div className="custom-modal-header git-modal-header">
           <h3 className="git-modal-title">
             <FaGithub size={24} /> GitHub Setup
           </h3>
@@ -49,7 +49,7 @@ const ConnectToGitModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <div className="modal-body git-modal-body">
+        <div className="custom-modal-body git-modal-body">
           {isConnected ? (
             <div className="git-connected-container">
               <FaCheckCircle size={60} color="#16a34a" />

@@ -385,7 +385,7 @@ const SprintStories = () => {
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
-            <h2 className="sprint-story-title">{sprint?.name}</h2>
+            <h3 className="sprint-story-title">{sprint?.name}</h3>
             <button
               onClick={openSprintEditModal}
               className="sprint-edit-btn"

@@ -30,16 +30,16 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content main-pr-modal">
-        <div className="modal-header">
+    <div className="custom-modal-overlay">
+      <div className="custom-modal-content main-pr-modal">
+        <div className="custom-modal-header">
           <h2>
             <FaGithub />
           </h2>
           <MdClose size={28} className="close-icon" onClick={onClose} />
         </div>
 
-        <form className="modal-form">
+        <form className="custom-modal-form">
           <p>
             Generate a PR link for <strong>{appName}</strong>.
           </p>
@@ -53,7 +53,7 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
             />
           </label>
 
-          <div className="modal-actions" style={{ justifyContent: "center" }}>  
+          <div className="custom-modal-actions" style={{ justifyContent: "center" }}>  
             {appBranches.thor && (
               <button
                 className="storyDetails-modal-btn-pr"
