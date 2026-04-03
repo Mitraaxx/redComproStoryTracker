@@ -358,4 +358,13 @@ export const repoConfig = {
       hotfix: "env/hotfix",
     },
   },
+  "cypress-automation-c1": {
+    baseUrl:
+      "https://github.com/ComproSQA/cypress-automation-c1/compare/",
+    orgName: "ComproSQA",
+    repoName: "cypress-automation-c1",
+    envBranches: {
+      thor: "main",
+    },
+  },
 };

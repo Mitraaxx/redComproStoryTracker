@@ -23,7 +23,7 @@ const AppList = () => {
   return (
     <div className="sprint-container">
       <div className="sprint-container2">
-        <h2 className="sprint-title">Applications</h2>
+        <h3 className="sprint-title">Applications</h3>
 
         <div className="sprint-search-header">
           <input

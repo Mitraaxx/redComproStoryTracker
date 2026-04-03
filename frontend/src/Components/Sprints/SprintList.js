@@ -3,11 +3,11 @@ import { fetchAllSprints, createSprint, clearAllCaches } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 import "../Sprints/SprintList.css";
-import CreateSprintModal from "../Modals/CreateSprintModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import { AiOutlineArrowUp } from "react-icons/ai";
+import SprintModal from "../Modals/SprintModal";
 
 /**
  * Main component to render and manage the complete list of sprints.
@@ -20,12 +20,6 @@ const SprintList = () => {
   const navigate = useNavigate();
 
   const [isCreateSprintModalOpen, setCreateIsSprintModalOpen] = useState(false);
-  const [newSprintData, setNewSprintData] = useState({
-    name: "",
-    startDate: "",
-    endDate: "",
-    sprintNotes: "",
-  });
   const [savingSprint, setSavingSprint] = useState(false);
 
   // For load more at bottom
@@ -91,32 +85,11 @@ const SprintList = () => {
   }, [visibleCount]);
 
   /**
-   * Initializes the form data to empty values and opens the "Create Sprint" modal.
-   */
-  const openCreateSprintModal = () => {
-    setNewSprintData({
-      name: "",
-      startDate: "",
-      endDate: "",
-      sprintNotes: "",
-    });
-    setCreateIsSprintModalOpen(true);
-  };
-
-  /**
-   * Handles input changes within the create sprint modal form.
-   */
-  const handleSprintChange = (e) => {
-    setNewSprintData({ ...newSprintData, [e.target.name]: e.target.value });
-  };
-
-  /**
    * Handles the submission of a new sprint.
    * Sends data to the API, clears local caches, refreshes the sprint list,
    * and displays a toast notification regarding the outcome.
    */
-  const handleSprintSave = async (e) => {
-    e.preventDefault();
+  const handleSprintSave = async (newSprintData) => {
     setSavingSprint(true);
     try {
       await createSprint(newSprintData);
@@ -125,10 +98,10 @@ const SprintList = () => {
       clearAllCaches();
       const data = await fetchAllSprints();
       setSprints(data);
-      toast.success("Sprint updated successfully");
+      toast.success("Sprint created successfully");
     } catch (error) {
       console.error("Sprint Save error:", error);
-      toast.error("Sprint Name exists");
+      toast.error(error.message || "Failed to create Sprint");
     } finally {
       setSavingSprint(false);
     }
@@ -216,7 +189,7 @@ const SprintList = () => {
     <div className="sprint-container">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="sprint-container2">
-        <h2 className="sprint-title">Sprint List</h2>
+        <h3 className="sprint-title">Sprint List</h3>
         <div className="sprint-search-header">
           <input
             type="text"
@@ -229,8 +202,8 @@ const SprintList = () => {
             }}
           />
           <button
+            onClick={() => setCreateIsSprintModalOpen(true)}
             className="create-sprint-button"
-            onClick={openCreateSprintModal}
           >
             Add Sprint
           </button>
@@ -246,12 +219,12 @@ const SprintList = () => {
           >
             {/* Sprint ka naam */}
             <span className="sprint-card-name">{sprint.name}</span>
-            
+
             {/* Sprint ki Date Range */}
             {(sprint.startDate || sprint.endDate) && (
               <span className="sprint-card-dates">
-                {sprint.startDate ? formatDate(sprint.startDate) : "TBD"} 
-                {" - "} 
+                {sprint.startDate ? formatDate(sprint.startDate) : "TBD"}
+                {" - "}
                 {sprint.endDate ? formatDate(sprint.endDate) : "TBD"}
               </span>
             )}
@@ -276,16 +249,15 @@ const SprintList = () => {
           )}
 
           <button className="back-top-btn" onClick={scrollToTop}>
-            <AiOutlineArrowUp/>
+            <AiOutlineArrowUp />
           </button>
         </div>
       )}
 
-      <CreateSprintModal
+      <SprintModal
         isOpen={isCreateSprintModalOpen}
         onClose={() => setCreateIsSprintModalOpen(false)}
-        formData={newSprintData}
-        handleChange={handleSprintChange}
+        initialData={null}
         handleSave={handleSprintSave}
         saving={savingSprint}
       />
