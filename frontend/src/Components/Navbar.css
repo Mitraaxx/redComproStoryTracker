@@ -1,4 +1,3 @@
-/* Custom Background & Border for Bootstrap Navbar */
 .custom-navbar-bg {
   background-color: #f0f7ff !important; 
   border-bottom: 1px solid #dbeafe;
@@ -11,7 +10,6 @@
   object-fit: contain;
 }
 
-/* Nav Buttons Styling (Same as before) */
 .nav-button {
   padding: 8px 16px;
   cursor: pointer;
@@ -21,11 +19,11 @@
   border-radius: 6px;
   transition: all 0.3s;
   font-weight: 500;
-  width: 100%; /* Mobile par full width click area deta hai */
+  width: 100%; 
   text-align: center;
 }
 
-/* Large screens par width normal kardenge */
+
 @media (min-width: 992px) {
   .nav-button {
     width: auto;
@@ -42,21 +40,21 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-/* Git Connect Button Styling (Same as before) */
 .git-connect-nav-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 8px 14px;
-  background-color: #24292F;     
-  color: #ffffff;
+  background-color: #f1f5f9;
+  color: #24292F;
+  border: 1.5px solid #24292F;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   font-size: 0.9rem;
   transition: all 0.3s ease;
-  width: 100%; /* Mobile ke liye */
+  width: 100%; 
 }
 
 @media (min-width: 992px) {
@@ -65,6 +63,11 @@
   }
 }
 
+.git-connect-nav-btn:hover {
+  background-color: #24292F;     
+  color: #ffffff;
+  border-color: #24292F;
+}
 
 .git-connect-nav-btn.connected {
   background-color: #f0fdf4;
@@ -76,7 +79,6 @@
   background-color: #dcfce7;
 }
 
-/* Toggler (Hamburger) Icon Color Change */
 .custom-toggler {
   border-color: #3b82f6 !important;
   outline: none;

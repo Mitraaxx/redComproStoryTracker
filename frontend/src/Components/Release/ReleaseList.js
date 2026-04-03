@@ -3,12 +3,12 @@ import { fetchAllReleases, createRelease } from "../../Api/api";
 import { HashLoader } from "react-spinners";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CreateReleaseModal from "../Modals/CreateReleaseModal";
 import "../Sprints/SprintList.css";
 import "../Release/ReleaseList.css";
 import { useNavigate } from "react-router-dom";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import { AiOutlineArrowUp } from "react-icons/ai";
+import ReleaseModal from "../Modals/ReleaseModal";
 
 /**
  * Main component to render and manage the global list of software releases.
@@ -20,13 +20,6 @@ const ReleaseList = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    releaseDate: "",
-    devCutoff: "",
-    qaSignoff: "",
-    category: "",
-  });
   const [saving, setSaving] = useState(false);
 
   // For load more at bottom
@@ -121,25 +114,18 @@ const ReleaseList = () => {
    * Opens the Create Release modal and resets the form data.
    */
   const handleOpenModal = () => {
-    setFormData({ name: "", releaseDate: "", category: "" });
     setIsModalOpen(true);
   };
 
-  /**
-   * Captures input changes within the Create Release modal.
-   */
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   /**
    * Submits the new release data to the API, refreshes the release list,
    * and handles toast notifications for success or failure..
    */
-  const handleSave = async (e) => {
-    e.preventDefault();
+  const handleSave = async (newReleaseData) => {
     setSaving(true);
     try {
-      await createRelease(formData);
+      await createRelease(newReleaseData);
       setIsModalOpen(false);
       await getReleases();
       toast.success("Release created successfully");
@@ -175,11 +161,9 @@ const ReleaseList = () => {
         item.category?.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     .sort((a, b) => {
-      // Agar date hai toh usko time (milliseconds) mein convert karo, warna 0 (TBD ke liye)
       const dateA = a.releaseDate ? new Date(a.releaseDate).getTime() : 0;
       const dateB = b.releaseDate ? new Date(b.releaseDate).getTime() : 0;
 
-      // Descending order (bade se chota / latest se oldest)
       return dateB - dateA;
     });
   const visibleRelease = filtered.slice(0, visibleCount);
@@ -295,16 +279,15 @@ const ReleaseList = () => {
           )}
 
           <button className="back-top-btn" onClick={scrollToTop}>
-            <AiOutlineArrowUp/>
+            <AiOutlineArrowUp />
           </button>
         </div>
       )}
 
-      <CreateReleaseModal
+      <ReleaseModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        formData={formData}
-        handleChange={handleChange}
+        initialData={null}
         handleSave={handleSave}
         saving={saving}
       />

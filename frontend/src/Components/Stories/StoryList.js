@@ -11,10 +11,10 @@ import { useNavigate } from "react-router-dom";
 import "../Stories/StoryList.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CreateStoryModal from "../Modals/CreateStoryModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import StoryFilter from "../Tools/StoryFilter";
 import { AiOutlineArrowUp } from "react-icons/ai"; 
+import StoryModal from "../Modals/StoryModal";
 
 
 
@@ -355,7 +355,8 @@ const StoryList = () => {
         </div>
       )}
 
-      <CreateStoryModal
+
+      <StoryModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         handleSave={handleCreateNewStory}

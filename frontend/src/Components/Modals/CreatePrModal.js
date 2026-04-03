@@ -30,15 +30,42 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
   };
 
   return (
-    <div className="custom-modal-overlay">
-      <div className="custom-modal-content main-pr-modal">
-        <div className="custom-modal-header">
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      style={{
+        backgroundColor: "rgba(15, 23, 42, 0.6)",
+        backdropFilter: "blur(4px)",
+        zIndex: 1040,
+      }}
+    >
+      <div
+        className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+        style={{ maxWidth: "600px" }}
+      >
+      <div
+          className="modal-content border-0"
+          style={{
+            borderRadius: "25px",
+            boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
+          }}
+        >
+        <div
+            className="modal-header px-4 pt-4 pb-3"
+            style={{
+              borderBottom: "1px solid #e2e8f0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
           <h2>
             <FaGithub />
           </h2>
           <MdClose size={28} className="close-icon" onClick={onClose} />
         </div>
-
+        
+        <div className="modal-body px-4 pb-4">
         <form className="custom-modal-form">
           <p>
             Generate a PR link for <strong>{appName}</strong>.
@@ -85,6 +112,8 @@ const CreatePrModal = ({ isOpen, onClose, appName, featureBranch }) => {
             )}
           </div>
         </form>
+        </div>
+      </div>
       </div>
     </div>
   );

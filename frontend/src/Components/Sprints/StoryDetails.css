@@ -361,3 +361,25 @@
     margin-top: 0;
   }
 }
+
+@media (max-width: 845px) and (min-width: 400px){
+  .sprint-storyDetails-container2-5 {
+    grid-template-columns: repeat(3, 1fr); 
+    max-width: 100%;
+  }
+
+  .sprint-storyDetails-container2-5 p.comments-field {
+    grid-column: 1 / -1; 
+    grid-row: auto;      
+    max-width: 100%;     
+    width: 100%;
+    min-height: auto;
+    margin-top: 15px;
+  }
+
+  .sprint-storyDetails-container2-5 p:last-child:not(.comments-field) {
+    grid-column: auto;
+    grid-row: auto;
+    margin-top: 0;
+  }
+}

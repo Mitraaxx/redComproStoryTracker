@@ -69,8 +69,8 @@
 
 .release-title-group {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  align-items: flex-start; 
+  gap: 15px;
   margin-bottom: 5px;
 }
 
@@ -84,9 +84,10 @@
 
 .release-story-title {
   color: #1e293b;
-  margin-bottom: 0; 
   font-weight: 550;
+  margin-bottom: 10px !important;
   padding-top: 20px;
+  margin-top: 0;
 }
 
 /* ==========================================
@@ -379,14 +380,17 @@
   .relTop-btn-group{
     margin-bottom: 20px;
   }
-  .btn-add-existing{
-    padding: 12px 5px;
-    font-size: 0.65rem;
-  }
   .release-story-grid {
     justify-content: center; 
   }
   .release-story-card{
     min-width: 290px
+  }
+}
+
+@media (min-width: 668px) and (max-width: 1120px) {
+  .release-story-container2{
+    flex-direction: column;
+    gap: 20px;
   }
 }

@@ -216,7 +216,7 @@ const AppStories = () => {
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
-            <h3 className="sprint-story-title">{appName}</h3>
+            <h3 className="sprint-title">{appName}</h3>
           </div>
         </section>
 
@@ -230,7 +230,6 @@ const AppStories = () => {
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                // Reset pagination to default items per page when a search is executed
                 setVisibleCount(ITEMS_PER_PAGE);
               }}
             />
