@@ -38,9 +38,35 @@ const ConnectToGitModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content git-modal-content">
-        <div className="modal-header git-modal-header">
+    <div
+      className="modal show d-block"
+      tabIndex="-1"
+      style={{
+        backgroundColor: "rgba(15, 23, 42, 0.6)",
+        backdropFilter: "blur(4px)",
+        zIndex: 1040,
+      }}
+    >
+      <div
+        className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+        style={{ maxWidth: "600px" }}
+      >
+      <div
+          className="modal-content border-0"
+          style={{
+            borderRadius: "25px",
+            boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
+          }}
+        >
+          <div
+            className="modal-header px-4 pt-4 pb-3"
+            style={{
+              borderBottom: "1px solid #e2e8f0",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
           <h3 className="git-modal-title">
             <FaGithub size={24} /> GitHub Setup
           </h3>
@@ -49,7 +75,7 @@ const ConnectToGitModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <div className="modal-body git-modal-body">
+          <div className="modal-body px-4 pb-4">
           {isConnected ? (
             <div className="git-connected-container">
               <FaCheckCircle size={60} color="#16a34a" />
@@ -85,6 +111,7 @@ const ConnectToGitModal = ({ isOpen, onClose }) => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

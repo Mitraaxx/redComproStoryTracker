@@ -14,14 +14,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
-import EditReleaseModal from "../Modals/EditReleaseModal";
+
 import "./ReleaseStories.css"; 
 import { repoConfig, ITEMS_PER_PAGE } from "../../utils/AppConfig";
-import MasterPrModal from "../Modals/MasterPrModal";
-import AlphaPrModal from "../Modals/AlphaPrModal";
-import HFXPrModal from "../Modals/HFXPrModal";
 import StoryFilter from "../Tools/StoryFilter";
-import { useAuth } from "@clerk/clerk-react"; 
+import ReleaseModal from "../Modals/ReleaseModal";
+import PrModal from "../Modals/prModal";
 
 /**
  * Component to manage and display stories tied to a specific Release.
@@ -36,7 +34,6 @@ const ReleaseStories = () => {
   const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
 
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
-  const [releaseFormData, setReleaseFormData] = useState({});
   const [savingRelease, setSavingRelease] = useState(false);
 
   const [newManualApp, setNewManualApp] = useState("");
@@ -284,44 +281,17 @@ const ReleaseStories = () => {
    * Opens the Release Edit Modal, pre-filling it with the current release context.
    */
   const openReleaseEditModal = () => {
-    setReleaseFormData({
-      name: release?.name || "",
-      releaseDate: formatDateForInput(release?.releaseDate),
-      devCutoff: formatDateForInput(release?.devCutoff), 
-      qaSignoff: formatDateForInput(release?.qaSignoff), 
-      category: release?.category || "",
-    });
     setIsReleaseModalOpen(true);
-  };
-
-  const handleReleaseChange = (e) => {
-    setReleaseFormData({ ...releaseFormData, [e.target.name]: e.target.value });
   };
 
   /**
    * Saves metadata modifications to the release context (name, date, category).
    * Bypasses the API call if no changes were detected.
    */
-  const handleReleaseSave = async (e) => {
-    e.preventDefault();
-    const isNameSame = (releaseFormData.name || "") === (release?.name || "");
-    const isDateSame =
-      (releaseFormData.releaseDate || "") ===
-      formatDateForInput(release?.releaseDate);
-    const isCatSame =
-      (releaseFormData.category || "") === (release?.category || "");
-
-    const isDevSame = (releaseFormData.devCutoff || "") === formatDateForInput(release?.devCutoff);
-    const isQaSame = (releaseFormData.qaSignoff || "") === formatDateForInput(release?.qaSignoff);
-
-    if (isNameSame && isDateSame && isCatSame && isDevSame && isQaSame) {
-      setIsReleaseModalOpen(false);
-      return;
-    }
-
+  const handleReleaseSave = async (updatedSprintData) => {
     setSavingRelease(true);
     try {
-      await updateRelease(releaseId, releaseFormData);
+      await updateRelease(releaseId, updatedSprintData);
 
       setIsReleaseModalOpen(false);
       clearAllCaches();
@@ -524,7 +494,7 @@ const ReleaseStories = () => {
       <div className="release-story-container2">
         <section>
           <div className="release-title-group">
-            <h2 className="release-story-title">{release?.name}</h2>
+            <h3 className="release-story-title">{release?.name}</h3>
             <button
               onClick={openReleaseEditModal}
               className="release-edit-btn"
@@ -629,7 +599,6 @@ const ReleaseStories = () => {
         </section>
       </div>
 
-      {/* List of all the apps to be deployed present in the stories attached with the release tag */}
       <div
         style={{
           display: "flex",
@@ -737,7 +706,6 @@ const ReleaseStories = () => {
         <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
-      {/* This displays all the stories in dynamic card format attached with the release tag */}
       <div className="release-story-grid">
         {visibleStories.length > 0 ? (
           visibleStories.map((story) => (
@@ -965,25 +933,28 @@ const ReleaseStories = () => {
         </div>
       )}
 
-      <MasterPrModal
+      <PrModal
         isOpen={isMasterModalOpen}
         onClose={() => setIsMasterModalOpen(false)}
         appsToBeDeployed={combinedUniqueApps}
         releaseName={release?.name}
+        prType="master"
       />
 
-      <AlphaPrModal
+      <PrModal
         isOpen={isAlphaModalOpen}
         onClose={() => setIsAlphaModalOpen(false)}
         appsToBeDeployed={combinedUniqueApps}
         releaseName={release?.name}
+        prType="alpha"
       />
 
-      <HFXPrModal
+      <PrModal
         isOpen={isHFXModalOpen}
         onClose={() => setIsHFXModalOpen(false)}
         appsToBeDeployed={combinedUniqueApps}
         releaseName={release?.name}
+        prType="hfx"
       />
 
       <AddExistingStoryModal
@@ -992,12 +963,12 @@ const ReleaseStories = () => {
         onSelectStory={handleSelectExistingStory}
         currentSprintStories={stories}
       />
-      <EditReleaseModal
+      
+      <ReleaseModal
         isOpen={isReleaseModalOpen}
         onClose={() => setIsReleaseModalOpen(false)}
-        releaseFormData={releaseFormData}
-        handleReleaseChange={handleReleaseChange}
-        handleReleaseSave={handleReleaseSave}
+        initialData={release}
+        handleSave={handleReleaseSave}
         saving={savingRelease}
       />
     </div>

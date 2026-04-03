@@ -17,9 +17,8 @@ import "../Sprints/StoryDetails.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CreatePrModal from "../Modals/CreatePrModal";
-import UnifiedEditModal from "../Modals/UnifiedEditModal";
-import { useAuth } from "@clerk/clerk-react"; 
 import { repoConfig } from "../../utils/AppConfig"; 
+import StoryModal from "../Modals/StoryModal";
 
 /**
  * Component to display the comprehensive details of a specific story.
@@ -475,7 +474,7 @@ const StoryDetails = () => {
         featureBranch={prAppData.featureBranch}
       />
 
-      <UnifiedEditModal
+      <StoryModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         handleSave={handleEditStorySave}

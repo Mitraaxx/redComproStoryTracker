@@ -12,13 +12,14 @@ import { MdArrowBack, MdEdit } from "react-icons/md";
 import { HashLoader } from "react-spinners";
 import { useParams, useNavigate } from "react-router-dom";
 import "../Sprints/SprintStories.css";
-import EditSprintModal from "../Modals/EditSprintModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CreateStoryModal from "../Modals/CreateStoryModal";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import StoryFilter from "../Tools/StoryFilter";
+import StoryModal from "../Modals/StoryModal";
+import SprintModal from "../Modals/SprintModal";
+
 
 /**
  * Component to manage and display all stories associated with a specific Sprint.
@@ -33,7 +34,6 @@ const SprintStories = () => {
   const navigate = useNavigate();
 
   const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
-  const [sprintFormData, setSprintFormData] = useState({});
   const [savingSprint, setSavingSprint] = useState(false);
 
   const [isCreateStoryModalOpen, setIsCreateStoryModalOpen] = useState(false);
@@ -169,59 +169,16 @@ const SprintStories = () => {
     navigate("/sprints");
   };
 
-  /**
-   * Utility function to format a raw ISO date string into a standard "YYYY-MM-DD" format
-   * suitable for HTML date input fields.
-   */
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return "";
-    return new Date(dateString).toISOString().split("T")[0];
-  };
-
-  /**
-   * Populates the sprint edit form with current sprint data and opens the edit modal.
-   */
-  const openSprintEditModal = () => {
-    setSprintFormData({
-      name: sprint?.name || "",
-      startDate: formatDateForInput(sprint?.startDate),
-      endDate: formatDateForInput(sprint?.endDate),
-      sprintNotes: sprint?.sprintNotes || "",
-    });
-    setIsSprintModalOpen(true);
-  };
-
-  /**
-   * Handles input changes within the sprint edit modal form.
-   */
-  const handleSprintChange = (e) => {
-    setSprintFormData({ ...sprintFormData, [e.target.name]: e.target.value });
-  };
 
   /**
    * Submits the updated sprint information to the backend API.
    * Prevents unnecessary API calls if no data has been modified.
    */
-  const handleSprintSave = async (e) => {
-    e.preventDefault();
-    const isNameSame = (sprintFormData.name || "") === (sprint?.name || "");
-    const isStartSame =
-      (sprintFormData.startDate || "") ===
-      formatDateForInput(sprint?.startDate);
-    const isEndSame =
-      (sprintFormData.endDate || "") === formatDateForInput(sprint?.endDate);
-    const isNotesSame =
-      (sprintFormData.sprintNotes || "") === (sprint?.sprintNotes || "");
-
-    if (isNameSame && isStartSame && isEndSame && isNotesSame) {
-      console.log("No sprint changes detected. Skipping API call.");
-      setIsSprintModalOpen(false);
-      return;
-    }
-
+  const handleSprintSave = async (updatedSprintData) => {
     setSavingSprint(true);
     try {
-      await updateSprint(sprintId, sprintFormData);
+      // Yahan api call jaayegi updated data ke sath
+      await updateSprint(sprintId, updatedSprintData);
 
       setIsSprintModalOpen(false);
       clearAllCaches();
@@ -230,10 +187,10 @@ const SprintStories = () => {
       setStories(updatedData.stories);
       setSprint(updatedData.sprint);
 
-      toast.success("Update Successful");
+      toast.success("Sprint Updated Successfully");
     } catch (error) {
       console.error("Sprint Save error:", error);
-      toast.error("Sprint Name exists");
+      toast.error("Sprint Name already exists or failed to update");
     } finally {
       setSavingSprint(false);
     }
@@ -385,13 +342,13 @@ const SprintStories = () => {
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
-            <h2 className="sprint-story-title">{sprint?.name}</h2>
+            <h3 className="sprint-story-title">{sprint?.name}</h3>
             <button
-              onClick={openSprintEditModal}
+              onClick={() => setIsSprintModalOpen(true)}
               className="sprint-edit-btn"
               title="Edit Sprint"
             >
-              <MdEdit size={15} />
+              <MdEdit/>
             </button>
           </div>
           <p className="sprint-date-badge">
@@ -506,16 +463,15 @@ const SprintStories = () => {
         </div>
       )}
 
-      <EditSprintModal
+      <SprintModal
         isOpen={isSprintModalOpen}
         onClose={() => setIsSprintModalOpen(false)}
-        sprintFormData={sprintFormData}
-        handleSprintChange={handleSprintChange}
-        handleSprintSave={handleSprintSave}
+        initialData={sprint} 
+        handleSave={handleSprintSave}
         saving={savingSprint}
       />
 
-      <CreateStoryModal
+      <StoryModal
         isOpen={isCreateStoryModalOpen}
         onClose={() => setIsCreateStoryModalOpen(false)}
         handleSave={handleCreateNewStory}
