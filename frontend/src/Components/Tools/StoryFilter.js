@@ -3,6 +3,7 @@ import { MdFilterList, MdClose } from "react-icons/md";
 import { useSearchParams } from "react-router-dom"; 
 import "./StoryFilter.css";
 import { TEAM_MEMBERS, STATUS_MEMBERS, repoConfig } from "../../utils/AppConfig";
+import SearchableSelect from "./SeachableSelect";
 
 const StoryFilter = ({ onApplyFilter }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -144,58 +145,29 @@ const StoryFilter = ({ onApplyFilter }) => {
               <div className="col-12">
                 <label className="filter-label">Assignee</label>
                 <div style={{ position: "relative" }}>
-                  <input
-                    list="filter-assignee-options"
-                    name="assignee"
-                    value={filters.assignee}
-                    onChange={handleChange}
-                    className="filter-input"
-                    placeholder="Search"
-                    autoComplete="off"
-                    style={{ paddingRight: "30px" }} 
-                  />
-                  {filters.assignee && (
-                    <MdClose
-                      size={18}
-                      style={clearIconStyle}
-                      onClick={() => handleClearField("assignee")}
-                      title="Clear Assignee"
-                    />
-                  )}
-                  <datalist id="filter-assignee-options">
-                    {TEAM_MEMBERS.map((a) => (
-                      <option key={a} value={a} />
-                    ))}
-                  </datalist>
+                  
+                   
+                  <SearchableSelect
+                        name="assignee"
+                        value={filters.assignee}
+                        onChange={handleChange}
+                        options={TEAM_MEMBERS}
+                        placeholder="Search"
+                      />
                 </div>
               </div>
 
               <div className="col-12">
                 <label className="filter-label">Currently With</label>
                 <div style={{ position: "relative" }}>
-                  <input
-                    list="filter-status-options"
-                    name="status"
-                    value={filters.status}
-                    onChange={handleChange}
-                    className="filter-input"
-                    placeholder="Search"
-                    autoComplete="off"
-                    style={{ paddingRight: "30px" }}
-                  />
-                  {filters.status && (
-                    <MdClose
-                      size={18}
-                      style={clearIconStyle}
-                      onClick={() => handleClearField("status")}
-                      title="Clear Status"
-                    />
-                  )}
-                  <datalist id="filter-status-options">
-                    {STATUS_MEMBERS.map((s) => (
-                      <option key={s} value={s} />
-                    ))}
-                  </datalist>
+                  
+                  <SearchableSelect
+                        name="status"
+                        value={filters.status}
+                        onChange={handleChange}
+                        options={STATUS_MEMBERS}
+                        placeholder="Search"
+                      />
                 </div>
               </div>
 
@@ -225,6 +197,14 @@ const StoryFilter = ({ onApplyFilter }) => {
                       <option key={i} value={appName} />
                     ))}
                   </datalist>
+                  <SearchableSelect
+                        name="apps"
+                        value={filters.status}
+                        onChange={handleChange}
+                        options={STATUS_MEMBERS}
+                        placeholder="Search"
+                      />
+                 
                 </div>
               </div>
 
