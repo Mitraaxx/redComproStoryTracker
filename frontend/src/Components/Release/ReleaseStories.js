@@ -20,6 +20,7 @@ import { repoConfig, ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import StoryFilter from "../Tools/StoryFilter";
 import ReleaseModal from "../Modals/ReleaseModal";
 import PrModal from "../Modals/prModal";
+import SearchableSelect from "../Tools/SeachableSelect";
 
 /**
  * Component to manage and display stories tied to a specific Release.
@@ -504,9 +505,14 @@ const ReleaseStories = () => {
             </button>
           </div>
 
-          <div className="release-Date-group">            
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              <p className="release-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}>
+          <div className="release-Date-group">
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
+              <p
+                className="release-date-badge"
+                style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}
+              >
                 <strong>Release Date: </strong>
                 {release?.releaseDate
                   ? new Date(release.releaseDate).toLocaleDateString("en-IN", {
@@ -516,8 +522,11 @@ const ReleaseStories = () => {
                     })
                   : "TBD"}
               </p>
-              
-              <p className="release-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}>
+
+              <p
+                className="release-date-badge"
+                style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}
+              >
                 <strong>Dev Cutoff: </strong>
                 {release?.devCutoff
                   ? new Date(release.devCutoff).toLocaleDateString("en-IN", {
@@ -527,8 +536,11 @@ const ReleaseStories = () => {
                     })
                   : "TBD"}
               </p>
-              
-              <p className="release-date-badge" style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}>
+
+              <p
+                className="release-date-badge"
+                style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}
+              >
                 <strong>QA Signoff: </strong>
                 {release?.qaSignoff
                   ? new Date(release.qaSignoff).toLocaleDateString("en-IN", {
@@ -541,12 +553,15 @@ const ReleaseStories = () => {
             </div>
 
             <div>
-              <p className="release-date-badge" id="rel-date-badge" style={{ padding: "6px 12px", fontSize: "0.8rem", margin: 0 }}>
+              <p
+                className="release-date-badge"
+                id="rel-date-badge"
+                style={{ padding: "6px 12px", fontSize: "0.8rem", margin: 0 }}
+              >
                 <strong>Category: </strong>
                 {release?.category || "General"}
               </p>
             </div>
-
           </div>
         </section>
 
@@ -661,29 +676,14 @@ const ReleaseStories = () => {
             marginLeft: "auto",
           }}
         >
-          <input
-            list="release-apps-options"
-            type="text"
+          <SearchableSelect
+            name="appsToBeDeployedInput"
             value={newManualApp}
             onChange={(e) => setNewManualApp(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAddManualApp()}
-            placeholder="Select app to add..."
-            style={{
-              padding: "6px 10px",
-              borderRadius: "6px",
-              border: "1px solid #cbd5e1",
-              fontSize: "0.8rem",
-              width: "160px",
-              outline: "none",
-            }}
+             onKeyDown={(e) => e.key === "Enter" && handleAddManualApp()}
+            options={availableAppsForManualAdd}
+            placeholder="Select App"
           />
-          <datalist id="release-apps-options">
-            {availableAppsForManualAdd.map((appName, i) => (
-              <option key={i} value={appName}>
-                {appName}
-              </option>
-            ))}
-          </datalist>
           <button
             onClick={handleAddManualApp}
             style={{
@@ -752,27 +752,29 @@ const ReleaseStories = () => {
                   }}
                 >
                   <strong
-                    style={{ 
-                    fontSize: "0.75rem", 
-                    color: "#2563eb", 
-                    backgroundColor: "#eff6ff",
-                    padding: "8px",
-                    borderRadius: "5px",
-                    display: "inline-block", 
-                    marginBottom: "10px",
-                    fontWeight: "600",
-                    textTransform: "uppercase",
-                  }}
+                    style={{
+                      fontSize: "0.75rem",
+                      color: "#2563eb",
+                      backgroundColor: "#eff6ff",
+                      padding: "8px",
+                      borderRadius: "5px",
+                      display: "inline-block",
+                      marginBottom: "10px",
+                      fontWeight: "600",
+                      textTransform: "uppercase",
+                    }}
                   >
                     Apps:
                   </strong>
                   {story.linkedApps.map((appItem, idx) => {
                     const repoName =
                       appItem.appRef?.name || appItem.appName || "Unknown";
-                    
+
                     const appConfig = repoConfig[repoName] || {};
                     const targetBranch = appConfig.envBranches?.rel || "";
-                    const baseUrl = appConfig.baseUrl || `https://github.com/comprodls/${repoName}/compare/`;
+                    const baseUrl =
+                      appConfig.baseUrl ||
+                      `https://github.com/comprodls/${repoName}/compare/`;
 
                     return (
                       <div key={idx} style={{ marginBottom: "12px" }}>
@@ -833,7 +835,7 @@ const ReleaseStories = () => {
                                     </span>
                                     <button
                                       onClick={(e) => {
-                                        e.stopPropagation(); 
+                                        e.stopPropagation();
                                         const githubUrl = `${baseUrl}${targetBranch}...${branch}`;
                                         window.open(githubUrl, "_blank");
                                       }}
@@ -844,14 +846,26 @@ const ReleaseStories = () => {
                                     </button>
                                   </div>
 
-                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <div className="merged-till-badge" style={{ margin: 0 }}>
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                    }}
+                                  >
+                                    <div
+                                      className="merged-till-badge"
+                                      style={{ margin: 0 }}
+                                    >
                                       Merged Till:{" "}
                                       <strong>
                                         {currentStatus ? (
                                           currentStatus
                                         ) : (
-                                          <FaSync className="spin-icon" color="#15803d" />
+                                          <FaSync
+                                            className="spin-icon"
+                                            color="#15803d"
+                                          />
                                         )}
                                       </strong>
                                     </div>
@@ -859,13 +873,13 @@ const ReleaseStories = () => {
                                     {currentStatus && (
                                       <button
                                         onClick={(e) => {
-                                          e.stopPropagation(); 
+                                          e.stopPropagation();
                                           if (config) {
                                             handleSpecificRefresh(
-                                              repoName, 
-                                              config.orgName, 
-                                              repoName, 
-                                              branch
+                                              repoName,
+                                              config.orgName,
+                                              repoName,
+                                              branch,
                                             );
                                           }
                                         }}
@@ -963,7 +977,7 @@ const ReleaseStories = () => {
         onSelectStory={handleSelectExistingStory}
         currentSprintStories={stories}
       />
-      
+
       <ReleaseModal
         isOpen={isReleaseModalOpen}
         onClose={() => setIsReleaseModalOpen(false)}

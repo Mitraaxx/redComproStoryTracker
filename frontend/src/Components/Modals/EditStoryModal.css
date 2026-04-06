@@ -172,3 +172,10 @@
   background-color: #4A515B;
   color: #ffffff;
 }
+
+@media (max-width: 395px) {
+  .form-grid{
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

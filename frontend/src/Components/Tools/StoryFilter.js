@@ -174,37 +174,14 @@ const StoryFilter = ({ onApplyFilter }) => {
               <div className="col-12">
                 <label className="filter-label">Apps</label>
                 <div style={{ position: "relative" }}>
-                  <input
-                    list="filter-apps-options"
+                  <SearchableSelect
                     name="apps"
                     value={filters.apps}
                     onChange={handleChange}
-                    className="filter-input"
-                    placeholder="Search"
-                    autoComplete="off"
-                    style={{ paddingRight: "30px" }}
+                    options={Object.keys(repoConfig)}
+                    placeholder="Search App"
                   />
-                  {filters.apps && (
-                    <MdClose
-                      size={18}
-                      style={clearIconStyle}
-                      onClick={() => handleClearField("apps")}
-                      title="Clear Apps"
-                    />
-                  )}
-                  <datalist id="filter-apps-options">
-                    {Object.keys(repoConfig).map((appName, i) => (
-                      <option key={i} value={appName} />
-                    ))}
-                  </datalist>
-                  <SearchableSelect
-                        name="apps"
-                        value={filters.status}
-                        onChange={handleChange}
-                        options={STATUS_MEMBERS}
-                        placeholder="Search"
-                      />
-                 
+
                 </div>
               </div>
 

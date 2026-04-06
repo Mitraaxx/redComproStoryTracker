@@ -161,8 +161,9 @@ exports.getAppDetails = async (req, res) => {
 // ================= UPDATE STORY DETAILS ONLY =================
 exports.updateStoryDetails = async (req, res) => {
   try {
-    const { storyId } = req.params;
+    const { storyId: oldStoryId } = req.params;
     const {
+      storyId: newStoryId, 
       storyName,
       sprintName,
       sprintId,
@@ -181,6 +182,13 @@ exports.updateStoryDetails = async (req, res) => {
       appsToBeDeployed, 
     } = req.body;
 
+    if (newStoryId && newStoryId.trim() !== oldStoryId) {
+      const existingStory = await Story.findOne({ storyId: newStoryId.trim() });
+      if (existingStory) {
+        return res.status(400).json({ error: "Story ID already exists!" });
+      }
+    }
+
     let finalSprintRef;
 
     if (sprintId !== undefined) {
@@ -193,17 +201,16 @@ exports.updateStoryDetails = async (req, res) => {
       } else {
         const foundSprint = await Sprint.findOne({ name: sprintName.trim() });
         if (!foundSprint) {
-          return res
-            .status(400)
-            .json({ error: "Selected Sprint does not exist." });
+          return res.status(400).json({ error: "Selected Sprint does not exist." });
         }
         finalSprintRef = foundSprint._id;
       }
     }
 
     const story = await Story.findOneAndUpdate(
-      { storyId },
+      { storyId: oldStoryId },
       {
+        storyId: newStoryId ? newStoryId.trim() : oldStoryId, 
         storyName,
         sprint: finalSprintRef,
         releaseTag,
@@ -225,6 +232,9 @@ exports.updateStoryDetails = async (req, res) => {
     if (!story) return res.status(404).json({ error: "Story not found" });
     res.json(story);
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "Story ID already exists!" });
+    }
     res.status(500).json({ error: err.message });
   }
 };
