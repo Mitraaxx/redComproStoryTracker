@@ -7,6 +7,7 @@ import {
   TEAM_MEMBERS,
   STATUS_MEMBERS,
 } from "../../utils/AppConfig";
+import SearchableSelect from "../Tools/SeachableSelect";
 
 /**
  * Universal Modal for BOTH Creating and Editing a Story.
@@ -120,13 +121,6 @@ const StoryModal = ({
     setDeployAppsList(deployAppsList.filter((_, index) => index !== indexToRemove));
   };
 
-  const handleDeployAppKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addDeployApp();
-    }
-  };
-
   const submitMainForm = (e) => {
     e.preventDefault();
 
@@ -213,45 +207,81 @@ const StoryModal = ({
   return (
     <>
       {/* ================= MAIN STORY MODAL (Universal Bootstrap Layout) ================= */}
-      <div 
-        className="modal show d-block" 
-        tabIndex="-1" 
-        style={{ backgroundColor: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 1040 }}
+      <div
+        className="modal show d-block"
+        tabIndex="-1"
+        style={{
+          backgroundColor: "rgba(15, 23, 42, 0.6)",
+          backdropFilter: "blur(4px)",
+          zIndex: 1040,
+        }}
       >
-        <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" style={{ maxWidth: "800px" }}>
-          <div className="modal-content border-0" style={{ borderRadius: "25px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
-            
-            <div className="modal-header px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #e2e8f0", display:"flex", justifyContent:"space-between" }}>
+        <div
+          className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
+          style={{ maxWidth: "800px" }}
+        >
+          <div
+            className="modal-content border-0"
+            style={{
+              borderRadius: "25px",
+              boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
+            }}
+          >
+            <div
+              className="modal-header px-4 pt-4 pb-3"
+              style={{
+                borderBottom: "1px solid #e2e8f0",
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
               <h2 style={{ margin: 0, color: "#1e293b", fontWeight: "500" }}>
                 {initialData ? "Edit Story & Apps" : "Create New Story"}
               </h2>
-              <MdClose size={28} className="close-icon" onClick={onClose} style={{ cursor: "pointer" }} />
+              <MdClose
+                size={28}
+                className="close-icon"
+                onClick={onClose}
+                style={{ cursor: "pointer" }}
+              />
             </div>
 
             <div className="modal-body px-4 pb-4">
-              <form id="storyForm" onSubmit={submitMainForm} onKeyDown={handleKeyDown}>
+              <form
+                id="storyForm"
+                onSubmit={submitMainForm}
+                onKeyDown={handleKeyDown}
+              >
                 <div className="row g-3">
-                  
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
-                      <span>Story ID <span className="required-asterisk">*</span></span>
-                      <input 
-                        type="text" 
-                        name="storyId" 
-                        value={formData.storyId || ""} 
-                        onChange={handleChange} 
-                        required 
-                        disabled={!!initialData} 
-                        className="form-input" 
-                        style={initialData ? { backgroundColor: "#e2e8f0", cursor: "not-allowed" } : {}}
+                      <span>
+                        Story ID <span className="required-asterisk">*</span>
+                      </span>
+                      <input
+                        type="text"
+                        name="storyId"
+                        value={formData.storyId || ""}
+                        onChange={handleChange}
+                        required
+                        className="form-input"
                       />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
-                      <span>Story Name <span className="required-asterisk">*</span></span>
-                      <input type="text" name="storyName" value={formData.storyName || ""} onChange={handleChange} required className="form-input" />
+                      <span>
+                        Story Name <span className="required-asterisk">*</span>
+                      </span>
+                      <input
+                        type="text"
+                        name="storyName"
+                        value={formData.storyName || ""}
+                        onChange={handleChange}
+                        required
+                        className="form-input"
+                      />
                     </label>
                   </div>
 
@@ -259,12 +289,13 @@ const StoryModal = ({
                     <div className="col-12 col-md-6">
                       <label className="form-label w-100">
                         <span>Sprint Name</span>
-                        <input list="new-story-sprint-options" name="sprintName" value={formData.sprintName || ""} onChange={handleChange} className="form-input" placeholder="Select Sprint" autoComplete="off" />
-                        <datalist id="new-story-sprint-options">
-                          {sprintsList.map((s) => (
-                            <option key={s._id} value={s.name} />
-                          ))}
-                        </datalist>
+                        <SearchableSelect
+                          name="sprintName"
+                          value={formData.sprintName || ""}
+                          onChange={handleChange}
+                          options={sprintsList}
+                          placeholder="Select Sprint"
+                        />
                       </label>
                     </div>
                   )}
@@ -272,90 +303,130 @@ const StoryModal = ({
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Currently With</span>
-                      <input list="team-option" type="text" name="status" value={formData.status || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Story is with" />
-                      <datalist id="team-option">
-                        {STATUS_MEMBERS.map((member, i) => (
-                          <option key={i} value={member} />
-                        ))}
-                      </datalist>
+                      <SearchableSelect
+                        name="status"
+                        value={formData.status}
+                        onChange={handleChange}
+                        options={TEAM_MEMBERS}
+                        placeholder="Story is with"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Story Points</span>
-                      <input type="number" name="storyPoints" value={formData.storyPoints || ""} onChange={handleChange} className="form-input" />
+                      <input
+                        type="number"
+                        name="storyPoints"
+                        value={formData.storyPoints || ""}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Responsibility</span>
-                      <input list="team-options" type="text" name="responsibility" value={formData.responsibility || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Select Team Member" />
-                      <datalist id="team-options">
-                        {TEAM_MEMBERS.map((member, i) => (
-                          <option key={i} value={member} />
-                        ))}
-                      </datalist>
+                      <SearchableSelect
+                        name="responsibility"
+                        value={formData.responsibility}
+                        onChange={handleChange}
+                        options={TEAM_MEMBERS}
+                        placeholder="Select Team Member"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Qa Release Date</span>
-                      <input type="date" name="qaEnvRelDate" value={formData.qaEnvRelDate || ""} onChange={handleChange} className="form-input" />
+                      <input
+                        type="date"
+                        name="qaEnvRelDate"
+                        value={formData.qaEnvRelDate || ""}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Live Release Date</span>
-                      <input type="date" name="liveEnvRelease" value={formData.liveEnvRelease || ""} onChange={handleChange} className="form-input" />
+                      <input
+                        type="date"
+                        name="liveEnvRelease"
+                        value={formData.liveEnvRelease || ""}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Release Tag</span>
-                      <input list="new-story-release-options" type="text" name="releaseTag" value={formData.releaseTag || ""} onChange={handleChange} className="form-input" placeholder="Select release tag" autoComplete="off" />
-                      <datalist id="new-story-release-options">
-                        {releasesList.map((r) => (
-                          <option key={r._id} value={r.name} />
-                        ))}
-                      </datalist>
+                      <SearchableSelect
+                        name="releaseTag"
+                        value={formData.releaseTag || ""}
+                        onChange={handleChange}
+                        options={releasesList}
+                        placeholder="Select release tag"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>EPIC</span>
-                      <input type="text" name="epic" value={formData.epic || ""} onChange={handleChange} className="form-input" />
+                      <input
+                        type="text"
+                        name="epic"
+                        value={formData.epic || ""}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Category</span>
-                      <input type="text" name="category" value={formData.category || ""} onChange={handleChange} className="form-input" />
+                      <input
+                        type="text"
+                        name="category"
+                        value={formData.category || ""}
+                        onChange={handleChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>First Review</span>
-                      <input list="team-options" type="text" name="firstReview" value={formData.firstReview || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Select Team Member" />
+                      <SearchableSelect
+                        name="firstReview"
+                        value={formData.firstReview}
+                        onChange={handleChange}
+                        options={TEAM_MEMBERS}
+                        placeholder="Select Team Member"
+                      />
                     </label>
                   </div>
 
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Type</span>
-                      <input list="type-options" name="type" value={formData.type || ""} onChange={handleChange} className="form-input" autoComplete="off" placeholder="Select Type" />
-                      <datalist id="type-options">
-                        <option value="Feature" />
-                        <option value="Bug" />
-                        <option value="Spike" />
-                      </datalist>
+                      <SearchableSelect
+                        name="type"
+                        value={formData.type || ""}
+                        onChange={handleChange}
+                        options={["Feature", "Bug", "Spike"]}
+                        placeholder="Select Type"
+                      />
                     </label>
                   </div>
 
@@ -363,21 +434,55 @@ const StoryModal = ({
                     <label className="form-label w-100">
                       <span>Apps to be deployed</span>
                       <div className="d-flex gap-2">
-                        <input list="deploy-apps-options" type="text" name="appsToBeDeployedInput" value={deployAppInput} onChange={(e) => setDeployAppInput(e.target.value)} onKeyDown={handleDeployAppKeyDown} className="form-input" autoComplete="off" placeholder="Select & press Add" />
-                        <button type="button" onClick={addDeployApp} style={{ padding: "0 12px", backgroundColor: "#3b82f6", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}>Add</button>
+                        <div style={{ flex: 1 }}>
+                          <SearchableSelect
+                            name="appsToBeDeployedInput"
+                            value={deployAppInput}
+                            onChange={(e) => setDeployAppInput(e.target.value)}
+                            options={availableDeployApps}
+                            placeholder="Select App"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={addDeployApp}
+                          style={{
+                            padding: "0 12px",
+                            backgroundColor: "#3b82f6",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Add
+                        </button>
                       </div>
-                      <datalist id="deploy-apps-options">
-                        {availableDeployApps.map((appName, i) => (
-                          <option key={i} value={appName}>{appName}</option>
-                        ))}
-                      </datalist>
 
                       {deployAppsList.length > 0 && (
                         <div className="d-flex flex-wrap gap-2 mt-2">
                           {deployAppsList.map((app, index) => (
-                            <span key={index} style={{ backgroundColor: "#eff6ff", color: "#2563eb", padding: "4px 8px", borderRadius: "6px", fontSize: "0.8rem", display: "flex", alignItems: "center", gap: "6px", border: "1px solid #bfdbfe" }}>
+                            <span
+                              key={index}
+                              style={{
+                                backgroundColor: "#eff6ff",
+                                color: "#2563eb",
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                fontSize: "0.8rem",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                border: "1px solid #bfdbfe",
+                              }}
+                            >
                               {app}
-                              <MdClose size={14} style={{ cursor: "pointer"  }} onClick={() => removeDeployApp(index)} />
+                              <MdClose
+                                size={14}
+                                style={{ cursor: "pointer" }}
+                                onClick={() => removeDeployApp(index)}
+                              />
                             </span>
                           ))}
                         </div>
@@ -388,16 +493,25 @@ const StoryModal = ({
                   <div className="col-12">
                     <label className="form-label w-100">
                       <span>Comments</span>
-                      <textarea name="comments" value={formData.comments || ""} onChange={handleChange} rows="2" className="form-input textarea-input"></textarea>
+                      <textarea
+                        name="comments"
+                        value={formData.comments || ""}
+                        onChange={handleChange}
+                        rows="2"
+                        className="form-input textarea-input"
+                      ></textarea>
                     </label>
                   </div>
-
                 </div>
 
                 <div className="apps-section mt-4">
                   <div className="apps-header">
                     <h3 className="apps-title">Linked Apps</h3>
-                    <button type="button" onClick={openAppForm} className="btn-add-app">
+                    <button
+                      type="button"
+                      onClick={openAppForm}
+                      className="btn-add-app"
+                    >
                       <MdAdd size={18} /> Add App
                     </button>
                   </div>
@@ -405,98 +519,188 @@ const StoryModal = ({
                   {appsList.length > 0 ? (
                     <ul className="apps-list">
                       {appsList.map((app, index) => (
-                        <li key={index} className="app-item flex-column flex-sm-row gap-2">
+                        <li
+                          key={index}
+                          className="app-item flex-column flex-sm-row gap-2"
+                        >
                           <div className="app-details flex-wrap">
-                            <strong className="app-name-highlight">{app.appName}</strong>
-                            <span className="app-branch">Branch: {app.featureBranches || "N/A"}</span>
+                            <strong className="app-name-highlight">
+                              {app.appName}
+                            </strong>
+                            <span className="app-branch">
+                              Branch: {app.featureBranches || "N/A"}
+                            </span>
                           </div>
                           <div className="app-actions">
-                            <MdEdit size={22} className="edit-icon" onClick={() => editApp(index)} title="Edit App" />
-                            <MdDelete size={22} className="delete-icon" onClick={() => removeApp(index)} title="Remove App" />
+                            <MdEdit
+                              size={22}
+                              className="edit-icon"
+                              onClick={() => editApp(index)}
+                              title="Edit App"
+                            />
+                            <MdDelete
+                              size={22}
+                              className="delete-icon"
+                              onClick={() => removeApp(index)}
+                              title="Remove App"
+                            />
                           </div>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="no-apps-text">No apps linked yet. Click 'Add App' to attach one.</p>
+                    <p className="no-apps-text">
+                      No apps linked yet. Click 'Add App' to attach one.
+                    </p>
                   )}
                 </div>
               </form>
             </div>
 
-            <div className="modal-footer px-4 py-3" style={{ borderTop: "1px solid #e2e8f0" }}>
-              <button type="submit" form="storyForm" disabled={saving} className="btn-save primary">
-                {saving ? "Saving..." : (initialData ? "Save Changes" : "Create Story")}
+            <div
+              className="modal-footer px-4 py-3"
+              style={{ borderTop: "1px solid #e2e8f0" }}
+            >
+              <button
+                type="submit"
+                form="storyForm"
+                disabled={saving}
+                className="btn-save primary"
+              >
+                {saving
+                  ? "Saving..."
+                  : initialData
+                    ? "Save Changes"
+                    : "Create Story"}
               </button>
             </div>
-
           </div>
         </div>
       </div>
 
       {/* ================= NESTED APP MODAL ================= */}
       {isAppFormOpen && (
-        <div 
-          className="modal show d-block" 
-          tabIndex="-1" 
-          style={{ backgroundColor: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(4px)", zIndex: 1050 }}
+        <div
+          className="modal show d-block"
+          tabIndex="-1"
+          style={{
+            backgroundColor: "rgba(15, 23, 42, 0.75)",
+            backdropFilter: "blur(4px)",
+            zIndex: 1050,
+          }}
         >
-          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable" style={{ minWidth: "300px", maxWidth: "550px" }}>
-            <div className="modal-content border-0" style={{ borderRadius: "25px" }}>
-              
-              <div className="modal-header px-4 pt-4 pb-3" style={{ borderBottom: "1px solid #e2e8f0",display:"flex", justifyContent:"space-between"}}>
+          <div
+            className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
+            style={{ minWidth: "300px", maxWidth: "550px" }}
+          >
+            <div
+              className="modal-content border-0"
+              style={{ borderRadius: "25px" }}
+            >
+              <div
+                className="modal-header px-4 pt-4 pb-3"
+                style={{
+                  borderBottom: "1px solid #e2e8f0",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
                 <h2 style={{ margin: 0, color: "#1e293b", fontWeight: "500" }}>
-                  {editingAppIndex !== null ? "Edit App Details" : "Add App Details"}
+                  {editingAppIndex !== null
+                    ? "Edit App Details"
+                    : "Add App Details"}
                 </h2>
-                <MdClose size={28} className="close-icon" onClick={() => { setIsAppFormOpen(false); setEditingAppIndex(null); }} style={{ cursor: "pointer"}} />
+                <MdClose
+                  size={28}
+                  className="close-icon"
+                  onClick={() => {
+                    setIsAppFormOpen(false);
+                    setEditingAppIndex(null);
+                  }}
+                  style={{ cursor: "pointer" }}
+                />
               </div>
 
               <div className="modal-body px-4 pb-4">
                 <div className="row g-3">
                   <div className="col-12">
                     <label className="form-label w-100">
-                      <span>Select App <span className="required-asterisk">*</span></span>
-                      <input list="app-options" name="appName" value={appFormData.appName || ""} onChange={handleAppChange} className="form-input" placeholder="Type to search app..." autoComplete="off" />
-                      <datalist id="app-options">
-                        {availableApps.map((appName, i) => (
-                          <option key={i} value={appName}>{appName}</option>
-                        ))}
-                      </datalist>
+                      <span>
+                        Select App <span className="required-asterisk">*</span>
+                      </span>
+                      <SearchableSelect
+                        name="appName"
+                        value={appFormData.appName || ""}
+                        onChange={handleAppChange}
+                        options={availableApps}
+                        placeholder="Select App"
+                      />
                     </label>
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
                       <span>Feature Branch</span>
-                      <input type="text" name="featureBranches" value={appFormData.featureBranches || ""} onChange={handleAppChange} className="form-input" />
+                      <input
+                        type="text"
+                        name="featureBranches"
+                        value={appFormData.featureBranches || ""}
+                        onChange={handleAppChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
                       <span>Base Branch</span>
-                      <input type="text" name="baseBranch" value={appFormData.baseBranch || ""} onChange={handleAppChange} className="form-input" />
+                      <input
+                        type="text"
+                        name="baseBranch"
+                        value={appFormData.baseBranch || ""}
+                        onChange={handleAppChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
                       <span>Dependencies</span>
-                      <input type="text" name="dependencies" value={appFormData.dependencies || ""} onChange={handleAppChange} className="form-input" />
+                      <input
+                        type="text"
+                        name="dependencies"
+                        value={appFormData.dependencies || ""}
+                        onChange={handleAppChange}
+                        className="form-input"
+                      />
                     </label>
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
                       <span>Notes</span>
-                      <textarea name="notes" value={appFormData.notes || ""} onChange={handleAppChange} rows="2" className="form-input textarea-input"></textarea>
+                      <textarea
+                        name="notes"
+                        value={appFormData.notes || ""}
+                        onChange={handleAppChange}
+                        rows="2"
+                        className="form-input textarea-input"
+                      ></textarea>
                     </label>
                   </div>
                 </div>
               </div>
 
-              <div className="modal-footer px-4 py-3" style={{ borderTop: "1px solid #e2e8f0" }}>
-                <button type="button" onClick={saveAppToList} disabled={isAllAppsAdded && editingAppIndex === null} className="btn-save primary">
+              <div
+                className="modal-footer px-4 py-3"
+                style={{ borderTop: "1px solid #e2e8f0" }}
+              >
+                <button
+                  type="button"
+                  onClick={saveAppToList}
+                  disabled={isAllAppsAdded && editingAppIndex === null}
+                  className="btn-save primary"
+                >
                   Save
                 </button>
               </div>
-
             </div>
           </div>
         </div>

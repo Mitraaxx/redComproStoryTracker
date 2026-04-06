@@ -141,7 +141,7 @@ const StoryDetails = () => {
       const { appsData, ...storyFields } = updatedDataWithApps;
 
       await updateStory(storyData.storyId, storyFields);
-      await updateStoryApps(storyData.storyId, appsData);
+      await updateStoryApps(storyFields.storyId, appsData);
 
       setIsEditModalOpen(false);
       clearAllCaches();
