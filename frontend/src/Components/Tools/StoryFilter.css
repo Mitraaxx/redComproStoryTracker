@@ -34,7 +34,6 @@
   width: 380px;
   max-width: 90vw; 
   z-index: 1050;
-  overflow: hidden;
   animation: slideInDown 0.2s ease-out;
 }
 
