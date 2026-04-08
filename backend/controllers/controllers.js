@@ -1,103 +1,20 @@
 const { Sprint, App, Story, Release } = require("../models/model");
 
-// ================= CREATE / UPDATE STORY =================
-exports.createStoryEntry = async (req, res) => {
+/**
+ * Fetches a list of all sprints, returning only essential fields, sorted alphabetically.
+ */
+exports.getAllSprints = async (req, res) => {
   try {
-    const {
-      storyId,
-      storyName,
-      sprintName,
-      sprintStartDate,
-      sprintEndDate,
-      sprintNotes,
-      releaseTag,
-      storyPoints,
-      comments,
-      epic,
-      category,
-      type,
-      responsibility, 
-      firstReview,
-      qaEnvRelDate,
-      status,
-      liveEnvRelease,
-      appsToBeDeployed, 
-      appsData = [],
-    } = req.body;
-
-    const sprint = sprintName?.trim()
-      ? await Sprint.findOneAndUpdate(
-          { name: sprintName.trim() },
-          {
-            name: sprintName.trim(),
-            startDate: sprintStartDate ? new Date(sprintStartDate) : undefined,
-            endDate: sprintEndDate ? new Date(sprintEndDate) : undefined,
-            sprintNotes: sprintNotes,
-          },
-          { new: true, upsert: true },
-        )
-      : null;
-
-    const linkedApps = await Promise.all(
-      appsData
-        .filter((a) => a.appName?.trim())
-        .map(async (a) => {
-          const app = await App.findOneAndUpdate(
-            { name: a.appName.trim() },
-            { name: a.appName.trim() },
-            { new: true, upsert: true },
-          );
-
-          return {
-            appRef: app._id,
-            featureBranches: Array.isArray(a.featureBranches)
-              ? a.featureBranches
-              : a.featureBranches
-                  ?.split(",")
-                  .map((b) => b.trim())
-                  .filter(Boolean) || [],
-            baseBranch: a.baseBranch,
-            dependencies: a.dependencies,
-            notes: a.notes,
-          };
-        }),
-    );
-
-    const story = await Story.findOneAndUpdate(
-      { storyId },
-      {
-        storyName,
-        sprint: sprint?._id,
-        linkedApps,
-        releaseTag: releaseTag,
-        storyPoints,
-        comments,
-        epic,
-        category,
-        type, 
-        responsibility,
-        firstReview,
-        qaEnvRelDate: qaEnvRelDate ? new Date(qaEnvRelDate) : undefined,
-        status,
-        liveEnvRelease: liveEnvRelease ? new Date(liveEnvRelease) : undefined,
-        appsToBeDeployed,
-      },
-      { new: true, upsert: true },
-    );
-
-    res.status(201).json(story);
+    const sprints = await Sprint.find().select("_id name startDate endDate").sort({ name: 1 });
+    res.json(sprints);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// ================= SPRINT =================
-
-exports.getAllSprints = async (req, res) => {
-  const sprints = await Sprint.find().select("_id name startDate endDate").sort({ name: 1 });
-  res.json(sprints);
-};
-
+/**
+ * Retrieves details of a specific sprint along with all the stories assigned to it.
+ */
 exports.getSprintStories = async (req, res) => {
   try {
     const sprint = await Sprint.findById(req.params.sprintId).select(
@@ -116,49 +33,45 @@ exports.getSprintStories = async (req, res) => {
   }
 };
 
-// ================= STORY =================
-
+/**
+ * Fetches all stories in the database.
+ */
 exports.getAllStories = async (req, res) => {
-  const stories = await Story.find()
-    .select(
-      "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps",
-    )
-    .populate("linkedApps.appRef", "name")
-    .sort({ createdAt: -1 });
+  try {
+    const stories = await Story.find()
+      .select(
+        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps",
+      )
+      .populate("linkedApps.appRef", "name")
+      .sort({ createdAt: -1 });
 
-  res.json(stories);
+    res.json(stories);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
+/**
+ * Retrieves the full details of a specific story by its database ID, including populated references.
+ */
 exports.getStoryById = async (req, res) => {
-  const story = await Story.findById(req.params.id)
-    .populate("sprint", "name")
-    .populate("linkedApps.appRef", "name");
+  try {
+    const story = await Story.findById(req.params.id)
+      .populate("sprint", "name")
+      .populate("linkedApps.appRef", "name");
 
-  if (!story) return res.status(404).json({ error: "Not found" });
+    if (!story) return res.status(404).json({ error: "Not found" });
 
-  res.json(story);
+    res.json(story);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-// ================= APP =================
-exports.getAllApps = async (req, res) => {
-  const apps = await App.find().select("_id name").sort({ name: 1 });
-  res.json(apps);
-};
-
-exports.getAppDetails = async (req, res) => {
-  const app = await App.findById(req.params.appId).select("_id name");
-  if (!app) return res.status(404).json({ error: "App not found" });
-
-  const stories = await Story.find({
-    "linkedApps.appRef": req.params.appId,
-  })
-    .select("_id storyId storyName")
-    .sort({ createdAt: -1 });
-
-  res.json({ app, stories });
-};
-
-// ================= UPDATE STORY DETAILS ONLY =================
+/**
+ * Updates only the metadata and basic details of an existing story.
+ * Includes a validation check to ensure a changed Story ID is not duplicated.
+ */
 exports.updateStoryDetails = async (req, res) => {
   try {
     const { storyId: oldStoryId } = req.params;
@@ -239,7 +152,9 @@ exports.updateStoryDetails = async (req, res) => {
   }
 };
 
-// ================= UPDATE STORY'S APPS ONLY =================
+/**
+ * Replaces or updates the linked applications and feature branches for a specific story.
+ */
 exports.updateStoryApps = async (req, res) => {
   try {
     const { storyId } = req.params;
@@ -283,7 +198,9 @@ exports.updateStoryApps = async (req, res) => {
   }
 };
 
-// ================= UPDATE SPRINT DETAILS =================
+/**
+ * Updates the details (name, dates, notes) of an existing sprint.
+ */
 exports.updateSprintDetails = async (req, res) => {
   try {
     const { name, startDate, endDate, sprintNotes } = req.body;
@@ -309,7 +226,9 @@ exports.updateSprintDetails = async (req, res) => {
   }
 };
 
-// ================= CREATE NEW SPRINT =================
+/**
+ * Creates a new sprint in the database, preventing duplicate sprint names.
+ */
 exports.createSprint = async (req, res) => {
   try {
     const { name, startDate, endDate, sprintNotes } = req.body;
@@ -346,7 +265,9 @@ exports.createSprint = async (req, res) => {
   }
 };
 
-// ================= CREATE NEW STORY =================
+/**
+ * Creates a brand new story from scratch, formatting associated apps and validating the ID.
+ */
 exports.createNewStory = async (req, res) => {
   try {
     const {
@@ -361,9 +282,9 @@ exports.createNewStory = async (req, res) => {
       responsibility,
       firstReview,
       qaEnvRelDate,
-      status, // 👈 type
+      status, 
       liveEnvRelease,
-      appsToBeDeployed, // 👈 naya naam
+      appsToBeDeployed, 
       appsData = [],
       sprintId,
     } = req.body;
@@ -429,51 +350,10 @@ exports.createNewStory = async (req, res) => {
   }
 };
 
-// ================= ADD NEW APP TO EXISTING STORY =================
-exports.addAppToStory = async (req, res) => {
-  try {
-    const { storyId } = req.params;
-    const { appName, featureBranches, baseBranch, dependencies, notes } =
-      req.body;
 
-    if (!appName || appName.trim() === "") {
-      return res.status(400).json({ error: "App Name is required" });
-    }
-
-    const app = await App.findOneAndUpdate(
-      { name: appName.trim() },
-      { name: appName.trim() },
-      { new: true, upsert: true },
-    );
-
-    const newAppEntry = {
-      appRef: app._id,
-      featureBranches: Array.isArray(featureBranches)
-        ? featureBranches
-        : featureBranches
-            ?.split(",")
-            .map((b) => b.trim())
-            .filter(Boolean) || [],
-      baseBranch,
-      dependencies,
-      notes,
-    };
-
-    const story = await Story.findOneAndUpdate(
-      { storyId },
-      { $push: { linkedApps: newAppEntry } },
-      { new: true },
-    );
-
-    if (!story) return res.status(404).json({ error: "Story not found" });
-    res.status(201).json(story);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// ================= RELEASES =================
-
+/**
+ * Retrieves all registered releases, sorted with the newest releases first.
+ */
 exports.getAllReleases = async (req, res) => {
   try {
     const releases = await Release.find().sort({ releaseDate: -1 });
@@ -483,6 +363,9 @@ exports.getAllReleases = async (req, res) => {
   }
 };
 
+/**
+ * Creates a new release tag, checking to ensure the release name is unique.
+ */
 exports.createRelease = async (req, res) => {
   try {
     const { name, releaseDate, category, devCutoff, qaSignoff } = req.body;
@@ -518,6 +401,9 @@ exports.createRelease = async (req, res) => {
   }
 };
 
+/**
+ * Fetches details for a specific release and retrieves all stories tagged with that release.
+ */
 exports.getReleaseStories = async (req, res) => {
   try {
     const release = await Release.findById(req.params.releaseId);
@@ -536,6 +422,10 @@ exports.getReleaseStories = async (req, res) => {
   }
 };
 
+/**
+ * Updates release details. If the release name is modified, it cascades the update 
+ * to all stories carrying the old release tag.
+ */
 exports.updateRelease = async (req, res) => {
   try {
     const { name, releaseDate, category, appsToBeDeployed, devCutoff, qaSignoff } = req.body;
@@ -550,17 +440,17 @@ exports.updateRelease = async (req, res) => {
     const newName = name ? name.trim() : oldName;
 
     const updatedRelease = await Release.findByIdAndUpdate(
-  releaseId,
-  { 
-    name: newName,
-    releaseDate: releaseDate ? new Date(releaseDate) : undefined,
-    devCutoff: devCutoff ? new Date(devCutoff) : undefined, 
-    qaSignoff: qaSignoff ? new Date(qaSignoff) : undefined, 
-    category: category || "General",
-    appsToBeDeployed: appsToBeDeployed !== undefined ? appsToBeDeployed : oldRelease.appsToBeDeployed
-  },
-  { new: true }
-);
+      releaseId,
+      { 
+        name: newName,
+        releaseDate: releaseDate ? new Date(releaseDate) : undefined,
+        devCutoff: devCutoff ? new Date(devCutoff) : undefined, 
+        qaSignoff: qaSignoff ? new Date(qaSignoff) : undefined, 
+        category: category || "General",
+        appsToBeDeployed: appsToBeDeployed !== undefined ? appsToBeDeployed : oldRelease.appsToBeDeployed
+      },
+      { new: true }
+    );
 
     if (oldName !== newName) {
       await Story.updateMany(
@@ -578,6 +468,9 @@ exports.updateRelease = async (req, res) => {
   }
 };
 
+/**
+ * Fetches all stories tied to a specific application by the app's name.
+ */
 exports.getAppStoriesByName = async (req, res) => {
   try {
     const { appName } = req.params;
@@ -601,7 +494,9 @@ exports.getAppStoriesByName = async (req, res) => {
 };
 
 
-// ================= GITHUB BRANCH MERGE STATUS =================
+/**
+ * Queries the GitHub API to check if a specific branch has been merged, and into which target branch.
+ */
 exports.getBranchMergeStatus = async (req, res) => {
   try {
     const { orgName, repoName, branchName, token } = req.body; 
@@ -650,4 +545,3 @@ exports.getBranchMergeStatus = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-

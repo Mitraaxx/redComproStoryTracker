@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// This connects the backend server with the mongoDb database
 const db = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URL)
