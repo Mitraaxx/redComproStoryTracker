@@ -412,17 +412,17 @@ const ReleaseStories = () => {
     return filtered.slice(0, visibleCount);
   }, [filtered, visibleCount]); 
 
+
   /**
-   * Fetches GitHub merge statuses exclusively for the currently visible stories.
-   * Batches state updates using a temporary object to prevent infinite re-render loops.
+   * Effect hook fetches all fields required for github-status api call
+   * Uses Promise.all to fetch all branch statuses in PARALLEL for maximum speed.
    */
   useEffect(() => {
     const fetchAllStatuses = async () => {
       if (!visibleStories || visibleStories.length === 0) return;
 
       try {
-        let hasNewData = false;
-        const fetchedStatuses = {};
+        const promises = [];
 
         for (const story of visibleStories) {
           if (!story.linkedApps) continue;
@@ -438,20 +438,28 @@ const ReleaseStories = () => {
                 const key = `${appName}-${branch}`;
 
                 if (mergeStatuses[key] === undefined) {
-                  const res = await fetchBranchMergeStatus(
-                    orgName,
-                    repoName,
-                    branch,
-                  );
-                  fetchedStatuses[key] = res.mergedTill || "Not Merged";
-                  hasNewData = true;
+                  const fetchPromise = fetchBranchMergeStatus(orgName, repoName, branch)
+                    .then((res) => ({ key, status: res.mergedTill || "Not Merged" }))
+                    .catch((err) => {
+                      console.error(`Error fetching status for ${key}:`, err);
+                      return { key, status: "Error" };
+                    });
+
+                  promises.push(fetchPromise);
                 }
               }
             }
           }
         }
 
-        if (hasNewData) {
+        if (promises.length > 0) {
+          const results = await Promise.all(promises);
+
+          const fetchedStatuses = {};
+          results.forEach(({ key, status }) => {
+            fetchedStatuses[key] = status;
+          });
+
           setMergeStatuses((prev) => ({ ...prev, ...fetchedStatuses }));
         }
       } catch (err) {
@@ -460,7 +468,7 @@ const ReleaseStories = () => {
     };
 
     fetchAllStatuses();
-  }, [visibleStories]);
+  }, [visibleStories]); 
 
   /**
    * Utility to smoothly scroll the page back to the top.

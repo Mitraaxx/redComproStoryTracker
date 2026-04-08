@@ -307,7 +307,7 @@ const StoryModal = ({
                         name="status"
                         value={formData.status}
                         onChange={handleChange}
-                        options={TEAM_MEMBERS}
+                        options={STATUS_MEMBERS}
                         placeholder="Story is with"
                       />
                     </label>
