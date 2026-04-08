@@ -102,20 +102,23 @@ const StoryDetails = () => {
 
   /**
    * Fetches the detailed information of the current story from the backend API,
-   * along with the list of available sprints to populate dropdowns if editing.
+   * along with the list of available sprints. Uses Promise.all for parallel fetching.
    */
   const getStoryDetails = async () => {
     try {
       setLoading(true);
-      const data = await fetchStoryDetails(storyId);
-      setStoryData(data);
+      
+      const [data, sprintsData] = await Promise.all([
+        fetchStoryDetails(storyId),
+        fetchAllSprints()
+      ]);
 
-      const sprintsData = await fetchAllSprints();
+      setStoryData(data);
       if (sprintsData) {
         setSprintsList(sprintsData);
       }
     } catch (err) {
-      console.log(err);
+      console.error("Error fetching story details or sprints:", err);
     } finally {
       setLoading(false);
     }

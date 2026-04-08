@@ -177,7 +177,6 @@ const SprintStories = () => {
   const handleSprintSave = async (updatedSprintData) => {
     setSavingSprint(true);
     try {
-      // Yahan api call jaayegi updated data ke sath
       await updateSprint(sprintId, updatedSprintData);
 
       setIsSprintModalOpen(false);
