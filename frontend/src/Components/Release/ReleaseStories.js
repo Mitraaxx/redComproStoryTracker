@@ -29,7 +29,7 @@ import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import StoryFilter from "../Tools/StoryFilter";
 import ReleaseModal from "../Modals/ReleaseModal";
 import PrModal from "../Modals/PrModal";
-import SearchableSelect from "../Tools/SeachableSelect";
+import SearchableSelect from "../Tools/SearchableSelect";
 import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
 import { formatDate } from "../Common/DateUtils";
 import LoadingSpinner from "../Common/LoadingSpinner";

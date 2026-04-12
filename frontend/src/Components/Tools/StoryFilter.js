@@ -12,7 +12,7 @@ import {
   STATUS_MEMBERS,
   repoConfig,
 } from "../../utils/AppConfig";
-import SearchableSelect from "./SeachableSelect";
+import SearchableSelect from "./SearchableSelect";
 
 const StoryFilter = ({ onApplyFilter }) => {
   // Controls open/close state for filter dropdown.

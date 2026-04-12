@@ -13,7 +13,7 @@ import {
   TEAM_MEMBERS,
   STATUS_MEMBERS,
 } from "../../utils/AppConfig";
-import SearchableSelect from "../Tools/SeachableSelect";
+import SearchableSelect from "../Tools/SearchableSelect";
 import useModalScrollLock from "../Common/UseModalScrollLock";
 
 const StoryModal = ({
