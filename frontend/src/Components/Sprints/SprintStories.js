@@ -13,6 +13,7 @@ import {
   updateSprint,
   createStory,
   updateStory,
+  fetchStoryDetails,
   fetchAllReleases,
   fetchAllSprints,
   fetchAllStories,
@@ -223,24 +224,22 @@ const SprintStories = () => {
 
     try {
       // Update story sprint linkage in backend.
-      await updateStory(selectedStory.storyId, {
+      const updatedStory = await updateStory(selectedStory.storyId, {
         sprintId,
         sprint: sprintId,
         sprintName: sprint?.name,
       });
+
+      // Refresh only the linked story so the grid gets the full payload.
+      const freshStory = await fetchStoryDetails(updatedStory._id);
 
       // Clear shared caches used elsewhere.
       clearAllCaches();
 
       // Reflect moved story in current grid.
       setStories((prev) => [
+        freshStory || updatedStory,
         ...prev,
-        {
-          ...selectedStory,
-          sprintId,
-          sprint: sprintId,
-          sprintName: sprint?.name,
-        },
       ]);
 
 

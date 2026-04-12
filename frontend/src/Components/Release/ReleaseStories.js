@@ -13,6 +13,7 @@ import { useEffect, useState, useMemo } from "react";
 import {
   fetchReleaseStories,
   updateStory,
+  fetchStoryDetails,
   clearAllCaches,
   updateRelease,
   fetchBranchMergeStatus,
@@ -237,18 +238,18 @@ const ReleaseStories = () => {
 
     try {
       // Re-tag selected story to current release name.
-      await updateStory(selectedStory.storyId, {
+      const updatedStory = await updateStory(selectedStory.storyId, {
         releaseTag: release?.name,
       });
+
+      // Refresh only the updated story so the card renders with full details.
+      const freshStory = await fetchStoryDetails(updatedStory._id);
 
       clearAllCaches();
 
       // Optimistically prepend newly linked story into visible list.
       setStories((prev) => [
-        {
-          ...selectedStory,
-          releaseTag: release?.name,
-        },
+        freshStory || updatedStory,
         ...prev,
       ]);
 
