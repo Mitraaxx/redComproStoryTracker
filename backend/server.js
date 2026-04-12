@@ -11,7 +11,7 @@ const {
 
 
 // Central router that contains all protected API endpoints.
-const trackerRoutes = require("./Routes/Routes");
+const trackerRoutes = require("./Routes/routes");
 
 // Create Express application instance.
 const app = express();
