@@ -1,9 +1,10 @@
-const { Sprint, Story } = require("../models/model");
+const { Sprint, Story } = require("../models/Model");
 
 exports.getSprints = async (req, res) => {
   try {
     // Route may include sprintId for detail mode, otherwise list mode is used.
     const { sprintId } = req.params;
+    const namesOnly = req.query.namesOnly === "true";
 
     if (sprintId) {
       // Detail mode: Fetch the sprint header/details required by the sprint detail screen.
@@ -14,15 +15,20 @@ exports.getSprints = async (req, res) => {
 
       // Fetch all stories linked to this sprint id.
       const stories = await Story.find({ sprint: sprintId }).select(
-        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps"
+        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps.appName"
       );
 
       return res.json({ sprint, stories });
     }
 
-    // List mode: return compact sprint cards sorted by name.
+    // List mode: support names-only response for dropdown hydration.
+    const selectFields = namesOnly
+      ? "_id name"
+      : "_id name startDate endDate";
+
+    // Return compact sprint cards sorted by name.
     const sprints = await Sprint.find()
-      .select("_id name startDate endDate")
+      .select(selectFields)
       .sort({ name: 1 });
 
     return res.json(sprints);

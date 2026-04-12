@@ -6,10 +6,13 @@
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 let cachedSprintList = null;
+let cachedSprintNameList = null;
 let cachedSprintStories = {};
 let storyDetailsCache = {};
 let cachedStoryList = null;
+let cachedStoryValidationList = null;
 let cachedReleaseList = null;
+let cachedReleaseNameList = null;
 let cachedReleaseStories = {};
 let cachedAppStories = {};
 let cachedBranchStatuses = {};
@@ -18,10 +21,13 @@ let cachedBranchStatuses = {};
 // when multiple pages may depend on stale shared data.
 export const clearAllCaches = () => {
   cachedSprintList = null;
+  cachedSprintNameList = null;
   cachedSprintStories = {};
   storyDetailsCache = {};
   cachedStoryList = null;
+  cachedStoryValidationList = null;
   cachedReleaseList = null;
+  cachedReleaseNameList = null;
   cachedReleaseStories = {};
   cachedAppStories = {};
   cachedBranchStatuses = {};
@@ -63,12 +69,22 @@ const fetchWithAuth = async (url, options = {}) => {
   return data;
 };
 
-// Sprint list fetch with memoized in-memory cache for fast revisits.
-export const fetchAllSprints = async () => {
+// Sprint list fetch with optional names-only mode for dropdown hydration.
+export const fetchAllSprints = async (namesOnly = false) => {
   try {
-    if (cachedSprintList) return cachedSprintList;
-    const data = await fetchWithAuth(`${BASE_URL}/sprints`);
-    cachedSprintList = data;
+    const cachedData = namesOnly ? cachedSprintNameList : cachedSprintList;
+    if (cachedData) return cachedData;
+
+    const url = namesOnly
+      ? `${BASE_URL}/sprints?namesOnly=true`
+      : `${BASE_URL}/sprints`;
+    const data = await fetchWithAuth(url);
+
+    if (namesOnly) {
+      cachedSprintNameList = data;
+    } else {
+      cachedSprintList = data;
+    }
     return data;
   } catch (error) {
     console.error("API Error in fetchAllSprints:", error);
@@ -104,12 +120,23 @@ export const fetchStoryDetails = async (storyId, forceRefresh = false) => {
   }
 };
 
-// Global story list fetch used by story pages and selection modals.
-export const fetchAllStories = async () => {
+// Global story list fetch with optional validation view for lightweight lookups.
+export const fetchAllStories = async (view = "list") => {
   try {
-    if (cachedStoryList) return cachedStoryList;
-    const data = await fetchWithAuth(`${BASE_URL}/stories`);
-    cachedStoryList = data;
+    const isValidation = view === "validation";
+    const cachedData = isValidation ? cachedStoryValidationList : cachedStoryList;
+    if (cachedData) return cachedData;
+
+    const url = isValidation
+      ? `${BASE_URL}/stories?view=validation`
+      : `${BASE_URL}/stories`;
+    const data = await fetchWithAuth(url);
+
+    if (isValidation) {
+      cachedStoryValidationList = data;
+    } else {
+      cachedStoryList = data;
+    }
     return data;
   } catch (error) {
     console.error("API Error:", error);
@@ -168,12 +195,22 @@ export const createStory = async storyData => {
   }
 };
 
-// Release list fetch with list-level cache.
-export const fetchAllReleases = async () => {
+// Release list fetch with optional names-only mode for dropdown hydration.
+export const fetchAllReleases = async (namesOnly = false) => {
   try {
-    if (cachedReleaseList) return cachedReleaseList;
-    const data = await fetchWithAuth(`${BASE_URL}/releases`);
-    cachedReleaseList = data;
+    const cachedData = namesOnly ? cachedReleaseNameList : cachedReleaseList;
+    if (cachedData) return cachedData;
+
+    const url = namesOnly
+      ? `${BASE_URL}/releases?namesOnly=true`
+      : `${BASE_URL}/releases`;
+    const data = await fetchWithAuth(url);
+
+    if (namesOnly) {
+      cachedReleaseNameList = data;
+    } else {
+      cachedReleaseList = data;
+    }
     return data;
   } catch (error) {
     console.error("API Error:", error);

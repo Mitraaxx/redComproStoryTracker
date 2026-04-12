@@ -1,9 +1,10 @@
-const { Story } = require("../models/model");
+const { Story } = require("../models/Model");
 
 exports.getStories = async (req, res) => {
   try {
     // Optional id determines detail mode vs list mode.
     const { id } = req.params;
+    const { view } = req.query;
 
     if (id) {
       // Detail mode: return one story and populate sprint name for UI display.
@@ -12,10 +13,19 @@ exports.getStories = async (req, res) => {
       return res.json(story);
     }
 
-    // List mode: return all stories with selected fields and newest first.
+    // Validation mode: return only identity fields needed by selectors/modals.
+    if (view === "validation") {
+      const stories = await Story.find()
+        .select("_id storyId storyName")
+        .sort({ createdAt: -1 });
+
+      return res.json(stories);
+    }
+
+    // List mode: return story-card fields and app names only.
     const stories = await Story.find()
       .select(
-        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps appsToBeDeployed"
+        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps.appName appsToBeDeployed"
       )
       .sort({ createdAt: -1 });
 

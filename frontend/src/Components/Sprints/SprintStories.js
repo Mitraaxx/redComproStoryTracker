@@ -16,9 +16,9 @@ import {
   fetchAllReleases,
   fetchAllSprints,
   fetchAllStories,
-} from "../../Api/api";
+} from "../../Api/Api";
 import { MdArrowBack, MdEdit } from "react-icons/md";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import "../Sprints/SprintStories.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,14 +27,14 @@ import StoryFilter from "../Tools/StoryFilter";
 import StoryModal from "../Modals/StoryModal";
 import SprintModal from "../Modals/SprintModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
-import { handleApiError, handleApiSuccess } from "../Common/apiUtils";
-import { formatDate } from "../Common/dateUtils";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
+import { formatDate } from "../Common/DateUtils";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import usePaginationState from "../Common/usePaginationState";
-import useInfiniteScroll from "../Common/useInfiniteScroll";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
 import PaginationControls from "../Common/PaginationControls";
 import StoryGrid from "../Common/StoryGrid";
-import { applyDropdownFilters, applySearchAndSort } from "../Common/searchBar";
+import { applyDropdownFilters, applySearchAndSort } from "../Common/SearchBar";
 
 const SprintStories = () => {
   // ------------------------------
@@ -57,6 +57,7 @@ const SprintStories = () => {
 
   // Navigation helper for detail/back routes.
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Sprint edit modal states.
   const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
@@ -111,7 +112,7 @@ const SprintStories = () => {
   const openEditSprintModal = async () => {
     setIsSprintModalOpen(true);
     try {
-      const data = await fetchAllSprints();
+      const data = await fetchAllSprints(true);
       if (data) setAllSprints(data);
     } catch (err) {
       console.error("Failed to fetch all sprints for validation", err);
@@ -145,7 +146,9 @@ const SprintStories = () => {
 
   // Navigate to a specific story detail under current sprint route.
   const handleStoryClick = (storyDbId) => {
-    navigate(`/sprints/${sprintId}/stories/${storyDbId}`);
+    navigate(`/sprints/${sprintId}/stories/${storyDbId}`, {
+      state: { from: `${location.pathname}${location.search}` },
+    });
   };
 
   // ------------------------------
@@ -260,8 +263,8 @@ const SprintStories = () => {
     try {
       // Load reference datasets in parallel.
       const [releasesData, storiesData] = await Promise.all([
-        fetchAllReleases(),
-        fetchAllStories(),
+        fetchAllReleases(true),
+        fetchAllStories("validation"),
       ]);
 
       // Store datasets when available.

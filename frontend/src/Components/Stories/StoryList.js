@@ -13,9 +13,8 @@ import {
   createStory,
   clearAllCaches,
   fetchAllReleases,
-} from "../../Api/api";
-import { MdArrowBack } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+} from "../../Api/Api";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../Stories/StoryList.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,10 +23,10 @@ import StoryFilter from "../Tools/StoryFilter";
 import StoryModal from "../Modals/StoryModal";
 import StoryGrid from "../Common/StoryGrid";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import usePaginationState from "../Common/usePaginationState";
-import useInfiniteScroll from "../Common/useInfiniteScroll";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
 import PaginationControls from "../Common/PaginationControls";
-import { applyDropdownFilters, applySearchAndSort } from "../Common/searchBar";
+import { applyDropdownFilters, applySearchAndSort } from "../Common/SearchBar";
 
 const StoryList = () => {
   // ------------------------------
@@ -60,6 +59,7 @@ const StoryList = () => {
 
   // Router helper for back/detail navigation.
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Persist number of visible cards across navigations.
   const [visibleCount, setVisibleCount] = usePaginationState(`storyList_count`);
@@ -132,8 +132,8 @@ const StoryList = () => {
     setIsCreateModalOpen(true);
     try {
       const [sprintsData, releasesData] = await Promise.all([
-        fetchAllSprints(),
-        fetchAllReleases(),
+        fetchAllSprints(true),
+        fetchAllReleases(true),
       ]);
       if (sprintsData) setSprintsList(sprintsData);
       if (releasesData) setReleasesList(releasesData);
@@ -145,7 +145,9 @@ const StoryList = () => {
 
   // Navigate to details page for selected story card.
   const handleStoryClick = (storyDbId) => {
-    navigate(`/stories/${storyDbId}`);
+    navigate(`/stories/${storyDbId}`, {
+      state: { from: `${location.pathname}${location.search}` },
+    });
   };
 
   // ------------------------------

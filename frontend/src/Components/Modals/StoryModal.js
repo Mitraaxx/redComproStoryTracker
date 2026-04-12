@@ -14,7 +14,7 @@ import {
   STATUS_MEMBERS,
 } from "../../utils/AppConfig";
 import SearchableSelect from "../Tools/SeachableSelect";
-import useModalScrollLock from "../Common/useModalScrollLock";
+import useModalScrollLock from "../Common/UseModalScrollLock";
 
 const StoryModal = ({
   isOpen,

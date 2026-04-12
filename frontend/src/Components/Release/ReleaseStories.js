@@ -17,25 +17,25 @@ import {
   updateRelease,
   fetchBranchMergeStatus,
   fetchAllReleases,
-} from "../../Api/api";
+} from "../../Api/Api";
 import { MdArrowBack, MdEdit, MdClose } from "react-icons/md";
 import { FaCodeBranch, FaSync } from "react-icons/fa";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./ReleaseStories.css";
 import { repoConfig, ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import StoryFilter from "../Tools/StoryFilter";
 import ReleaseModal from "../Modals/ReleaseModal";
-import PrModal from "../Modals/prModal";
+import PrModal from "../Modals/PrModal";
 import SearchableSelect from "../Tools/SeachableSelect";
-import { handleApiError, handleApiSuccess } from "../Common/apiUtils";
-import { formatDate } from "../Common/dateUtils";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
+import { formatDate } from "../Common/DateUtils";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import usePaginationState from "../Common/usePaginationState";
-import useInfiniteScroll from "../Common/useInfiniteScroll";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
 import PaginationControls from "../Common/PaginationControls";
-import { applyDropdownFilters, applySearchAndSort } from "../Common/searchBar";
+import { applyDropdownFilters, applySearchAndSort } from "../Common/SearchBar";
 import StoryGrid from "../Common/StoryGrid";
 
 const ReleaseStories = () => {
@@ -77,6 +77,7 @@ const ReleaseStories = () => {
 
   // Navigation helper for back and detail route transitions.
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Per-app-branch merge status map keyed by `${appName}-${branch}`.
   const [mergeStatuses, setMergeStatuses] = useState({});
@@ -107,7 +108,7 @@ const ReleaseStories = () => {
     setIsReleaseModalOpen(true);
     try {
       // Preload all releases so modal can validate duplicate names client-side.
-      const data = await fetchAllReleases();
+      const data = await fetchAllReleases(true);
       if (data) setAllRelease(data);
     } catch (err) {
       console.error("Failed to fetch all release for validation", err);
@@ -262,7 +263,9 @@ const ReleaseStories = () => {
 
   // Navigate to release story detail.
   const handleStoryClick = (storyDbId) => {
-    navigate(`/releases/${releaseId}/stories/${storyDbId}`);
+    navigate(`/releases/${releaseId}/stories/${storyDbId}`, {
+      state: { from: `${location.pathname}${location.search}` },
+    });
   };
 
   // Back to release list.
@@ -372,6 +375,9 @@ const ReleaseStories = () => {
           if (!story.linkedApps) continue;
 
           for (const appItem of story.linkedApps) {
+            // Defensive guard: backend data can include null placeholders.
+            if (!appItem || typeof appItem !== "object") continue;
+
             // Pull app + branch for status lookup.
             const appName = appItem.appName;
             const branch = appItem.featureBranch;
@@ -457,7 +463,9 @@ const ReleaseStories = () => {
         </strong>
 
         {/* Render app-level branch blocks inside each story card. */}
-        {story.linkedApps.map((appItem, idx) => {
+        {story.linkedApps
+          .filter((appItem) => appItem && typeof appItem === "object")
+          .map((appItem, idx) => {
           // Resolve repo settings for current app.
           const repoName = appItem.appName || "Unknown";
           const appConfig = repoConfig[repoName] || {};
@@ -575,6 +583,7 @@ const ReleaseStories = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
                                 if (config) {
                                   handleSpecificRefresh(
                                     repoName,

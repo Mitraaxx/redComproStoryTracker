@@ -69,15 +69,17 @@ const Navbar = () => {
       <nav className="navbar navbar-expand-lg custom-navbar-bg">
         <div className="container-fluid">
           {/* Brand logo navigates back to default landing route. */}
-          <div
+          <a
             className="navbar-brand nav-logo m-0 p-0 py-2"
             style={{
               cursor: "pointer",
+              textDecoration: "none",
+              color: "inherit",
             }}
             onClick={() => navigate("/")}
           >
             <img src={logo} alt="logo" />
-          </div>
+          </a>
 
           {/* Mobile hamburger toggles collapsed nav content. */}
           <button

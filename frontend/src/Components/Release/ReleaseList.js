@@ -6,7 +6,7 @@
 // 3) Paginate visible cards.
 // 4) Create release via modal and prepend it locally.
 import { useEffect, useState, useMemo } from "react";
-import { fetchAllReleases, createRelease, clearAllCaches } from "../../Api/api";
+import { fetchAllReleases, createRelease, clearAllCaches } from "../../Api/Api";
 import { useNavigate } from "react-router-dom";
 import "../Sprints/SprintList.css";
 import "../Release/ReleaseList.css";
@@ -14,10 +14,10 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ReleaseModal from "../Modals/ReleaseModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
-import { handleApiError, handleApiSuccess } from "../Common/apiUtils";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import usePaginationState from "../Common/usePaginationState";
-import useInfiniteScroll from "../Common/useInfiniteScroll";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
 import PaginationControls from "../Common/PaginationControls";
 
 const ReleaseList = () => {

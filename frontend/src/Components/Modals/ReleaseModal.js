@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import { MdClose } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
-import useModalScrollLock from "../../Components/Common/useModalScrollLock";
+import useModalScrollLock from "../../Components/Common/UseModalScrollLock";
 
 const ReleaseModal = ({
   isOpen,

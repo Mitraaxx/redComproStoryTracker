@@ -45,13 +45,17 @@ const AppList = () => {
       <div className="sprint-grid">
         {filteredApps.length > 0 ? (
           filteredApps.map((appName, index) => (
-            <div
+            <a
               key={index}
               className="sprint-card app-card-aligned"
               onClick={() => navigate(`/apps/${appName}/stories`)}
+              style={{
+                textDecoration: "none",
+                color: "inherit",
+              }}
             >
               <h3 className="app-name-text">{appName}</h3>
-            </div>
+            </a>
           ))
         ) : (
           <p

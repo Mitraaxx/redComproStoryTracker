@@ -8,27 +8,27 @@ const {
   getStories,
   updateStoryDetails,
   createNewStory
-} = require('../controllers/storiesController');
+} = require('../controllers/StoriesController');
 
 // Import sprint handlers.
 const {
   getSprints,
   updateSprintDetails,
   createSprint
-} = require('../controllers/sprintsController');
+} = require('../controllers/SprintsController');
 
 // Import release handlers.
 const {
   getReleases,
   createRelease,
   updateRelease
-} = require('../controllers/releaseController');
+} = require('../controllers/ReleaseController');
 
 // Import app and GitHub status handlers.
 const {
   getAppStoriesByName,
   getBranchMergeStatus
-} = require('../controllers/appController');
+} = require('../controllers/AppController');
 
 // Story routes
 // 1) list all stories

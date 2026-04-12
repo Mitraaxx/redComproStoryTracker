@@ -1,4 +1,4 @@
-const { Story } = require("../models/model");
+const { Story } = require("../models/Model");
 
 exports.getAppStoriesByName = async (req, res) => {
   try {
@@ -9,7 +9,7 @@ exports.getAppStoriesByName = async (req, res) => {
     // Select only fields needed by the UI and keep newest stories first.
     const stories = await Story.find({ "linkedApps.appName": appName })
       .select(
-        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments status liveEnvRelease linkedApps"
+        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments status liveEnvRelease linkedApps.appName"
       )
       .sort({ createdAt: -1 });
 

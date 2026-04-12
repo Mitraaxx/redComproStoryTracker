@@ -7,18 +7,18 @@
 // 4) Open modal to create sprint and append it locally after success.
 // 5) Navigate to sprint stories page on card click.
 import { useEffect, useState, useMemo } from "react";
-import { fetchAllSprints, createSprint, clearAllCaches } from "../../Api/api";
+import { fetchAllSprints, createSprint, clearAllCaches } from "../../Api/Api";
 import { useNavigate } from "react-router-dom";
 import "../Sprints/SprintList.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SprintModal from "../Modals/SprintModal";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
-import { handleApiError, handleApiSuccess } from "../Common/apiUtils";
-import { formatDate } from "../Common/dateUtils";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
+import { formatDate } from "../Common/DateUtils";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import usePaginationState from "../Common/usePaginationState";
-import useInfiniteScroll from "../Common/useInfiniteScroll";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
 import PaginationControls from "../Common/PaginationControls";
 
 const SprintList = () => {

@@ -2,7 +2,7 @@
 // 1) Apply structured dropdown filters (assignee/status/date/apps).
 // 2) Apply free-text search on story fields.
 // 3) Keep results sorted by descending numeric story identifier.
-import { formatDateForInput } from "./dateUtils";
+import { formatDateForInput } from "./DateUtils";
 
 export const applyDropdownFilters = (stories, activeFilters) => {
   // Filter dataset based on active filter values; no-op when a filter is empty.
@@ -29,9 +29,9 @@ export const applyDropdownFilters = (stories, activeFilters) => {
       // App filter matches only linked appName values.
       if (activeFilters.apps) {
         const selectedApp = activeFilters.apps;
-        const hasLinkedApp = item.linkedApps?.some(
-          (app) => app.appName === selectedApp,
-        );
+        const hasLinkedApp = Array.isArray(item.linkedApps)
+          ? item.linkedApps.some((app) => app?.appName === selectedApp)
+          : false;
         if (!hasLinkedApp) return false;
       }
 

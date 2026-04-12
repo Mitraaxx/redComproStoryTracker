@@ -8,10 +8,10 @@
 // 5) Return selected story object to parent via onSelectStory.
 import { useState, useEffect } from "react";
 import { MdClose, MdSearch } from "react-icons/md";
-import { fetchAllStories } from "../../Api/api";
+import { fetchAllStories } from "../../Api/Api";
 import { HashLoader } from "react-spinners";
 import "../Modals/EditStoryModal.css";
-import useModalScrollLock from "../../Components/Common/useModalScrollLock";
+import useModalScrollLock from "../../Components/Common/UseModalScrollLock";
 
 const AddExistingStoryModal = ({
   isOpen,
@@ -44,8 +44,8 @@ const AddExistingStoryModal = ({
         // Start loading indicator.
         setLoading(true);
 
-        // Load all stories used by selection list.
-        const data = await fetchAllStories();
+        // Load lightweight story identities used by selection list.
+        const data = await fetchAllStories("validation");
         if (data) setAllStories(data);
 
         // Stop loading indicator.
@@ -201,7 +201,7 @@ const AddExistingStoryModal = ({
                 >
                   {/* Click a story row to pass selection back to parent. */}
                   {visibleStories.map((story) => (
-                    <div
+                    <a
                       key={story._id}
                       onClick={() => onSelectStory(story)}
                       style={{
@@ -211,6 +211,8 @@ const AddExistingStoryModal = ({
                         borderRadius: "8px",
                         cursor: "pointer",
                         transition: "all 0.2s ease",
+                        textDecoration: "none",
+                        color: "inherit",
                       }}
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.borderColor = "#3b82f6")
@@ -237,7 +239,7 @@ const AddExistingStoryModal = ({
                       >
                         {story.storyName}
                       </div>
-                    </div>
+                    </a>
                   ))}
 
                   {/* Footer hint while more items are still available. */}

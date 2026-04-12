@@ -8,9 +8,9 @@
 import { useState, useEffect } from "react";
 import { FaGithub, FaCheckCircle } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
-import { clearAllCaches } from "../../Api/api";
+import { clearAllCaches } from "../../Api/Api";
 import "./ConnectToGitModal.css";
-import useModalScrollLock from "../../Components/Common/useModalScrollLock";
+import useModalScrollLock from "../../Components/Common/UseModalScrollLock";
 
 const ConnectToGitModal = ({ isOpen, onClose }) => {
   // ------------------------------

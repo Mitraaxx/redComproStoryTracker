@@ -6,18 +6,18 @@
 // 3) Apply dropdown filters + search.
 // 4) Paginate and render story cards.
 import { useEffect, useState, useMemo } from "react";
-import { fetchAppStories } from "../../Api/api";
+import { fetchAppStories } from "../../Api/Api";
 import { MdArrowBack } from "react-icons/md";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import "../Sprints/SprintStories.css";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import StoryFilter from "../Tools/StoryFilter";
 import StoryGrid from "../Common/StoryGrid";
 import LoadingSpinner from "../Common/LoadingSpinner";
-import usePaginationState from "../Common/usePaginationState";
-import useInfiniteScroll from "../Common/useInfiniteScroll";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
 import PaginationControls from "../Common/PaginationControls";
-import { applyDropdownFilters, applySearchAndSort } from "../Common/searchBar";
+import { applyDropdownFilters, applySearchAndSort } from "../Common/SearchBar";
 import { toast } from "react-toastify";
 
 const AppStories = () => {
@@ -35,6 +35,7 @@ const AppStories = () => {
   });
   const { appName } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [visibleCount, setVisibleCount] = usePaginationState(
     `app_${appName}_count`,
   );
@@ -130,7 +131,9 @@ const AppStories = () => {
       <StoryGrid
         stories={visibleStories}
         onCardClick={(storyDbId) =>
-          navigate(`/apps/${appName}/stories/${storyDbId}`)
+          navigate(`/apps/${appName}/stories/${storyDbId}`, {
+            state: { from: `${location.pathname}${location.search}` },
+          })
         }
         gridClassName="story-grid"
         cardClassName="story-card"

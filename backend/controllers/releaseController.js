@@ -1,4 +1,4 @@
-const { Release, Story } = require("../models/model");
+const { Release, Story } = require("../models/Model");
 
 exports.createRelease = async (req, res) => {
   try {
@@ -43,6 +43,7 @@ exports.getReleases = async (req, res) => {
   try {
     // Optional param decides whether we return full release list or one release with stories.
     const { releaseId } = req.params;
+    const namesOnly = req.query.namesOnly === "true";
 
     if (releaseId) {
       // Fetch one release for detail page.
@@ -52,15 +53,22 @@ exports.getReleases = async (req, res) => {
       // Fetch stories tagged with this release name.
       const stories = await Story.find({ releaseTag: release.name })
         .select(
-          "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments appsToBeDeployed linkedApps status liveEnvRelease"
+          "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate releaseTag comments appsToBeDeployed linkedApps.appName linkedApps.featureBranch status liveEnvRelease"
         )
         .sort({ createdAt: -1 });
 
       return res.json({ release, stories });
     }
 
-    // Default branch: return all releases sorted by latest release date first.
-    const releases = await Release.find().sort({ releaseDate: -1 });
+    // List mode: support names-only payload for dropdown hydration.
+    const selectFields = namesOnly
+      ? "_id name"
+      : "_id name releaseDate devCutoff qaSignoff category createdAt updatedAt";
+
+    // Default branch: return releases sorted by latest release date first.
+    const releases = await Release.find()
+      .select(selectFields)
+      .sort({ releaseDate: -1 });
     return res.json(releases);
   } catch (err) {
     res.status(500).json({ error: err.message });

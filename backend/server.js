@@ -7,11 +7,11 @@ const {
 } = require('@clerk/express');
 const {
   db
-} = require("./database/db");
+} = require("./database/Db");
 
 
 // Central router that contains all protected API endpoints.
-const trackerRoutes = require("./Routes/routes");
+const trackerRoutes = require("./Routes/Routes");
 
 // Create Express application instance.
 const app = express();

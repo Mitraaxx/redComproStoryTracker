@@ -3,7 +3,7 @@
 // 2) Forward card click events to parent with selected story id.
 // 3) Support optional extra content renderer per card.
 // 4) Show fallback empty-state message when no stories exist.
-import { formatDate } from "../Common/dateUtils";
+import { formatDate } from "../Common/DateUtils";
 
 const StoryGrid = ({
   stories = [],

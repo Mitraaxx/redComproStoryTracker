@@ -16,17 +16,17 @@ import {
   fetchAllReleases,
   fetchBranchMergeStatus,
   fetchAllStories,
-} from "../../Api/api";
+} from "../../Api/Api";
 import { MdArrowBack, MdSource, MdNotes, MdEdit } from "react-icons/md";
 import { FaCodeBranch, FaSync } from "react-icons/fa";
 import { AiOutlineLink } from "react-icons/ai";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import "../Sprints/StoryDetails.css";
 import "react-toastify/dist/ReactToastify.css";
 import CreatePrModal from "../Modals/CreatePrModal";
 import { repoConfig } from "../../utils/AppConfig";
 import StoryModal from "../Modals/StoryModal";
-import { handleApiError, handleApiSuccess } from "../Common/apiUtils";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
 import LoadingSpinner from "../Common/LoadingSpinner";
 
 const StoryDetails = () => {
@@ -71,6 +71,7 @@ const StoryDetails = () => {
 
   // Router helper for back navigation.
   const navigate = useNavigate();
+  const location = useLocation();
 
   // ------------------------------
   // Data Loader: Story Details
@@ -267,9 +268,9 @@ const StoryDetails = () => {
     try {
       // Fetch all required datasets concurrently for faster modal open.
       const [releasesData, storiesData, sprintsData] = await Promise.all([
-        fetchAllReleases(),
-        fetchAllStories(),
-        fetchAllSprints(),
+        fetchAllReleases(true),
+        fetchAllStories("validation"),
+        fetchAllSprints(true),
       ]);
 
       // Store each dataset if request returned data.
@@ -294,6 +295,11 @@ const StoryDetails = () => {
 
   // Route-aware back navigation for nested story detail entry points.
   const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+      return;
+    }
+
     if (sprintId) {
       navigate(`/sprints/${sprintId}/stories`);
       return;

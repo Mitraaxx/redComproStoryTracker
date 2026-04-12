@@ -6,7 +6,7 @@
 import { MdClose } from "react-icons/md";
 import { repoConfig } from "../../utils/AppConfig";
 import "../Modals/ReleasePrModal.css";
-import useModalScrollLock from "../../Components/Common/useModalScrollLock";
+import useModalScrollLock from "../../Components/Common/UseModalScrollLock";
 
 const PrModal = ({ isOpen, onClose, appsToBeDeployed, prType }) => {
   // Prevent background page scrolling when modal is visible.
