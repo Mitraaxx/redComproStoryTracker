@@ -1,4 +1,12 @@
-import React, { useEffect, useState } from "react";
+// Story list page.
+//
+// High-level flow:
+// 1) Fetch all stories on mount.
+// 2) Apply dropdown filters + search text in memory.
+// 3) Paginate visible cards with persisted session state.
+// 4) Create new stories via modal and prepend them to list.
+// 5) Navigate to story details on card click.
+import { useEffect, useState, useMemo } from "react";
 import {
   fetchAllStories,
   fetchAllSprints,
@@ -6,47 +14,35 @@ import {
   clearAllCaches,
   fetchAllReleases,
 } from "../../Api/api";
-import { HashLoader } from "react-spinners";
+import { MdArrowBack } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import "../Stories/StoryList.css";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import StoryFilter from "../Tools/StoryFilter";
-import { AiOutlineArrowUp } from "react-icons/ai"; 
 import StoryModal from "../Modals/StoryModal";
+import StoryGrid from "../Common/StoryGrid";
+import LoadingSpinner from "../Common/LoadingSpinner";
+import usePaginationState from "../Common/usePaginationState";
+import useInfiniteScroll from "../Common/useInfiniteScroll";
+import PaginationControls from "../Common/PaginationControls";
+import { applyDropdownFilters, applySearchAndSort } from "../Common/searchBar";
 
-
-
-/**
- * Main component to render and manage the complete list of stories.
- * Handles fetching, searching, pagination (Load More), and initiating story creation.
- */
 const StoryList = () => {
+  // ------------------------------
+  // View State
+  // ------------------------------
+  // Master story array used for filter/search/pagination.
   const [stories, setStories] = useState([]);
+
+  // Full-page loader for initial fetch.
   const [loading, setLoading] = useState(true);
+
+  // Search text from header input.
   const [searchTerm, setSearchTerm] = useState("");
-  const navigate = useNavigate();
 
-  const [sprintsList, setSprintsList] = useState([]);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [creatingStory, setCreatingStory] = useState(false);
-
-  const [releasesList, setReleasesList] = useState([]);
-
-  /**
-   * Initializes the visible count for pagination from session storage to persist user state,
-   * falling back to the default ITEMS_PER_PAGE if no cache exists.
-   */
-  const [visibleCount, setVisibleCount] = useState(() => {
-    const savedCount = sessionStorage.getItem(`storyList_count`);
-    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
-  });
-
-  // For load more at bottom
-  const [isAtBottom, setIsAtBottom] = useState(false);
-
-  // New State for active filters
+  // Advanced filter values managed by StoryFilter.
   const [activeFilters, setActiveFilters] = useState({
     assignee: "",
     status: "",
@@ -54,95 +50,71 @@ const StoryList = () => {
     apps: "",
   });
 
-  // Function to apply filter
+  // Reference datasets used by create modal dropdowns.
+  const [sprintsList, setSprintsList] = useState([]);
+  const [releasesList, setReleasesList] = useState([]);
+
+  // Create story modal state.
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [creatingStory, setCreatingStory] = useState(false);
+
+  // Router helper for back/detail navigation.
+  const navigate = useNavigate();
+
+  // Persist number of visible cards across navigations.
+  const [visibleCount, setVisibleCount] = usePaginationState(`storyList_count`);
+
+  // Used by pagination controls to manage load-more visibility near bottom.
+  // These all inputs are dependency according to which the isAtBottom re-renders
+  const isAtBottom = useInfiniteScroll([
+    stories,
+    visibleCount,
+    searchTerm,
+    activeFilters,
+  ]);
+
+  // ------------------------------
+  // Handler: Apply Dropdown Filters
+  // ------------------------------
+  // Called by StoryFilter; resets pagination after filter change.
   const handleApplyFilter = (newFilters) => {
     setActiveFilters(newFilters);
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
-  // Universal function to check scroll as well as height(for big viewport)
-  const checkBottom = () => {
-    const windowHeight = window.innerHeight;
-    const scrollY = window.scrollY;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    if (documentHeight <= windowHeight + 10 || windowHeight + scrollY >= documentHeight - 50) {
-      setIsAtBottom(true);
-    } else {
-      setIsAtBottom(false);
-    }
-  };
-
-  /**
-   * Effect hook to manage scroll and resize events
-   */
-  useEffect(() => {
-    window.addEventListener("scroll", checkBottom);
-    window.addEventListener("resize", checkBottom);
-    
-    checkBottom();
-
-    return () => {
-      window.removeEventListener("scroll", checkBottom);
-      window.removeEventListener("resize", checkBottom);
-    };
-  }, []);
-
-  /**
-   * Effect hook to make sure whenever the data changes to 
-   * recalculate the height
-   */
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      checkBottom();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [stories, visibleCount, searchTerm, activeFilters]);
-
-  /**
-   * Effect hook to synchronize the current visible count with session storage
-   * whenever the user clicks "Load More".
-   */
-  useEffect(() => {
-    sessionStorage.setItem(`storyList_count`, visibleCount);
-  }, [visibleCount]);
-
-  /**
-   * Fetches the complete list of stories from the backend API.
-   * Manages the loading state during the asynchronous network request.
-   */
-  const getStoriesAndSprints = async () => {
+  // ------------------------------
+  // Data Loader: Stories
+  // ------------------------------
+  // Fetches full story list for this page.
+  const getStories = async () => {
     try {
       setLoading(true);
       const data = await fetchAllStories();
-      setStories(data);
+      setStories(data || []);
     } catch (err) {
-      console.log(err);
+      console.error(err);
+      toast.error(err.message || "Failed to fetch stories");
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Effect hook to trigger the initial data fetch when the component mounts.
-   */
+  // Initial page load.
   useEffect(() => {
-    getStoriesAndSprints();
+    getStories();
   }, []);
 
-  /**
-   * Handles the submission of a new story.
-   * Sends data to the API, clears local caches to ensure fresh data,
-   * refreshes the story list, and displays a success or error toast notification.
-   */
+  // ------------------------------
+  // Handler: Create Story
+  // ------------------------------
+  // Persists new story, updates UI, and closes modal.
   const handleCreateNewStory = async (storyDataWithApps) => {
     setCreatingStory(true);
     try {
-      await createStory(storyDataWithApps);
-
+      const createdStory = await createStory(storyDataWithApps);
+      setStories((prev) => [createdStory, ...prev]);
       setIsCreateModalOpen(false);
       clearAllCaches();
-      await getStoriesAndSprints();
       toast.success("Story created successfully");
     } catch (error) {
       console.error(error);
@@ -152,131 +124,64 @@ const StoryList = () => {
     }
   };
 
-  /**
-   * Opens the "Create Story" modal and concurrently fetches prerequisite data
-   * (like Sprints and Releases) to populate the dropdown menus inside the form.
-   */
+  // ------------------------------
+  // Modal Prep: Open Create Story
+  // ------------------------------
+  // Preloads sprints and releases for dropdowns inside create modal.
   const openNewStoryModal = async () => {
     setIsCreateModalOpen(true);
-
     try {
-      const sprintsData = await fetchAllSprints();
+      const [sprintsData, releasesData] = await Promise.all([
+        fetchAllSprints(),
+        fetchAllReleases(),
+      ]);
       if (sprintsData) setSprintsList(sprintsData);
-
-      const releasesData = await fetchAllReleases();
-      if (releasesData) {
-        setReleasesList(releasesData);
-      }
+      if (releasesData) setReleasesList(releasesData);
     } catch (err) {
-      console.error("Failed to fetch releases", err);
+      console.error(err);
+      toast.error(err.message || "Failed to fetch required data");
     }
   };
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <HashLoader color="#007bff" size={80} />
-      </div>
-    );
-  }
-
-  /**
-   * Navigates to the detailed view page of a specific story.
-   */
+  // Navigate to details page for selected story card.
   const handleStoryClick = (storyDbId) => {
     navigate(`/stories/${storyDbId}`);
   };
 
-   /**
-   * Filters the master stories array based on active filters and search term.
-   */
-  const filtered =
-    stories
-      ?.filter((item) => {
-        if (
-          activeFilters.assignee &&
-          item.responsibility !== activeFilters.assignee
-        )
-          return false;
-        if (activeFilters.status && item.status !== activeFilters.status)
-          return false;
+  // ------------------------------
+  // Derived Data Pipeline
+  // ------------------------------
+  // Step 1: apply dropdown filters.
+  const dropdownFilteredStories = useMemo(
+    () => applyDropdownFilters(stories, activeFilters),
+    [stories, activeFilters],
+  );
 
-        if (activeFilters.qaRelDate) {
-          if (!item.qaEnvRelDate) return false;
-          const storyDate = new Date(item.qaEnvRelDate)
-            .toISOString()
-            .split("T")[0];
-          if (storyDate !== activeFilters.qaRelDate) return false;
-        }
+  // Step 2: apply search and default sorting.
+  const filtered = useMemo(
+    () => applySearchAndSort(dropdownFilteredStories, searchTerm),
+    [dropdownFilteredStories, searchTerm],
+  );
 
-        if (activeFilters.apps) {
-          const selectedApp = activeFilters.apps;
-          const hasLinkedApp = item.linkedApps?.some(
-            (app) => app.appName === selectedApp || app.appRef?.name === selectedApp
-          );
-          if (!hasLinkedApp) {
-            return false;
-          }
-        }
-
-        const search = searchTerm.trim().toLowerCase();
-        if (!search) return true;
-
-        const storyName = item.storyName?.toLowerCase() || "";
-        const storyId = item.storyId?.toLowerCase() || "";
-        const responsibility = item.responsibility?.toLowerCase() || "";
-        const firstReview = item.firstReview?.toLowerCase() || "";
-        const releaseDate = item.qaEnvRelDate
-          ? new Date(item.qaEnvRelDate)
-              .toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
-              .toLowerCase()
-          : "";
-        const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
-
-        return (
-          storyName.includes(search) ||
-          storyId.includes(search) ||
-          responsibility.includes(search) ||
-          firstReview.includes(search) ||
-          releaseDate.includes(search) ||
-          storyPoints.includes(search)
-        );
-      })
-      .sort((a, b) => {
-        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
-        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
-        return numB - numA;
-      }) || [];
-
-  // Applies pagination limit to the filtered array
+  // Step 3: apply pagination limit.
   const visibleStories = filtered.slice(0, visibleCount);
 
-  /**
-   * Utility function to smoothly scroll the window back to the top of the page.
-   */
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // Show full-page loader during initial fetch.
+  if (loading) return <LoadingSpinner />;
 
+  // ------------------------------
+  // Render
+  // ------------------------------
   return (
     <div className="story-container">
-      <ToastContainer position="top-right" autoClose={3000} />
-
+      {/* Header section: title, filters, search, and create action. */}
       <div className="story-container2">
         <h3 className="story-title">Story List</h3>
         <div className="story-search-header">
+          {/* Dropdown filter panel for assignee/status/date/apps. */}
           <StoryFilter onApplyFilter={handleApplyFilter} />
+
+          {/* Search input also resets pagination to first chunk. */}
           <input
             type="text"
             className="story-search-input"
@@ -287,75 +192,32 @@ const StoryList = () => {
               setVisibleCount(ITEMS_PER_PAGE);
             }}
           />
+
+          {/* Open modal to create a new story. */}
           <button className="create-story-btn" onClick={openNewStoryModal}>
             New Story
           </button>
         </div>
       </div>
 
-      <div className="story-grid">
-        {visibleStories.map((story) => (
-          <div
-            key={story._id}
-            onClick={() => handleStoryClick(story._id)}
-            className="story-card"
-          >
-            <p>
-              <strong>Story Name: </strong>
-              {story.storyName}
-            </p>
-            <p>
-              <strong>Story ID: </strong> {story.storyId}
-            </p>
-            <p>
-              <strong>Assigned: </strong> {story.responsibility}
-            </p>
-            <p>
-              <strong>First Review: </strong> {story?.firstReview}
-            </p>
-            <p>
-              <strong>Qa Release Date: </strong>
-              {story.qaEnvRelDate
-                ? new Date(story.qaEnvRelDate).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "N/A"}
-            </p>
-            <p>
-              <strong>Story Points: </strong> {story.storyPoints}
-            </p>
-            <div className="story-comments">
-              <strong>Comments: </strong>
-              <span>{story?.comments || "No comments."}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Story cards grid for currently visible subset. */}
+      <StoryGrid
+        stories={visibleStories}
+        onCardClick={handleStoryClick}
+        gridClassName="story-grid"
+        cardClassName="story-card"
+        emptyMessage="No stories found."
+      />
 
-      {filtered.length > ITEMS_PER_PAGE && (
-        <div className="pagination-container">
-          {visibleCount < filtered.length && (
-            <button
-              className="load-more-btn"
-              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-              style={{
-                opacity: isAtBottom ? 1 : 0,
-                pointerEvents: isAtBottom ? "auto" : "none",
-                transition: "opacity 0.3s ease-in-out",
-              }}
-            >
-              Load More
-            </button>
-          )}
-          <button className="back-top-btn" onClick={scrollToTop}>
-            <AiOutlineArrowUp/>
-          </button>
-        </div>
-      )}
+      {/* Shared load-more and back-to-top controls. */}
+      <PaginationControls
+        filteredItems={filtered}
+        visibleCount={visibleCount}
+        setVisibleCount={setVisibleCount}
+        isAtBottom={isAtBottom}
+      />
 
-
+      {/* Create story modal with all required reference data. */}
       <StoryModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -364,9 +226,9 @@ const StoryList = () => {
         saving={creatingStory}
         sprintsList={sprintsList}
         initialSprintName=""
+        existingStories={stories}
       />
     </div>
   );
 };
-
 export default StoryList;

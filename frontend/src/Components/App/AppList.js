@@ -1,21 +1,26 @@
-import React, { useState } from "react";
+// Application list page.
+//
+// High-level flow:
+// 1) Read app names from repoConfig.
+// 2) Filter list by search input.
+// 3) Navigate to app stories on card click.
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { repoConfig } from "../../utils/AppConfig";
 import "../Sprints/SprintList.css";
 import "../App/AppList.css";
 
-/**
- * Component to display a searchable grid of available applications.
- * Reads application data statically from the global AppConfig.
- */
 const AppList = () => {
+  // ------------------------------
+  // View State
+  // ------------------------------
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
 
-  /**
-   * Filters the globally configured applications based on the search term input.
-   */
+  // Source app names from static repo configuration.
   const appNames = Object.keys(repoConfig);
+
+  // Case-insensitive search filter over app names.
   const filteredApps = appNames.filter((appName) => {
     return appName.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -26,6 +31,7 @@ const AppList = () => {
         <h3 className="sprint-title">Applications</h3>
 
         <div className="sprint-search-header">
+          {/* Updates the app-name search term. */}
           <input
             type="text"
             className="sprint-search-input"
@@ -63,5 +69,4 @@ const AppList = () => {
     </div>
   );
 };
-
 export default AppList;
