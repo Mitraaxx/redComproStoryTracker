@@ -7,7 +7,7 @@ const {
 } = require('@clerk/express');
 const {
   db
-} = require("./database/Db");
+} = require("./database/db");
 
 
 // Central router that contains all protected API endpoints.
