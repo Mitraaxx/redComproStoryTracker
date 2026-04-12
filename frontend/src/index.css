@@ -22,7 +22,7 @@ button{
   display: none;
 }
 
-/* Firefox / IE / old Edge */*/
+/* Firefox / IE / old Edge */
 * {
   scrollbar-width: none;
   -ms-overflow-style: none;
