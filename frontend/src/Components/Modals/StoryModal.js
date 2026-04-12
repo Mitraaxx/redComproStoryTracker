@@ -1,4 +1,10 @@
-import React, { useState, useEffect } from "react";
+// Modal flow summary:
+// 1) Bootstrap story form state for create/edit mode when modal opens.
+// 2) Manage two linked datasets: linked apps and deploy-app chips.
+// 3) Validate required fields + duplicate story ID + edit-change detection.
+// 4) Save story payload from the main form and app payload from nested app form.
+// 5) Render parent story modal and conditional child app modal.
+import { useState, useEffect } from "react";
 import { MdClose, MdAdd, MdDelete, MdEdit } from "react-icons/md";
 import "../Modals/EditStoryModal.css";
 import "../Modals/CreateStoryHalfModal.css";
@@ -8,47 +14,57 @@ import {
   STATUS_MEMBERS,
 } from "../../utils/AppConfig";
 import SearchableSelect from "../Tools/SeachableSelect";
+import useModalScrollLock from "../Common/UseModalScrollLock";
 
-/**
- * Universal Modal for BOTH Creating and Editing a Story.
- * Switches to "Edit Mode" if `initialData` is provided.
- */
 const StoryModal = ({
   isOpen,
   onClose,
   handleSave,
   saving,
-  initialData = null, 
+  initialData = null,
   sprintsList = [],
   releasesList = [],
   initialSprintName = "",
   sprintId = null,
   hideSprintField = false,
+  existingStories = [],
 }) => {
+  // Main story form state.
   const [formData, setFormData] = useState({});
+
+  // Linked app entries shown under "Linked Apps" section.
   const [appsList, setAppsList] = useState([]);
 
+  // Snapshots used to calculate "has changes" in edit mode.
   const [originalFormData, setOriginalFormData] = useState({});
   const [originalAppsList, setOriginalAppsList] = useState([]);
 
+  // App chips for "Apps to be deployed" multi-select.
   const [deployAppsList, setDeployAppsList] = useState([]);
   const [originalDeployAppsList, setOriginalDeployAppsList] = useState([]);
   const [deployAppInput, setDeployAppInput] = useState("");
 
+  // Nested app details modal state.
   const [isAppFormOpen, setIsAppFormOpen] = useState(false);
   const [appFormData, setAppFormData] = useState({});
   const [editingAppIndex, setEditingAppIndex] = useState(null);
 
+  // Prevent background page scroll while modal is open.
+  useModalScrollLock(isOpen);
+
+  // Initialize all form buckets when modal opens or source data changes.
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        // ================= EDIT MODE SETUP =================
-        const formatDate = (dateString) => dateString ? new Date(dateString).toISOString().split("T")[0] : "";
+        // Convert date values into YYYY-MM-DD expected by date inputs.
+        const formatDate = (dateString) =>
+          dateString ? new Date(dateString).toISOString().split("T")[0] : "";
 
+        // Edit mode: preload existing story fields.
         const formattedData = {
           storyId: initialData.storyId || "",
           storyName: initialData.storyName || "",
-          sprintName: initialData.sprint?.name || initialData.sprintName || "", 
+          sprintName: initialData.sprint?.name || initialData.sprintName || "",
           status: initialData.status || "Pending",
           storyPoints: initialData.storyPoints || "",
           responsibility: initialData.responsibility || "",
@@ -62,32 +78,39 @@ const StoryModal = ({
           firstReview: initialData.firstReview || "",
         };
 
+        // Edit mode: normalize linked apps into local app-form shape.
         let formattedApps = [];
         if (initialData.linkedApps && initialData.linkedApps.length > 0) {
-          formattedApps = initialData.linkedApps.map(app => ({
-            appName: app.appRef?.name || app.appName || "",
-            featureBranches: Array.isArray(app.featureBranches) ? app.featureBranches.join(", ") : (app.featureBranches || ""),
+          formattedApps = initialData.linkedApps.map((app) => ({
+            appName: app.appName || "",
+            featureBranch: app.featureBranch || "",
             baseBranch: app.baseBranch || "",
             dependencies: app.dependencies || "",
-            notes: app.notes || ""
+            notes: app.notes || "",
           }));
         }
 
-        const initialDeployApps = Array.isArray(initialData.appsToBeDeployed) 
-          ? initialData.appsToBeDeployed 
-          : (initialData.appsToBeDeployed ? [initialData.appsToBeDeployed] : []);
+        // Support string or array backend values and normalize to array.
+        const initialDeployApps = Array.isArray(initialData.appsToBeDeployed)
+          ? initialData.appsToBeDeployed
+          : initialData.appsToBeDeployed
+            ? [initialData.appsToBeDeployed]
+            : [];
 
         setFormData(formattedData);
         setOriginalFormData(formattedData);
-        
         setAppsList(formattedApps);
         setOriginalAppsList(formattedApps);
-
         setDeployAppsList(initialDeployApps);
         setOriginalDeployAppsList(initialDeployApps);
       } else {
-        // ================= CREATE MODE SETUP =================
-        const resetData = { status: "", sprintName: initialSprintName || "", storyId: "", storyName: "" };
+        // Create mode: start from clean defaults.
+        const resetData = {
+          status: "",
+          sprintName: initialSprintName || "",
+          storyId: "",
+          storyName: "",
+        };
         setFormData(resetData);
         setOriginalFormData(resetData);
         setAppsList([]);
@@ -95,118 +118,246 @@ const StoryModal = ({
         setDeployAppsList([]);
         setOriginalDeployAppsList([]);
       }
+
+      // Reset transient app-chip input and nested-modal edit pointer on each open.
       setDeployAppInput("");
       setEditingAppIndex(null);
     }
   }, [isOpen, initialData, initialSprintName]);
 
+  // Do not mount modal tree while closed.
   if (!isOpen) return null;
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  // Shared field updater for story form controls.
+  const handleChange = (e) =>
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
 
+  // Prevent accidental submit when Enter is pressed in regular inputs.
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && e.target.tagName !== "TEXTAREA" && e.target.name !== "appsToBeDeployedInput") {
+    if (
+      e.key === "Enter" &&
+      e.target.tagName !== "TEXTAREA" &&
+      e.target.name !== "appsToBeDeployedInput"
+    )
       e.preventDefault();
-    }
   };
 
+  // Add selected deploy app once, then clear selector field.
   const addDeployApp = () => {
-    if (deployAppInput.trim() && !deployAppsList.includes(deployAppInput.trim())) {
+    if (
+      deployAppInput.trim() &&
+      !deployAppsList.includes(deployAppInput.trim())
+    ) {
       setDeployAppsList([...deployAppsList, deployAppInput.trim()]);
     }
     setDeployAppInput("");
   };
 
-  const removeDeployApp = (indexToRemove) => {
-    setDeployAppsList(deployAppsList.filter((_, index) => index !== indexToRemove));
-  };
+  // Remove one deploy app chip by index.
+  const removeDeployApp = (indexToRemove) =>
+    setDeployAppsList(deployAppsList.filter((_, i) => i !== indexToRemove));
 
+  // Required-field and duplicate-ID checks.
+  const currentStoryId = (formData.storyId || "").trim();
+  const currentStoryName = (formData.storyName || "").trim();
+  const isIdEmpty = currentStoryId === "";
+  const isNameEmpty = currentStoryName === "";
+  const isDuplicateId = existingStories.some(
+    (s) =>
+      s.storyId.toLowerCase() === currentStoryId.toLowerCase() &&
+      s.storyId.toLowerCase() !== (initialData?.storyId || "").toLowerCase(),
+  );
+
+  // Compare all editable buckets to decide if edit mode has meaningful changes.
+  const isStoryChanged = Object.keys(formData).some(
+    (key) => formData[key] !== originalFormData[key],
+  );
+  const isAppsChanged =
+    JSON.stringify(appsList) !== JSON.stringify(originalAppsList);
+  const isDeployAppsChanged =
+    JSON.stringify(deployAppsList) !== JSON.stringify(originalDeployAppsList);
+  const hasChanges = isStoryChanged || isAppsChanged || isDeployAppsChanged;
+
+  // Disable save while pending, invalid, duplicate, or unchanged in edit mode.
+  const isBtnDisabled =
+    saving ||
+    isIdEmpty ||
+    isNameEmpty ||
+    isDuplicateId ||
+    (initialData && !hasChanges);
+
+  // Submit main story form: resolve sprint, clean app rows, then dispatch create/edit payload.
   const submitMainForm = (e) => {
     e.preventDefault();
+    if (isBtnDisabled) return;
 
-    // No api call if the data is unchanged
-    if (initialData) {
-      const isFormUnchanged = JSON.stringify(formData) === JSON.stringify(originalFormData);
-      const isAppsUnchanged = JSON.stringify(appsList) === JSON.stringify(originalAppsList);
-      const isDeployAppsUnchanged = JSON.stringify(deployAppsList) === JSON.stringify(originalDeployAppsList);
-
-      if (isFormUnchanged && isAppsUnchanged && isDeployAppsUnchanged) {
-        console.log("No changes detected. Skipping API call.");
-        onClose();
-        return; 
-      }
-    }
-
+    // Use fixed sprintId when sprint field is hidden, otherwise resolve by sprint name.
     let finalSprintId = sprintId;
-
-    if (!hideSprintField && formData.sprintName && formData.sprintName.trim() !== "") {
-      const matchedSprint = sprintsList.find((s) => s.name === formData.sprintName.trim());
-      if (!matchedSprint) {
-        alert("Sprint not found! Please select a valid sprint from the list.");
-        return;
-      }
+    if (
+      !hideSprintField &&
+      formData.sprintName &&
+      formData.sprintName.trim() !== ""
+    ) {
+      const matchedSprint = sprintsList.find(
+        (s) => s.name === formData.sprintName.trim(),
+      );
+      if (!matchedSprint)
+        return alert(
+          "Sprint not found! Please select a valid sprint from the list.",
+        );
       finalSprintId = matchedSprint._id;
-    } else if (!hideSprintField && (!formData.sprintName || formData.sprintName.trim() === "")) {
-      finalSprintId = null; 
+    } else if (
+      !hideSprintField &&
+      (!formData.sprintName || formData.sprintName.trim() === "")
+    ) {
+      finalSprintId = null;
     }
 
-    handleSave({
-      ...formData,
-      sprintId: finalSprintId,
-      sprint: finalSprintId, 
-      appsData: appsList,
-      appsToBeDeployed: deployAppsList,
-    });
+    // Keep only valid linked app rows and trim text fields before submit.
+    const cleanedAppsData = appsList
+      .filter((app) => app.appName && app.appName.trim() !== "")
+      .map((app) => ({
+        appName: app.appName.trim(),
+        featureBranch: app.featureBranch ? app.featureBranch.trim() : "",
+        baseBranch: app.baseBranch ? app.baseBranch.trim() : "",
+        dependencies: app.dependencies ? app.dependencies.trim() : "",
+        notes: app.notes ? app.notes.trim() : "",
+      }));
+
+    if (initialData) {
+      // Edit mode: include only changed story fields.
+      const changedStoryFields = {};
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== originalFormData[key]) {
+          changedStoryFields[key] =
+            typeof formData[key] === "string"
+              ? formData[key].trim()
+              : formData[key];
+        }
+      });
+
+      // Attach deploy apps only when this section changed.
+      if (isDeployAppsChanged)
+        changedStoryFields.appsToBeDeployed = deployAppsList;
+
+      // Convert sprint-name change into sprint id update expected by backend.
+      if (
+        !hideSprintField &&
+        formData.sprintName !== originalFormData.sprintName
+      ) {
+        changedStoryFields.sprint = finalSprintId;
+      }
+
+      handleSave({
+        isEditMode: true,
+        isStoryChanged: Object.keys(changedStoryFields).length > 0,
+        changedStoryFields,
+        isAppsChanged,
+        linkedApps: cleanedAppsData,
+        fullFormDataForState: {
+          ...formData,
+          sprintId: finalSprintId,
+          appsToBeDeployed: deployAppsList,
+        },
+      });
+    } else {
+      // Create mode: submit full story payload.
+      handleSave({
+        isEditMode: false,
+        ...formData,
+        sprint: finalSprintId,
+        linkedApps: cleanedAppsData,
+        appsToBeDeployed: deployAppsList,
+      });
+    }
   };
 
-  // =============== NESTED APP LOGIC ===============
+  // Open nested app modal in "add" mode with blank app form.
   const openAppForm = () => {
-    setAppFormData({ appName: "", featureBranches: "", baseBranch: "", dependencies: "", notes: "" });
+    setAppFormData({
+      appName: "",
+      featureBranch: "",
+      baseBranch: "",
+      dependencies: "",
+      notes: "",
+    });
     setEditingAppIndex(null);
     setIsAppFormOpen(true);
   };
 
+  // Open nested app modal in "edit" mode for selected index.
   const editApp = (index) => {
     setAppFormData(appsList[index]);
     setEditingAppIndex(index);
     setIsAppFormOpen(true);
   };
 
-  const handleAppChange = (e) => setAppFormData({ ...appFormData, [e.target.name]: e.target.value });
+  // Shared updater for nested app form controls.
+  const handleAppChange = (e) =>
+    setAppFormData({
+      ...appFormData,
+      [e.target.name]: e.target.value,
+    });
 
+  // Save app row into list (replace when editing, append when adding).
   const saveAppToList = () => {
     if (!appFormData.appName) return alert("Please select an App Name!");
-
     if (editingAppIndex !== null) {
       const updatedList = [...appsList];
       updatedList[editingAppIndex] = appFormData;
       setAppsList(updatedList);
-    } else {
-      setAppsList([...appsList, appFormData]);
-    }
-
+    } else setAppsList([...appsList, appFormData]);
     setIsAppFormOpen(false);
     setEditingAppIndex(null);
   };
 
+  // Remove linked app row.
   const removeApp = (index) => {
     const newList = [...appsList];
     newList.splice(index, 1);
     setAppsList(newList);
   };
 
+  // Available app choices for nested modal (avoid duplicates unless editing same app).
   const availableApps = Object.keys(repoConfig).filter((appName) => {
-    const isAlreadyAdded = appsList?.some((addedApp) => addedApp.appName === appName);
-    const isCurrentlyEditing = editingAppIndex !== null && appsList[editingAppIndex]?.appName === appName;
+    const isAlreadyAdded = appsList?.some((a) => a.appName === appName);
+    const isCurrentlyEditing =
+      editingAppIndex !== null &&
+      appsList[editingAppIndex]?.appName === appName;
     return !isAlreadyAdded || isCurrentlyEditing;
   });
 
+  // Helper lists and flags used for button-disable logic.
   const isAllAppsAdded = appsList.length >= Object.keys(repoConfig).length;
-  const availableDeployApps = Object.keys(repoConfig).filter((appName) => !deployAppsList.includes(appName));
+  const availableDeployApps = Object.keys(repoConfig).filter(
+    (appName) => !deployAppsList.includes(appName),
+  );
+
+  // When editing an app, disable save if no values changed.
+  let isAppUnchanged = false;
+  if (editingAppIndex !== null) {
+    const originalApp = appsList[editingAppIndex];
+    isAppUnchanged =
+      appFormData.appName === originalApp.appName &&
+      (appFormData.featureBranch || "") === (originalApp.featureBranch || "") &&
+      (appFormData.baseBranch || "") === (originalApp.baseBranch || "") &&
+      (appFormData.dependencies || "") === (originalApp.dependencies || "") &&
+      (appFormData.notes || "") === (originalApp.notes || "");
+  }
+
+  // App modal save requires required fields and meaningful changes.
+  const isAppBtnDisabled =
+    !appFormData.appName?.trim() ||
+    !appFormData.featureBranch?.trim() ||
+    !appFormData.baseBranch?.trim() ||
+    (isAllAppsAdded && editingAppIndex === null) ||
+    isAppUnchanged;
 
   return (
     <>
-      {/* ================= MAIN STORY MODAL (Universal Bootstrap Layout) ================= */}
       <div
         className="modal show d-block"
         tabIndex="-1"
@@ -218,7 +369,9 @@ const StoryModal = ({
       >
         <div
           className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"
-          style={{ maxWidth: "800px" }}
+          style={{
+            maxWidth: "800px",
+          }}
         >
           <div
             className="modal-content border-0"
@@ -235,18 +388,27 @@ const StoryModal = ({
                 justifyContent: "space-between",
               }}
             >
-              <h2 style={{ margin: 0, color: "#1e293b", fontWeight: "500" }}>
+              <h2
+                style={{
+                  margin: 0,
+                  color: "#1e293b",
+                  fontWeight: "500",
+                }}
+              >
                 {initialData ? "Edit Story & Apps" : "Create New Story"}
               </h2>
               <MdClose
                 size={28}
                 className="close-icon"
                 onClick={onClose}
-                style={{ cursor: "pointer" }}
+                style={{
+                  cursor: "pointer",
+                }}
               />
             </div>
 
             <div className="modal-body px-4 pb-4">
+              {/* Main story form section. */}
               <form
                 id="storyForm"
                 onSubmit={submitMainForm}
@@ -263,12 +425,21 @@ const StoryModal = ({
                         name="storyId"
                         value={formData.storyId || ""}
                         onChange={handleChange}
-                        required
                         className="form-input"
                       />
+                      {isDuplicateId && (
+                        <span
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.8rem",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Story ID already exists!
+                        </span>
+                      )}
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>
@@ -279,12 +450,10 @@ const StoryModal = ({
                         name="storyName"
                         value={formData.storyName || ""}
                         onChange={handleChange}
-                        required
                         className="form-input"
                       />
                     </label>
                   </div>
-
                   {!hideSprintField && (
                     <div className="col-12 col-md-6">
                       <label className="form-label w-100">
@@ -312,7 +481,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Story Points</span>
@@ -325,7 +493,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Responsibility</span>
@@ -338,7 +505,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Qa Release Date</span>
@@ -351,7 +517,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Live Release Date</span>
@@ -364,7 +529,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Release Tag</span>
@@ -377,7 +541,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>EPIC</span>
@@ -390,7 +553,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Category</span>
@@ -403,7 +565,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>First Review</span>
@@ -416,7 +577,6 @@ const StoryModal = ({
                       />
                     </label>
                   </div>
-
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Type</span>
@@ -433,8 +593,13 @@ const StoryModal = ({
                   <div className="col-12 col-md-6">
                     <label className="form-label w-100">
                       <span>Apps to be deployed</span>
+                      {/* Select + add pattern for deploy-app chips. */}
                       <div className="d-flex gap-2">
-                        <div style={{ flex: 1 }}>
+                        <div
+                          style={{
+                            flex: 1,
+                          }}
+                        >
                           <SearchableSelect
                             name="appsToBeDeployedInput"
                             value={deployAppInput}
@@ -459,7 +624,7 @@ const StoryModal = ({
                           Add
                         </button>
                       </div>
-
+                      {/* Display removable chips for currently selected deploy apps. */}
                       {deployAppsList.length > 0 && (
                         <div className="d-flex flex-wrap gap-2 mt-2">
                           {deployAppsList.map((app, index) => (
@@ -477,10 +642,12 @@ const StoryModal = ({
                                 border: "1px solid #bfdbfe",
                               }}
                             >
-                              {app}
+                              {app}{" "}
                               <MdClose
                                 size={14}
-                                style={{ cursor: "pointer" }}
+                                style={{
+                                  cursor: "pointer",
+                                }}
                                 onClick={() => removeDeployApp(index)}
                               />
                             </span>
@@ -489,7 +656,6 @@ const StoryModal = ({
                       )}
                     </label>
                   </div>
-
                   <div className="col-12">
                     <label className="form-label w-100">
                       <span>Comments</span>
@@ -504,6 +670,7 @@ const StoryModal = ({
                   </div>
                 </div>
 
+                {/* Linked-app list and open-add-app action. */}
                 <div className="apps-section mt-4">
                   <div className="apps-header">
                     <h3 className="apps-title">Linked Apps</h3>
@@ -515,7 +682,6 @@ const StoryModal = ({
                       <MdAdd size={18} /> Add App
                     </button>
                   </div>
-
                   {appsList.length > 0 ? (
                     <ul className="apps-list">
                       {appsList.map((app, index) => (
@@ -528,7 +694,7 @@ const StoryModal = ({
                               {app.appName}
                             </strong>
                             <span className="app-branch">
-                              Branch: {app.featureBranches || "N/A"}
+                              Branch: {app.featureBranch || "N/A"}
                             </span>
                           </div>
                           <div className="app-actions">
@@ -536,13 +702,11 @@ const StoryModal = ({
                               size={22}
                               className="edit-icon"
                               onClick={() => editApp(index)}
-                              title="Edit App"
                             />
                             <MdDelete
                               size={22}
                               className="delete-icon"
                               onClick={() => removeApp(index)}
-                              title="Remove App"
                             />
                           </div>
                         </li>
@@ -559,16 +723,21 @@ const StoryModal = ({
 
             <div
               className="modal-footer px-4 py-3"
-              style={{ borderTop: "1px solid #e2e8f0" }}
+              style={{
+                borderTop: "1px solid #e2e8f0",
+              }}
             >
+              {/* Main create/edit submit button for story form. */}
               <button
                 type="submit"
                 form="storyForm"
-                disabled={saving}
+                disabled={isBtnDisabled}
                 className="btn-save primary"
               >
                 {saving
-                  ? "Saving..."
+                  ? initialData
+                    ? "Saving..."
+                    : "Creating..."
                   : initialData
                     ? "Save Changes"
                     : "Create Story"}
@@ -578,7 +747,7 @@ const StoryModal = ({
         </div>
       </div>
 
-      {/* ================= NESTED APP MODAL ================= */}
+      {/* Nested modal for adding/editing one linked app entry. */}
       {isAppFormOpen && (
         <div
           className="modal show d-block"
@@ -591,11 +760,16 @@ const StoryModal = ({
         >
           <div
             className="modal-dialog modal-dialog-centered modal-dialog-scrollable"
-            style={{ minWidth: "300px", maxWidth: "550px" }}
+            style={{
+              minWidth: "300px",
+              maxWidth: "550px",
+            }}
           >
             <div
               className="modal-content border-0"
-              style={{ borderRadius: "25px" }}
+              style={{
+                borderRadius: "25px",
+              }}
             >
               <div
                 className="modal-header px-4 pt-4 pb-3"
@@ -605,7 +779,13 @@ const StoryModal = ({
                   justifyContent: "space-between",
                 }}
               >
-                <h2 style={{ margin: 0, color: "#1e293b", fontWeight: "500" }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    color: "#1e293b",
+                    fontWeight: "500",
+                  }}
+                >
                   {editingAppIndex !== null
                     ? "Edit App Details"
                     : "Add App Details"}
@@ -614,10 +794,13 @@ const StoryModal = ({
                   size={28}
                   className="close-icon"
                   onClick={() => {
+                    // Closing nested app modal also clears current edit pointer.
                     setIsAppFormOpen(false);
                     setEditingAppIndex(null);
                   }}
-                  style={{ cursor: "pointer" }}
+                  style={{
+                    cursor: "pointer",
+                  }}
                 />
               </div>
 
@@ -639,11 +822,14 @@ const StoryModal = ({
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
-                      <span>Feature Branch</span>
+                      <span>
+                        Feature Branch{" "}
+                        <span className="required-asterisk">*</span>
+                      </span>
                       <input
                         type="text"
-                        name="featureBranches"
-                        value={appFormData.featureBranches || ""}
+                        name="featureBranch"
+                        value={appFormData.featureBranch || ""}
                         onChange={handleAppChange}
                         className="form-input"
                       />
@@ -651,7 +837,9 @@ const StoryModal = ({
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
-                      <span>Base Branch</span>
+                      <span>
+                        Base Branch <span className="required-asterisk">*</span>
+                      </span>
                       <input
                         type="text"
                         name="baseBranch"
@@ -690,12 +878,15 @@ const StoryModal = ({
 
               <div
                 className="modal-footer px-4 py-3"
-                style={{ borderTop: "1px solid #e2e8f0" }}
+                style={{
+                  borderTop: "1px solid #e2e8f0",
+                }}
               >
+                {/* Save one app row into linked-app list. */}
                 <button
                   type="button"
                   onClick={saveAppToList}
-                  disabled={isAllAppsAdded && editingAppIndex === null}
+                  disabled={isAppBtnDisabled}
                   className="btn-save primary"
                 >
                   Save

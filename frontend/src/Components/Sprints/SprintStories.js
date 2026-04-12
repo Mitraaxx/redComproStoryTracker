@@ -1,51 +1,81 @@
-import React, { useEffect, useState } from "react";
+// Sprint stories page.
+//
+// High-level flow:
+// 1) Read sprintId from route.
+// 2) Fetch sprint details and its stories.
+// 3) Support search + dropdown filtering + pagination.
+// 4) Support editing sprint, creating story, and adding existing story.
+// 5) Keep UI in sync with local state updates after successful actions.
+import { useEffect, useState, useMemo } from "react";
 import {
   fetchSprintStories,
   clearAllCaches,
   updateSprint,
   createStory,
-  fetchStoryDetails,
   updateStory,
   fetchAllReleases,
-} from "../../Api/api";
+  fetchAllSprints,
+  fetchAllStories,
+} from "../../Api/Api";
 import { MdArrowBack, MdEdit } from "react-icons/md";
-import { HashLoader } from "react-spinners";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import "../Sprints/SprintStories.css";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
-import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
 import StoryFilter from "../Tools/StoryFilter";
 import StoryModal from "../Modals/StoryModal";
 import SprintModal from "../Modals/SprintModal";
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
+import { formatDate } from "../Common/DateUtils";
+import LoadingSpinner from "../Common/LoadingSpinner";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
+import PaginationControls from "../Common/PaginationControls";
+import StoryGrid from "../Common/StoryGrid";
+import { applyDropdownFilters, applySearchAndSort } from "../Common/SearchBar";
 
-
-/**
- * Component to manage and display all stories associated with a specific Sprint.
- * Handles fetching, creating, editing, and assigning stories to the sprint.
- */
 const SprintStories = () => {
+  // ------------------------------
+  // View State
+  // ------------------------------
+  // Stories currently linked to the selected sprint.
   const [stories, setStories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [sprint, setSprint] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const { sprintId } = useParams();
-  const navigate = useNavigate();
 
+  // Full-page loader for initial fetch and some move operations.
+  const [loading, setLoading] = useState(true);
+
+  // Sprint header object containing name, dates, notes.
+  const [sprint, setSprint] = useState("");
+
+  // Search text for quick filtering by story fields.
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Route parameter identifying current sprint context.
+  const { sprintId } = useParams();
+
+  // Navigation helper for detail/back routes.
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Sprint edit modal states.
   const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
   const [savingSprint, setSavingSprint] = useState(false);
 
+  // New story modal states.
   const [isCreateStoryModalOpen, setIsCreateStoryModalOpen] = useState(false);
   const [creatingStory, setCreatingStory] = useState(false);
 
+  // Add existing story modal visibility.
   const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
+
+  // Reference datasets for modal dropdowns/validation.
   const [releasesList, setReleasesList] = useState([]);
+  const [allSprints, setAllSprints] = useState([]);
+  const [allStories, setAllStories] = useState([]);
 
-  // For load more at bottom
-  const [isAtBottom, setIsAtBottom] = useState(false);
-
-  // states for filtering
+  // Dropdown filter state consumed by StoryFilter.
   const [activeFilters, setActiveFilters] = useState({
     assignee: "",
     status: "",
@@ -53,318 +83,267 @@ const SprintStories = () => {
     apps: "",
   });
 
-  /**
-   * Initializes the visible count for pagination from session storage to persist user state,
-   * falling back to the default ITEMS_PER_PAGE if no cache exists.
-   */
-  const [visibleCount, setVisibleCount] = useState(() => {
-    const savedCount = sessionStorage.getItem(`sprint_${sprintId}_count`);
-    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
-  });
+  // Persist visible count with sprint-specific key.
+  const [visibleCount, setVisibleCount] = usePaginationState(
+    `sprint_${sprintId}_count`,
+  );
 
-  // Universal function to check scroll as well as height(for big viewport)
-  const checkBottom = () => {
-    const windowHeight = window.innerHeight;
-    const scrollY = window.scrollY;
-    const documentHeight = document.documentElement.scrollHeight;
+  // Used by pagination controls to animate Load More visibility.
+  const isAtBottom = useInfiniteScroll([
+    stories,
+    visibleCount,
+    searchTerm,
+    activeFilters,
+  ]);
 
-    if (
-      documentHeight <= windowHeight + 10 ||
-      windowHeight + scrollY >= documentHeight - 50
-    ) {
-      setIsAtBottom(true);
-    } else {
-      setIsAtBottom(false);
-    }
-  };
-
-  /**
-   * Effect hook to manage scroll and resize events
-   */
-  useEffect(() => {
-    window.addEventListener("scroll", checkBottom);
-    window.addEventListener("resize", checkBottom);
-
-    checkBottom();
-
-    return () => {
-      window.removeEventListener("scroll", checkBottom);
-      window.removeEventListener("resize", checkBottom);
-    };
-  }, []);
-
-  /**
-   * Effect hook to make sure whenever the data changes to
-   * recalculate the height
-   */
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      checkBottom();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [stories, visibleCount, searchTerm, activeFilters]);
-
-  // This function apply filtering in the stories
+  // ------------------------------
+  // Handler: Apply Filters
+  // ------------------------------
+  // Receives filter object from StoryFilter and resets page size.
   const handleApplyFilter = (newFilters) => {
     setActiveFilters(newFilters);
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
-  /**
-   * Effect hook to synchronize the current visible count with session storage
-   * whenever the user clicks "Load More".
-   */
-  useEffect(() => {
-    sessionStorage.setItem(`sprint_${sprintId}_count`, visibleCount);
-  }, [visibleCount, sprintId]);
+  // ------------------------------
+  // Modal Prep: Edit Sprint
+  // ------------------------------
+  // Preloads all sprint names to support duplicate validation in modal.
+  const openEditSprintModal = async () => {
+    setIsSprintModalOpen(true);
+    try {
+      const data = await fetchAllSprints(true);
+      if (data) setAllSprints(data);
+    } catch (err) {
+      console.error("Failed to fetch all sprints for validation", err);
+    }
+  };
 
-  /**
-   * Effect hook to fetch the specific sprint details and its associated stories
-   * when the component mounts or the sprintId changes.
-   */
+  // ------------------------------
+  // Data Loader: Sprint + Stories
+  // ------------------------------
+  // Fetches sprint summary and linked stories when sprintId changes.
   useEffect(() => {
     const getStories = async () => {
       try {
         setLoading(true);
+
+        // API returns object containing sprint metadata + stories array.
         const data = await fetchSprintStories(sprintId);
         setStories(data.stories);
         setSprint(data.sprint);
       } catch (err) {
-        console.log(err);
+        console.error(err);
+        toast.error(err);
       } finally {
         setLoading(false);
       }
     };
-    if (sprintId) {
-      getStories();
-    }
+
+    // Guard and execute for valid route id.
+    if (sprintId) getStories();
   }, [sprintId]);
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <HashLoader color="#007bff" size={80} />
-      </div>
-    );
-  }
-
-  /**
-   * Navigates to the detailed view page of a specific story.
-   */
+  // Navigate to a specific story detail under current sprint route.
   const handleStoryClick = (storyDbId) => {
-    navigate(`/sprints/${sprintId}/stories/${storyDbId}`);
+    navigate(`/sprints/${sprintId}/stories/${storyDbId}`, {
+      state: { from: `${location.pathname}${location.search}` },
+    });
   };
 
-  /**
-   * Navigates the user back to the main sprints list.
-   */
-  const handleBack = () => {
-    navigate("/sprints");
-  };
-
-
-  /**
-   * Submits the updated sprint information to the backend API.
-   * Prevents unnecessary API calls if no data has been modified.
-   */
-  const handleSprintSave = async (updatedSprintData) => {
+  // ------------------------------
+  // Handler: Save Sprint Changes
+  // ------------------------------
+  // Accepts modal payload and updates sprint details when in edit mode.
+  const handleSprintSave = async (payload) => {
+    // Lock modal save action during request.
     setSavingSprint(true);
-    try {
-      await updateSprint(sprintId, updatedSprintData);
 
+    try {
+      const { isEditMode, changedFields } = payload;
+
+      // Only call update endpoint for edit mode payloads.
+      if (isEditMode) {
+        await updateSprint(sprintId, changedFields);
+
+        // Reflect updated fields in local sprint header without refetch.
+        setSprint((prev) => ({
+          ...prev,
+          ...changedFields,
+        }));
+      }
+
+      // Close modal and invalidate shared caches after success.
       setIsSprintModalOpen(false);
       clearAllCaches();
 
-      const updatedData = await fetchSprintStories(sprintId, true);
-      setStories(updatedData.stories);
-      setSprint(updatedData.sprint);
-
-      toast.success("Sprint Updated Successfully");
+      handleApiSuccess("Sprint Updated Successfully");
     } catch (error) {
-      console.error("Sprint Save error:", error);
-      toast.error("Sprint Name already exists or failed to update");
+      handleApiError(error, "Sprint Name already exists or failed to update");
     } finally {
+      // Re-enable save controls.
       setSavingSprint(false);
     }
   };
 
-  /**
-   * Handles the creation of a new story linked directly to this sprint.
-   * Sends data to the API, clears caches, and refreshes the story list.
-   */
+  // ------------------------------
+  // Handler: Create New Story
+  // ------------------------------
+  // Creates story in backend and appends it to current list.
   const handleCreateNewStory = async (storyDataWithApps) => {
+    // Lock modal submit while creating.
     setCreatingStory(true);
-    try {
-      await createStory(storyDataWithApps);
 
+    try {
+      // Persist story.
+      const createdStory = await createStory(storyDataWithApps);
+
+      // Append locally for immediate UI update.
+      setStories((prev) => [...prev, createdStory]);
+
+      // Close create modal and clear cross-page caches.
       setIsCreateStoryModalOpen(false);
       clearAllCaches();
 
-      setLoading(true);
-      const updatedData = await fetchSprintStories(sprintId, true);
-      setStories(updatedData.stories);
-      setSprint(updatedData.sprint);
-      setLoading(false);
-
-      toast.success("Story created successfully");
+      handleApiSuccess("Story created successfully");
     } catch (error) {
-      console.error(error);
-      toast.error(error.message || "Failed to create story");
+      handleApiError(error, "Failed to create story");
     } finally {
       setCreatingStory(false);
     }
   };
 
-  /**
-   * Associates an existing, orphaned story with the current sprint.
-   */
-  const handleSelectExistingStory = async (storyDbId) => {
+  // ------------------------------
+  // Handler: Add Existing Story
+  // ------------------------------
+  // Reassigns selected story to this sprint and updates list state.
+  const handleSelectExistingStory = async (selectedStory) => {
     setIsAddExistingModalOpen(false);
     setLoading(true);
+
     try {
-      const fullStory = await fetchStoryDetails(storyDbId, true);
+      // Update story sprint linkage in backend.
+      await updateStory(selectedStory.storyId, {
+        sprintId,
+        sprint: sprintId,
+        sprintName: sprint?.name,
+      });
 
-      fullStory.sprintId = sprintId;
-      fullStory.sprint = sprintId;
-      fullStory.sprintName = sprint?.name;
-
-      await updateStory(fullStory.storyId, fullStory);
-
+      // Clear shared caches used elsewhere.
       clearAllCaches();
-      const updatedData = await fetchSprintStories(sprintId, true);
-      setStories(updatedData.stories);
-      setSprint(updatedData.sprint);
 
-      toast.success("Story successfully moved to this Sprint");
+      // Reflect moved story in current grid.
+      setStories((prev) => [
+        ...prev,
+        {
+          ...selectedStory,
+          sprintId,
+          sprint: sprintId,
+          sprintName: sprint?.name,
+        },
+      ]);
+
+
+      handleApiSuccess("Story successfully moved to this Sprint");
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Failed to move story to this sprint");
+      handleApiError(err, "Failed to move story to this sprint");
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Opens the "Create Story" modal and concurrently fetches prerequisite release data
-   * to populate the dropdown menus inside the form.
-   */
+  // ------------------------------
+  // Modal Prep: Create Story
+  // ------------------------------
+  // Preloads releases and all stories required by StoryModal.
   const openCreateStoryModal = async () => {
+    // Open modal first for quick perceived response.
     setIsCreateStoryModalOpen(true);
 
     try {
-      const releasesData = await fetchAllReleases();
-      if (releasesData) {
-        setReleasesList(releasesData);
-      }
+      // Load reference datasets in parallel.
+      const [releasesData, storiesData] = await Promise.all([
+        fetchAllReleases(true),
+        fetchAllStories("validation"),
+      ]);
+
+      // Store datasets when available.
+      if (releasesData) setReleasesList(releasesData);
+      if (storiesData) setAllStories(storiesData);
     } catch (err) {
-      console.error("Failed to fetch releases", err);
+      console.error("Failed to fetch modal data", err);
     }
   };
 
-  /**
-   * Filters the stories array based on the current search term,
-   * checking multiple fields (Name, ID, Responsibility, Reviewer, Date, Points).
-   * It subsequently sorts the results by Story ID in descending numerical order.
-   * User Input ->  Update -> Array Test (Search + Filter) -> Sort -> Slice -> Render
-   */
-  const filtered =
-    stories
-      ?.filter((item) => {
-        const search = searchTerm.trim().toLowerCase();
-        const storyName = item.storyName?.toLowerCase() || "";
-        const storyId = item.storyId?.toLowerCase() || "";
-        const matchesSearch =
-          storyName.includes(search) || storyId.includes(search);
+  // ------------------------------
+  // Derived Data: Filtering + Search + Sort
+  // ------------------------------
+  // Step 1: apply dropdown filters (assignee/status/date/apps).
+  const dropdownFilteredStories = useMemo(() => {
+    return applyDropdownFilters(stories, activeFilters);
+  }, [stories, activeFilters]);
 
-        if (search && !matchesSearch) return false;
+  // Step 2: apply text search and standard sort order.
+  const filtered = useMemo(() => {
+    return applySearchAndSort(dropdownFilteredStories, searchTerm);
+  }, [dropdownFilteredStories, searchTerm]);
 
-        if (
-          activeFilters.assignee &&
-          item.responsibility !== activeFilters.assignee
-        )
-          return false;
-        if (activeFilters.status && item.status !== activeFilters.status)
-          return false;
-
-        if (activeFilters.qaRelDate) {
-          if (!item.qaEnvRelDate) return false;
-
-          const storyDate = new Date(item.qaEnvRelDate)
-            .toISOString()
-            .split("T")[0];
-          if (storyDate !== activeFilters.qaRelDate) return false;
-        }
-
-        if (activeFilters.apps) {
-          const selectedApp = activeFilters.apps;
-          const hasLinkedApp = item.linkedApps?.some(
-            (app) =>
-              app.appName === selectedApp || app.appRef?.name === selectedApp,
-          );
-          if (!hasLinkedApp) {
-            return false;
-          }
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
-        const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
-        return numB - numA;
-      }) || [];
-
+  // Step 3: apply pagination limit.
   const visibleStories = filtered.slice(0, visibleCount);
 
-  /**
-   * Utility function to smoothly scroll the window back to the top of the page.
-   */
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // Initial loading guard.
+  if (loading) return <LoadingSpinner />;
 
+  // ------------------------------
+  // Render
+  // ------------------------------
   return (
     <div className="sprint-story-container">
-      <div className="extra-box" style={{ justifyContent: "flex-start" }}>
-        <button onClick={handleBack} className="back-button">
+      {/* Top bar with back button to sprint list. */}
+      <div
+        className="extra-box"
+        style={{
+          justifyContent: "flex-start",
+        }}
+      >
+        {/* Navigate back to sprint list root. */}
+        <button
+          onClick={() => navigate("/sprints")}
+          className="back-button"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <MdArrowBack />
         </button>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} />
+
+      {/* Sprint header section showing sprint metadata and actions. */}
       <div className="sprint-story-container2">
         <section>
           <div className="sprint-title-group">
             <h3 className="sprint-story-title">{sprint?.name}</h3>
+
+            {/* Opens sprint edit modal. */}
             <button
-              onClick={() => setIsSprintModalOpen(true)}
+              onClick={openEditSprintModal}
               className="sprint-edit-btn"
               title="Edit Sprint"
             >
-              <MdEdit/>
+              <MdEdit />
             </button>
           </div>
+
+          {/* Sprint timeline and notes fields. */}
           <p className="sprint-date-badge">
             <strong>Start Date: </strong>
-            {new Date(sprint?.startDate).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })}
+            {sprint?.startDate ? formatDate(sprint.startDate) : "TBD"}
           </p>
           <p className="sprint-date-badge">
             <strong>End Date: </strong>
-            {new Date(sprint?.endDate).toLocaleDateString("en-IN", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })}
+            {sprint?.endDate ? formatDate(sprint.endDate) : "TBD"}
           </p>
           <p>
             <strong>Notes: </strong>
@@ -372,6 +351,7 @@ const SprintStories = () => {
           </p>
         </section>
 
+        {/* Search + story actions section. */}
         <section className="sprint-story-container3">
           <div className="story-search-header">
             <input
@@ -380,16 +360,21 @@ const SprintStories = () => {
               placeholder="Search"
               value={searchTerm}
               onChange={(e) => {
+                // Update search and reset pagination to first page window.
                 setSearchTerm(e.target.value);
                 setVisibleCount(ITEMS_PER_PAGE);
               }}
             />
+
+            {/* Open modal to attach an existing story to this sprint. */}
             <button
               className="btn-add-existing"
               onClick={() => setIsAddExistingModalOpen(true)}
             >
               Add Existing
             </button>
+
+            {/* Open modal to create a new story directly in this sprint. */}
             <button className="create-story-btn" onClick={openCreateStoryModal}>
               New Story
             </button>
@@ -397,79 +382,39 @@ const SprintStories = () => {
         </section>
       </div>
 
+      {/* Filter row for advanced dropdown-based filtering. */}
       <div className="extra-box">
         <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
-      <div className="sprint-story-grid">
-        {visibleStories.map((story) => (
-          <div
-            key={story._id}
-            onClick={() => handleStoryClick(story._id)}
-            className="sprint-story-card"
-          >
-            <p>
-              <strong>Story Name: </strong>
-              {story?.storyName}
-            </p>
-            <p>
-              <strong>Story ID: </strong> {story?.storyId}
-            </p>
-            <p>
-              <strong>Assigned: </strong> {story?.responsibility}
-            </p>
-            <p>
-              <strong>First Review: </strong> {story?.firstReview}
-            </p>
-            <p>
-              <strong>Qa Release Date: </strong>
-              {new Date(story?.qaEnvRelDate).toLocaleDateString("en-IN", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })}
-            </p>
-            <p>
-              <strong>Story Points: </strong> {story?.storyPoints}
-            </p>
-            <div className="sprint-story-comments">
-              <strong>Comments: </strong>
-              <span>{story?.comments || "No comments."}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Story cards grid for currently visible subset. */}
+      <StoryGrid
+        stories={visibleStories}
+        onCardClick={handleStoryClick}
+        gridClassName="story-grid"
+        cardClassName="story-card"
+        emptyMessage="No stories found for this sprint."
+      />
 
-      {filtered.length > ITEMS_PER_PAGE && (
-        <div className="pagination-container">
-          {visibleCount < filtered.length && (
-            <button
-              className="load-more-btn"
-              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-              style={{
-                opacity: isAtBottom ? 1 : 0,
-                pointerEvents: isAtBottom ? "auto" : "none",
-                transition: "opacity 0.3s ease-in-out",
-              }}
-            >
-              Load More
-            </button>
-          )}
+      {/* Shared pagination footer controls. */}
+      <PaginationControls
+        filteredItems={filtered}
+        visibleCount={visibleCount}
+        setVisibleCount={setVisibleCount}
+        isAtBottom={isAtBottom}
+      />
 
-          <button className="back-top-btn" onClick={scrollToTop}>
-            ⬆
-          </button>
-        </div>
-      )}
-
+      {/* Sprint edit modal. */}
       <SprintModal
         isOpen={isSprintModalOpen}
         onClose={() => setIsSprintModalOpen(false)}
-        initialData={sprint} 
+        initialData={sprint}
         handleSave={handleSprintSave}
         saving={savingSprint}
+        existingSprints={allSprints}
       />
 
+      {/* New story creation modal scoped to this sprint. */}
       <StoryModal
         isOpen={isCreateStoryModalOpen}
         onClose={() => setIsCreateStoryModalOpen(false)}
@@ -478,8 +423,10 @@ const SprintStories = () => {
         saving={creatingStory}
         sprintId={sprintId}
         hideSprintField={true}
+        existingStories={allStories}
       />
 
+      {/* Existing story picker modal for linking a story into this sprint. */}
       <AddExistingStoryModal
         isOpen={isAddExistingModalOpen}
         onClose={() => setIsAddExistingModalOpen(false)}
@@ -489,5 +436,4 @@ const SprintStories = () => {
     </div>
   );
 };
-
 export default SprintStories;
