@@ -13,7 +13,6 @@ import {
   updateSprint,
   createStory,
   updateStory,
-  fetchStoryDetails,
   fetchAllReleases,
   fetchAllSprints,
   fetchAllStories,
@@ -197,7 +196,16 @@ const SprintStories = () => {
 
     try {
       // Persist story.
-      const createdStory = await createStory(storyDataWithApps);
+      const { isEditMode, ...createPayload } = storyDataWithApps;
+      const createdStoryKey = await createStory(createPayload);
+      if (!createdStoryKey?._id) {
+        throw new Error("Create story response missing _id");
+      }
+
+      const createdStory = {
+        ...createPayload,
+        _id: createdStoryKey._id,
+      };
 
       // Append locally for immediate UI update.
       setStories((prev) => [...prev, createdStory]);
@@ -230,15 +238,12 @@ const SprintStories = () => {
         sprintName: sprint?.name,
       });
 
-      // Refresh only the linked story so the grid gets the full payload.
-      const freshStory = await fetchStoryDetails(updatedStory._id);
-
       // Clear shared caches used elsewhere.
       clearAllCaches();
 
       // Reflect moved story in current grid.
       setStories((prev) => [
-        freshStory || updatedStory,
+        updatedStory,
         ...prev,
       ]);
 

@@ -114,9 +114,9 @@ exports.createNewStory = async (req, res) => {
       linkedApps: body.linkedApps || [],
     });
 
-    // Save and return created story document.
+    // Save and return only identity key for frontend-local object construction.
     await newStory.save();
-    res.status(201).json(newStory);
+    res.status(201).json({ _id: newStory._id });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(400).json({ error: "Story ID already exists in DB!" });
