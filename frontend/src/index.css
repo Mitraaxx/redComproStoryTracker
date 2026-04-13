@@ -17,17 +17,13 @@ button{
   font-size: .85rem;
 }
 
-Chrome, Edge, Safari
+/* Chrome, Edge, Safari */
 ::-webkit-scrollbar {
   display: none;
 }
 
-/* Firefox */
+/* Firefox / IE / old Edge */
 * {
   scrollbar-width: none;
-}
-
-/* IE / old Edge */
-* {
   -ms-overflow-style: none;
 }

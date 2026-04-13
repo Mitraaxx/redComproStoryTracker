@@ -58,6 +58,12 @@
   gap: 4px;
 }
 
+.release-date-badge--compact {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
 #rel-date-badge{
   font-size: .75rem;
   background: #ffffff;
@@ -66,6 +72,7 @@
   border-radius: 6px;
   color: #475569;
   max-width: 500px;
+  margin: 0;
 }
 
 .release-title-group {

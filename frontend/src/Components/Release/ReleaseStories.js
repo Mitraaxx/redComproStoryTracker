@@ -1,64 +1,88 @@
-import React, { useEffect, useState, useMemo } from "react";
+// Release stories page.
+//
+// Complete flow overview:
+// 1) Read `releaseId` from the URL.
+// 2) Fetch release metadata + stories linked to that release.
+// 3) Build an effective deployment app list from two sources:
+//    - story-level appsToBeDeployed
+//    - release-level manually added apps
+// 4) Apply dropdown filters + search + pagination for story cards.
+// 5) Fetch merge status for visible app branches and render PR helpers.
+// 6) Support release edit, manual app add/remove, and linking existing stories.
+import { useEffect, useState, useMemo } from "react";
 import {
   fetchReleaseStories,
-  fetchStoryDetails,
   updateStory,
   clearAllCaches,
   updateRelease,
-  fetchBranchMergeStatus, 
-} from "../../Api/api";
+  fetchBranchMergeStatus,
+  fetchAllReleases,
+} from "../../Api/Api";
 import { MdArrowBack, MdEdit, MdClose } from "react-icons/md";
-import { FaCodeBranch, FaSync } from "react-icons/fa"; 
-import { HashLoader } from "react-spinners";
-import { useParams, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
-
-import "./ReleaseStories.css"; 
+import { FaCodeBranch, FaSync } from "react-icons/fa";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
+import "./ReleaseStories.css";
 import { repoConfig, ITEMS_PER_PAGE } from "../../utils/AppConfig";
+import AddExistingStoryModal from "../Modals/AddExistingStoryModal";
 import StoryFilter from "../Tools/StoryFilter";
 import ReleaseModal from "../Modals/ReleaseModal";
-import PrModal from "../Modals/prModal";
-import SearchableSelect from "../Tools/SeachableSelect";
+import PrModal from "../Modals/PrModal";
+import SearchableSelect from "../Tools/SearchableSelect";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
+import { formatDate } from "../Common/DateUtils";
+import LoadingSpinner from "../Common/LoadingSpinner";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
+import PaginationControls from "../Common/PaginationControls";
+import { applyDropdownFilters, applySearchAndSort } from "../Common/SearchBar";
+import StoryGrid from "../Common/StoryGrid";
 
-/**
- * Component to manage and display stories tied to a specific Release.
- * Handles manual app additions, existing story linking, filtering, and triggering global/inline PRs for the release.
- */
 const ReleaseStories = () => {
+  // ------------------------------
+  // View State
+  // ------------------------------
+  // Stories currently associated with this release.
   const [stories, setStories] = useState([]);
+
+  // Release header object (name, dates, category, manual apps).
   const [release, setRelease] = useState(null);
+
+  // Full-page loading state during initial fetch and story-link operations.
   const [loading, setLoading] = useState(true);
+
+  // Free-text search query.
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Modal visibility state: add existing story modal.
   const [isAddExistingModalOpen, setIsAddExistingModalOpen] = useState(false);
 
+  // Modal visibility state: edit release modal.
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
+
+  // Submit-lock for release save action.
   const [savingRelease, setSavingRelease] = useState(false);
 
+  // Temporary selected app value for manual app-add control.
   const [newManualApp, setNewManualApp] = useState("");
 
-  const [isMasterModalOpen, setIsMasterModalOpen] = useState(false);
-  const [isAlphaModalOpen, setIsAlphaModalOpen] = useState(false);
-  const [isHFXModalOpen, setIsHFXModalOpen] = useState(false);
+  // Active PR modal type: "master" | "alpha" | "hfx" | null.
+  const [activePrType, setActivePrType] = useState(null);
 
-  const [isAtBottom, setIsAtBottom] = useState(false);
+  // Full release list used by modal for duplicate name checks.
+  const [allRelease, setAllRelease] = useState([]);
 
+  // Route parameter (release context).
   const { releaseId } = useParams();
-  const navigate = useNavigate();
 
+  // Navigation helper for back and detail route transitions.
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Per-app-branch merge status map keyed by `${appName}-${branch}`.
   const [mergeStatuses, setMergeStatuses] = useState({});
 
-  /**
-   * Initializes and persists pagination limits in session storage.
-   */
-  const [visibleCount, setVisibleCount] = useState(() => {
-    const savedCount = sessionStorage.getItem(`release_${releaseId}_count`);
-    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
-  });
-
-  // State for active filters
+  // Dropdown filter state managed by StoryFilter.
   const [activeFilters, setActiveFilters] = useState({
     assignee: "",
     status: "",
@@ -66,91 +90,67 @@ const ReleaseStories = () => {
     apps: "",
   });
 
-  /**
-   * Applies selected filters from the StoryFilter component and resets pagination.
-   */
+  // Persist visible card count per release so pagination survives route revisits.
+  const [visibleCount, setVisibleCount] = usePaginationState(
+    `release_${releaseId}_count`,
+  );
+
+  // Used by shared pagination controls for load-more visibility behavior.
+  const isAtBottom = useInfiniteScroll([
+    stories,
+    visibleCount,
+    searchTerm,
+    activeFilters,
+  ]);
+
+  // Opens release edit modal and preloads release list for duplicate-name checks.
+  const openEditReleaseModal = async () => {
+    setIsReleaseModalOpen(true);
+    try {
+      // Preload all releases so modal can validate duplicate names client-side.
+      const data = await fetchAllReleases(true);
+      if (data) setAllRelease(data);
+    } catch (err) {
+      console.error("Failed to fetch all release for validation", err);
+    }
+  };
+
+  // Receives dropdown filters and resets pagination window.
   const handleApplyFilter = (newFilters) => {
     setActiveFilters(newFilters);
     setVisibleCount(ITEMS_PER_PAGE);
   };
 
-  /**
-   * Persists the current visible count of stories to session storage.
-   */
-  useEffect(() => {
-    sessionStorage.setItem(`release_${releaseId}_count`, visibleCount);
-  }, [visibleCount, releaseId]);
-
-  /**
-   * Universal function to check scroll as well as height (for big viewports)
-   * to determine if the user has reached the bottom of the page.
-   */
-  const checkBottom = () => {
-    const windowHeight = window.innerHeight;
-    const scrollY = window.scrollY;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    if (
-      documentHeight <= windowHeight + 10 ||
-      windowHeight + scrollY >= documentHeight - 50
-    ) {
-      setIsAtBottom(true);
-    } else {
-      setIsAtBottom(false);
-    }
-  };
-
-  /**
-   * Effect hook to manage scroll and resize events for infinite scrolling/pagination.
-   */
-  useEffect(() => {
-    window.addEventListener("scroll", checkBottom);
-    window.addEventListener("resize", checkBottom);
-
-    checkBottom();
-
-    return () => {
-      window.removeEventListener("scroll", checkBottom);
-      window.removeEventListener("resize", checkBottom);
-    };
-  }, []);
-
-  /**
-   * Effect hook to recalculate the page height whenever data or filters change.
-   */
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      checkBottom();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [stories, visibleCount, searchTerm, activeFilters]);
-
-  /**
-   * Fetches specific release metadata and all stories associated with that release tag.
-   */
+  // Fetch release summary and linked stories when route releaseId changes.
   useEffect(() => {
     const getStories = async () => {
       try {
+        // Enter loading mode while requesting release payload.
         setLoading(true);
+
+        // Backend returns `{ release, stories }` for this releaseId.
         const data = await fetchReleaseStories(releaseId);
+
+        // Hydrate header and story grid state.
         setRelease(data.release);
         setStories(data.stories);
       } catch (err) {
-        console.log(err);
+        console.error(err);
+        toast.error(err.message);
       } finally {
         setLoading(false);
       }
     };
+
+    // Only fetch when route has a valid release id.
     if (releaseId) {
       getStories();
     }
   }, [releaseId]);
 
-  /**
-   * Dynamically aggregates a unique list of all applications that need to be deployed
-   * in this release, combining apps inherently linked via stories with apps added manually.
-   */
+  // Aggregate apps requested by stories, then combine with manual release apps.
   const storyApps = stories.reduce((acc, story) => {
+    // Each story may store apps as string or array; normalize to list push.
     if (Array.isArray(story.appsToBeDeployed)) {
       acc.push(...story.appsToBeDeployed);
     } else if (story.appsToBeDeployed) {
@@ -158,20 +158,24 @@ const ReleaseStories = () => {
     }
     return acc;
   }, []);
+
+  // Release-level manually curated app list.
   const manualReleaseApps = release?.appsToBeDeployed || [];
+
+  // Combined + de-duplicated deployment app list used in UI and PR modal.
   const combinedUniqueApps = [...new Set([...storyApps, ...manualReleaseApps])];
 
+  // Options shown in add-manual-app dropdown: exclude apps already selected.
   const availableAppsForManualAdd = Object.keys(repoConfig).filter(
     (appName) => !combinedUniqueApps.includes(appName),
   );
 
-  /**
-   * Handles manually adding an application to the global release list.
-   * Prevents duplicates and updates the release document via API.
-   */
+  // Adds a manual app to release-level deployment list.
   const handleAddManualApp = async () => {
+    // Guard: empty input should do nothing.
     if (!newManualApp.trim()) return;
 
+    // Guard: ignore duplicates that already exist from either source list.
     if (
       manualReleaseApps.includes(newManualApp.trim()) ||
       storyApps.includes(newManualApp.trim())
@@ -180,332 +184,483 @@ const ReleaseStories = () => {
       return;
     }
 
+    // Build next manual app list.
     const updatedApps = [...manualReleaseApps, newManualApp.trim()];
 
     try {
-      const payload = {
-        name: release.name,
-        releaseDate: release.releaseDate,
-        category: release.category,
-        appsToBeDeployed: updatedApps,
-      };
+      // Persist release changes.
+      await updateRelease(releaseId, { appsToBeDeployed: updatedApps });
 
-      await updateRelease(releaseId, payload);
+      // Update local release state for immediate UI feedback.
+      setRelease((prev) => ({
+        ...prev,
+        appsToBeDeployed: updatedApps,
+      }));
+
+      // Invalidate shared caches so other views do not use stale release data.
       clearAllCaches();
 
-      const updatedData = await fetchReleaseStories(releaseId);
-      setRelease(updatedData.release);
-      setStories(updatedData.stories);
+      // Reset input and show success toast.
       setNewManualApp("");
-      toast.success("App added to release");
+      handleApiSuccess("App added to release");
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to add app");
+      handleApiError(err, "Failed to add app");
     }
   };
 
-  /**
-   * Handles removing a manually added application from the release.
-   * Note: Applications attached via specific stories cannot be removed here.
-   */
+  // Removes a manual app from release-level deployment list.
   const handleRemoveManualApp = async (appToRemove) => {
+    // Remove target app from manual-only list.
     const updatedApps = manualReleaseApps.filter((app) => app !== appToRemove);
 
     try {
-      const payload = {
-        name: release.name,
-        releaseDate: release.releaseDate,
-        category: release.category,
+      await updateRelease(releaseId, { appsToBeDeployed: updatedApps });
+
+      // Reflect removal in local header state.
+      setRelease((prev) => ({
+        ...prev,
         appsToBeDeployed: updatedApps,
-      };
+      }));
 
-      await updateRelease(releaseId, payload);
       clearAllCaches();
-
-      const updatedData = await fetchReleaseStories(releaseId);
-      setRelease(updatedData.release);
-      setStories(updatedData.stories);
-      toast.success("App removed from release");
+      handleApiSuccess("App removed from release");
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to remove app");
+      handleApiError(err, "Failed to remove app");
     }
   };
 
-  /**
-   * Associates an existing, standalone story directly with this release.
-   */
-  const handleSelectExistingStory = async (storyDbId) => {
+  // Links an existing story to this release by updating story releaseTag.
+  const handleSelectExistingStory = async (selectedStory) => {
+    // Close picker modal and show loading while reassignment happens.
     setIsAddExistingModalOpen(false);
     setLoading(true);
+
     try {
-      const fullStory = await fetchStoryDetails(storyDbId, true);
-      fullStory.releaseTag = release?.name;
-
-      if (fullStory.sprint) {
-        fullStory.sprintId = fullStory.sprint._id || fullStory.sprint;
-      }
-
-      await updateStory(fullStory.storyId, fullStory);
+      // Re-tag selected story to current release name.
+      const updatedStory = await updateStory(selectedStory.storyId, {
+        releaseTag: release?.name,
+      });
 
       clearAllCaches();
-      const updatedData = await fetchReleaseStories(releaseId);
-      setRelease(updatedData.release);
-      setStories(updatedData.stories);
 
-      toast.success("Story successfully added to this Release");
+      // Optimistically prepend newly linked story into visible list.
+      setStories((prev) => [
+        updatedStory,
+        ...prev,
+      ]);
+
+      handleApiSuccess("Story successfully added to this Release");
     } catch (err) {
-      console.error(err);
-      toast.error(err.message || "Failed to add story to this release");
+      handleApiError(err, "Failed to add story to this release");
     } finally {
+      // Restore UI.
       setLoading(false);
     }
   };
 
-  /**
-   * Navigates to the detailed view page of a specific story.
-   */
+  // Navigate to release story detail.
   const handleStoryClick = (storyDbId) => {
-    navigate(`/releases/${releaseId}/stories/${storyDbId}`);
+    navigate(`/releases/${releaseId}/stories/${storyDbId}`, {
+      state: { from: `${location.pathname}${location.search}` },
+    });
   };
 
+  // Back to release list.
   const handleBack = () => {
     navigate("/releases");
   };
 
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return "";
-    return new Date(dateString).toISOString().split("T")[0];
-  };
-
-  /**
-   * Opens the Release Edit Modal, pre-filling it with the current release context.
-   */
-  const openReleaseEditModal = () => {
-    setIsReleaseModalOpen(true);
-  };
-
-  /**
-   * Saves metadata modifications to the release context (name, date, category).
-   * Bypasses the API call if no changes were detected.
-   */
-  const handleReleaseSave = async (updatedSprintData) => {
+  // Saves release edits and propagates renamed releaseTag to current list view.
+  const handleReleaseSave = async (payload) => {
+    // Lock modal save while update request runs.
     setSavingRelease(true);
+
     try {
-      await updateRelease(releaseId, updatedSprintData);
+      const { isEditMode, changedFields } = payload;
+
+      // Only process edit payload shape.
+      if (isEditMode) {
+        // Persist changed fields.
+        await updateRelease(releaseId, changedFields);
+
+        // Sync local release header with changed values.
+        setRelease((prev) => ({
+          ...prev,
+          ...changedFields,
+        }));
+
+        // If release name changed, update current story chips in-memory.
+        if (changedFields.name) {
+          setStories((prev) =>
+            prev.map((s) => ({
+              ...s,
+              releaseTag: changedFields.name,
+            })),
+          );
+        }
+      }
 
       setIsReleaseModalOpen(false);
       clearAllCaches();
-
-      const updatedData = await fetchReleaseStories(releaseId);
-      setRelease(updatedData.release);
-      setStories(updatedData.stories);
-
-      toast.success("Release updated successfully");
+      handleApiSuccess("Release updated successfully");
     } catch (error) {
-      console.error("Release Save error:", error);
-      toast.error(error.message || "Release Name exists");
+      handleApiError(error, "Release Name exists or failed to update");
     } finally {
+      // Unlock save button.
       setSavingRelease(false);
     }
   };
 
-  /**
-   * Specific refresh button ka logic - Fetches single branch update
-   */
+  // Manually refresh one branch merge status.
   const handleSpecificRefresh = async (appName, orgName, repoName, branch) => {
+    // Status map key for this specific app branch pair.
     const statusKey = `${appName}-${branch}`;
 
-    setMergeStatuses(prev => ({
+    // Set to null so UI renders loading spinner during refresh.
+    setMergeStatuses((prev) => ({
       ...prev,
-      [statusKey]: null, 
+      [statusKey]: null,
     }));
 
     try {
+      // forceRefresh=true bypasses client cache.
       const res = await fetchBranchMergeStatus(orgName, repoName, branch, true);
-      setMergeStatuses(prev => ({
+
+      // Write fresh status value.
+      setMergeStatuses((prev) => ({
         ...prev,
         [statusKey]: res.mergedTill || "Not Merged",
       }));
     } catch (error) {
+      // Keep trace and show explicit error state in badge.
       console.error("Error refreshing specific status:", error);
-      setMergeStatuses(prev => ({
+      setMergeStatuses((prev) => ({
         ...prev,
         [statusKey]: "Error",
       }));
     }
   };
 
-  /**
-   * Filters and sorts the stories based on active filters and search terms.
-   * useMemo caches this heavy calculation so it only re-runs when inputs actually change.
-   */
+  // Filter/search/paginate pipeline.
+  const dropdownFilteredStories = useMemo(() => {
+    // Step 1: apply filter panel values.
+    return applyDropdownFilters(stories, activeFilters);
+  }, [stories, activeFilters]);
+
   const filtered = useMemo(() => {
-    return (
-      stories
-        ?.filter((item) => {
-          if (
-            activeFilters.assignee &&
-            item.responsibility !== activeFilters.assignee
-          )
-            return false;
-          if (activeFilters.status && item.status !== activeFilters.status)
-            return false;
+    // Step 2: apply text search + sorting.
+    return applySearchAndSort(dropdownFilteredStories, searchTerm);
+  }, [dropdownFilteredStories, searchTerm]);
 
-          if (activeFilters.qaRelDate) {
-            if (!item.qaEnvRelDate) return false;
-            const storyDate = new Date(item.qaEnvRelDate)
-              .toISOString()
-              .split("T")[0];
-            if (storyDate !== activeFilters.qaRelDate) return false;
-          }
-
-          if (activeFilters.apps) {
-            const selectedApp = activeFilters.apps;
-            const hasLinkedApp = item.linkedApps?.some(
-              (app) =>
-                app.appName === selectedApp || app.appRef?.name === selectedApp,
-            );
-            if (!hasLinkedApp) return false;
-          }
-
-          const search = searchTerm.trim().toLowerCase();
-          if (!search) return true;
-
-          const storyName = item.storyName?.toLowerCase() || "";
-          const storyId = item.storyId?.toLowerCase() || "";
-          const responsibility = item.responsibility?.toLowerCase() || "";
-          const firstReview = item.firstReview?.toLowerCase() || "";
-          const releaseDate = item.qaEnvRelDate
-            ? new Date(item.qaEnvRelDate)
-                .toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
-                .toLowerCase()
-            : "";
-          const storyPoints = item.storyPoints?.toString().toLowerCase() || "";
-
-          return (
-            storyName.includes(search) ||
-            storyId.includes(search) ||
-            responsibility.includes(search) ||
-            firstReview.includes(search) ||
-            releaseDate.includes(search) ||
-            storyPoints.includes(search)
-          );
-        })
-        .sort((a, b) => {
-          const numA = parseInt(a.storyId?.match(/\d+/)?.[0] || "0", 10);
-          const numB = parseInt(b.storyId?.match(/\d+/)?.[0] || "0", 10);
-          return numB - numA;
-        }) || []
-    );
-  }, [stories, activeFilters, searchTerm]);
-
-  /**
-   * Slices the filtered array for infinite scrolling/pagination.
-   * useMemo prevents the array's memory address from resetting on every page re-render.
-   */
   const visibleStories = useMemo(() => {
+    // Step 3: apply pagination cap.
     return filtered.slice(0, visibleCount);
-  }, [filtered, visibleCount]); 
+  }, [filtered, visibleCount]);
 
-
-  /**
-   * Effect hook fetches all fields required for github-status api call
-   * Uses Promise.all to fetch all branch statuses in PARALLEL for maximum speed.
-   */
+  // Resolve merge statuses for visible story app branches in parallel.
   useEffect(() => {
     const fetchAllStatuses = async () => {
+      // Nothing visible means nothing to resolve.
       if (!visibleStories || visibleStories.length === 0) return;
 
       try {
+        // Queue unresolved branch lookups and resolve in parallel.
         const promises = [];
 
         for (const story of visibleStories) {
+          // Skip stories with no app linkage.
           if (!story.linkedApps) continue;
 
           for (const appItem of story.linkedApps) {
-            const appName = appItem.appRef?.name || appItem.appName;
+            // Defensive guard: backend data can include null placeholders.
+            if (!appItem || typeof appItem !== "object") continue;
+
+            // Pull app + branch for status lookup.
+            const appName = appItem.appName;
+            const branch = appItem.featureBranch;
             const config = repoConfig[appName];
 
-            if (config && appItem.featureBranches?.length > 0) {
+            if (config && branch) {
               const { orgName, repoName } = config;
 
-              for (const branch of appItem.featureBranches) {
-                const key = `${appName}-${branch}`;
+              const key = `${appName}-${branch}`;
 
-                if (mergeStatuses[key] === undefined) {
-                  const fetchPromise = fetchBranchMergeStatus(orgName, repoName, branch)
-                    .then((res) => ({ key, status: res.mergedTill || "Not Merged" }))
-                    .catch((err) => {
-                      console.error(`Error fetching status for ${key}:`, err);
-                      return { key, status: "Error" };
-                    });
-
-                  promises.push(fetchPromise);
-                }
+              // Fetch only if this key is not already present in map.
+              if (mergeStatuses[key] === undefined) {
+                const fetchPromise = fetchBranchMergeStatus(
+                  orgName,
+                  repoName,
+                  branch,
+                )
+                  .then((res) => ({
+                    key,
+                    status: res.mergedTill || "Not Merged",
+                  }))
+                  .catch((err) => {
+                    console.error(`Error fetching status for ${key}:`, err);
+                    return {
+                      key,
+                      status: "Error",
+                    };
+                  });
+                promises.push(fetchPromise);
               }
             }
           }
         }
 
+        // Merge resolved statuses into existing state map.
         if (promises.length > 0) {
           const results = await Promise.all(promises);
-
           const fetchedStatuses = {};
           results.forEach(({ key, status }) => {
             fetchedStatuses[key] = status;
           });
-
-          setMergeStatuses((prev) => ({ ...prev, ...fetchedStatuses }));
+          setMergeStatuses((prev) => ({
+            ...prev,
+            ...fetchedStatuses,
+          }));
         }
       } catch (err) {
         console.error("Error fetching statuses:", err);
+        toast.error(err.message);
       }
     };
 
     fetchAllStatuses();
-  }, [visibleStories]); 
+  }, [visibleStories]);
 
-  /**
-   * Utility to smoothly scroll the page back to the top.
-   */
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // Extra renderer passed to StoryGrid to show per-app branch and PR controls.
+  const renderReleaseExtra = (story) => {
+    // Skip extra block when there are no linked apps.
+    if (!story.linkedApps || story.linkedApps.length === 0) return null;
 
-  if (loading) {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
+          marginTop: "16px",
+          borderTop: "1px dashed #cbd5e1",
+          paddingTop: "12px",
         }}
       >
-        <HashLoader color="#007bff" size={80} />
+        <strong
+          style={{
+            fontSize: "0.75rem",
+            color: "#2563eb",
+            backgroundColor: "#eff6ff",
+            padding: "8px",
+            borderRadius: "5px",
+            display: "inline-block",
+            marginBottom: "10px",
+            fontWeight: "600",
+            textTransform: "uppercase",
+          }}
+        >
+          Apps:
+        </strong>
+
+        {/* Render app-level branch blocks inside each story card. */}
+        {story.linkedApps
+          .filter((appItem) => appItem && typeof appItem === "object")
+          .map((appItem, idx) => {
+          // Resolve repo settings for current app.
+          const repoName = appItem.appName || "Unknown";
+          const appConfig = repoConfig[repoName] || {};
+          const targetBranch = appConfig.envBranches?.rel || "";
+          const baseUrl =
+            appConfig.baseUrl ||
+            `https://github.com/comprodls/${repoName}/compare/`;
+
+          return (
+            <div
+              key={idx}
+              style={{
+                marginBottom: "12px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "0.8rem",
+                  fontWeight: "700",
+                  color: "#1e293b",
+                }}
+              >
+                {repoName}
+              </span>
+
+              {}
+              {/* Branch controls appear only if feature branch is present. */}
+              {appItem.featureBranch ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "6px",
+                    marginTop: "6px",
+                  }}
+                >
+                  {(() => {
+                    // Build lookup context for status and refresh actions.
+                    const branch = appItem.featureBranch;
+                    const statusKey = `${repoName}-${branch}`;
+                    const currentStatus = mergeStatuses[statusKey];
+                    const config = repoConfig[repoName];
+
+                    return (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "10px",
+                          backgroundColor: "#f8fafc",
+                          border: "1px solid #e2e8f0",
+                          padding: "8px 10px",
+                          borderRadius: "6px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "0.75rem",
+                              fontFamily: "monospace",
+                              color: "#334155",
+                              wordBreak: "break-all",
+                              marginRight: "10px",
+                            }}
+                          >
+                            <FaCodeBranch color="#3b82f6" /> {branch}
+                          </span>
+
+                          {/* Opens GitHub compare URL for release PR creation. */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const githubUrl = `${baseUrl}${targetBranch}...${branch}`;
+                              window.open(githubUrl, "_blank");
+                            }}
+                            className="relBottom-btn-pr"
+                            title="Create Release PR"
+                          >
+                            PR Rel
+                          </button>
+                        </div>
+
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          {/* Shows resolved merge target or spinner while loading. */}
+                          <div
+                            className="merged-till-badge"
+                            style={{
+                              margin: 0,
+                            }}
+                          >
+                            Merged Till:{" "}
+                            <strong>
+                              {currentStatus ? (
+                                currentStatus
+                              ) : (
+                                <FaSync className="spin-icon" color="#15803d" />
+                              )}
+                            </strong>
+                          </div>
+
+                          {/* Refresh status button appears once initial status is known. */}
+                          {currentStatus && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                if (config) {
+                                  handleSpecificRefresh(
+                                    repoName,
+                                    config.orgName,
+                                    repoName,
+                                    branch,
+                                  );
+                                }
+                              }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                display: "flex",
+                                padding: "2px",
+                              }}
+                              title="Refresh branch status"
+                            >
+                              <FaSync color="#15803d" size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    // Fallback text for apps without feature branch data.
+                    fontSize: "0.75rem",
+                    color: "#94a3b8",
+                    marginTop: "2px",
+                  }}
+                >
+                  No branch linked
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
-  }
+  };
 
+  // Initial fetch guard.
+  if (loading) return <LoadingSpinner />;
+
+  // ------------------------------
+  // Render
+  // ------------------------------
   return (
     <div className="release-story-container">
-      <div className="extra-box" style={{ justifyContent: "flex-start" }}>
-        <button onClick={handleBack} className="back-button">
+      {/* Back row. */}
+      <div
+        className="extra-box"
+        style={{
+          justifyContent: "flex-start",
+        }}
+      >
+        <button
+          onClick={handleBack}
+          className="back-button"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <MdArrowBack />
         </button>
       </div>
-      <ToastContainer position="top-right" autoClose={3000} />
+
       <div className="release-story-container2">
+        {/* Release summary header and edit action. */}
         <section>
           <div className="release-title-group">
             <h3 className="release-story-title">{release?.name}</h3>
             <button
-              onClick={openReleaseEditModal}
+              onClick={openEditReleaseModal}
               className="release-edit-btn"
               title="Edit Release"
             >
@@ -515,48 +670,46 @@ const ReleaseStories = () => {
 
           <div className="release-Date-group">
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+              }}
             >
               <p
                 className="release-date-badge"
-                style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "0.75rem",
+                  margin: 0,
+                }}
               >
                 <strong>Release Date: </strong>
-                {release?.releaseDate
-                  ? new Date(release.releaseDate).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "TBD"}
+                {release?.releaseDate ? formatDate(release.releaseDate) : "TBD"}
               </p>
 
               <p
                 className="release-date-badge"
-                style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "0.75rem",
+                  margin: 0,
+                }}
               >
                 <strong>Dev Cutoff: </strong>
-                {release?.devCutoff
-                  ? new Date(release.devCutoff).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "TBD"}
+                {release?.devCutoff ? formatDate(release.devCutoff) : "TBD"}
               </p>
 
               <p
                 className="release-date-badge"
-                style={{ padding: "4px 8px", fontSize: "0.75rem", margin: 0 }}
+                style={{
+                  padding: "4px 8px",
+                  fontSize: "0.75rem",
+                  margin: 0,
+                }}
               >
                 <strong>QA Signoff: </strong>
-                {release?.qaSignoff
-                  ? new Date(release.qaSignoff).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "TBD"}
+                {release?.qaSignoff ? formatDate(release.qaSignoff) : "TBD"}
               </p>
             </div>
 
@@ -564,7 +717,11 @@ const ReleaseStories = () => {
               <p
                 className="release-date-badge"
                 id="rel-date-badge"
-                style={{ padding: "6px 12px", fontSize: "0.8rem", margin: 0 }}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "0.8rem",
+                  margin: 0,
+                }}
               >
                 <strong>Category: </strong>
                 {release?.category || "General"}
@@ -576,25 +733,19 @@ const ReleaseStories = () => {
         <div className="relTop-btn-group">
           <button
             className="relTop-btn-pr"
-            onClick={(e) => {
-              setIsMasterModalOpen(true);
-            }}
+            onClick={() => setActivePrType("master")}
           >
             Master
           </button>
           <button
             className="relTop-btn-pr"
-            onClick={(e) => {
-              setIsAlphaModalOpen(true);
-            }}
+            onClick={() => setActivePrType("alpha")}
           >
             Alpha
           </button>
           <button
             className="relTop-btn-pr"
-            onClick={(e) => {
-              setIsHFXModalOpen(true);
-            }}
+            onClick={() => setActivePrType("hfx")}
           >
             HFX
           </button>
@@ -602,6 +753,7 @@ const ReleaseStories = () => {
 
         <section className="release-story-container3">
           <div className="story-search-header">
+            {/* Search text with pagination reset. */}
             <input
               type="text"
               className="story-search-input"
@@ -613,6 +765,8 @@ const ReleaseStories = () => {
               }}
             />
           </div>
+
+          {/* Open modal to attach existing story to this release. */}
           <button
             className="btn-add-existing"
             onClick={() => setIsAddExistingModalOpen(true)}
@@ -622,6 +776,7 @@ const ReleaseStories = () => {
         </section>
       </div>
 
+      {/* Deployment apps summary bar (story-derived + manual apps). */}
       <div
         style={{
           display: "flex",
@@ -636,12 +791,18 @@ const ReleaseStories = () => {
           border: "1px solid #e2e8f0",
         }}
       >
-        <strong style={{ fontSize: "0.9rem", color: "#334155" }}>
+        <strong
+          style={{
+            fontSize: "0.9rem",
+            color: "#334155",
+          }}
+        >
           Apps to be deployed:{" "}
         </strong>
 
         {combinedUniqueApps.length > 0 ? (
           combinedUniqueApps.map((app, idx) => {
+            // Apps originating from story data cannot be removed from this bar.
             const isFromStory = storyApps.includes(app);
             return (
               <span
@@ -663,7 +824,10 @@ const ReleaseStories = () => {
                 {!isFromStory && (
                   <MdClose
                     size={14}
-                    style={{ cursor: "pointer", color: "#ef4444" }}
+                    style={{
+                      cursor: "pointer",
+                      color: "#ef4444",
+                    }}
                     onClick={() => handleRemoveManualApp(app)}
                     title="Remove manually added app"
                   />
@@ -672,10 +836,17 @@ const ReleaseStories = () => {
             );
           })
         ) : (
-          <span style={{ color: "#64748b", fontSize: "0.85rem" }}>
+          <span
+            style={{
+              color: "#64748b",
+              fontSize: "0.85rem",
+            }}
+          >
             None yet
           </span>
         )}
+
+        {/* Manual app add controls. */}
         <div
           style={{
             display: "flex",
@@ -688,7 +859,7 @@ const ReleaseStories = () => {
             name="appsToBeDeployedInput"
             value={newManualApp}
             onChange={(e) => setNewManualApp(e.target.value)}
-             onKeyDown={(e) => e.key === "Enter" && handleAddManualApp()}
+            onKeyDown={(e) => e.key === "Enter" && handleAddManualApp()}
             options={availableAppsForManualAdd}
             placeholder="Select App"
           />
@@ -710,275 +881,39 @@ const ReleaseStories = () => {
         </div>
       </div>
 
+      {/* Advanced filter bar. */}
       <div className="extra-box">
         <StoryFilter onApplyFilter={handleApplyFilter} />
       </div>
 
-      <div className="release-story-grid">
-        {visibleStories.length > 0 ? (
-          visibleStories.map((story) => (
-            <div
-              key={story._id}
-              onClick={() => handleStoryClick(story._id)}
-              className="release-story-card"
-            >
-              <p>
-                <strong>Story Name: </strong>
-                {story?.storyName}
-              </p>
-              <p>
-                <strong>Story ID: </strong> {story?.storyId}
-              </p>
-              <p>
-                <strong>Assigned: </strong> {story?.responsibility}
-              </p>
-              <p>
-                <strong>First Review: </strong> {story?.firstReview}
-              </p>
-              <p>
-                <strong>Qa Release Date: </strong>
-                {new Date(story?.qaEnvRelDate).toLocaleDateString("en-IN", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </p>
-              <p>
-                <strong>Story Points: </strong> {story?.storyPoints}
-              </p>
-              <div className="story-comments">
-                <strong>Comments: </strong>
-                <span>{story?.comments || "No comments."}</span>
-              </div>
-
-              {story.linkedApps && story.linkedApps.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "16px",
-                    borderTop: "1px dashed #cbd5e1",
-                    paddingTop: "12px",
-                  }}
-                >
-                  <strong
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "#2563eb",
-                      backgroundColor: "#eff6ff",
-                      padding: "8px",
-                      borderRadius: "5px",
-                      display: "inline-block",
-                      marginBottom: "10px",
-                      fontWeight: "600",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Apps:
-                  </strong>
-                  {story.linkedApps.map((appItem, idx) => {
-                    const repoName =
-                      appItem.appRef?.name || appItem.appName || "Unknown";
-
-                    const appConfig = repoConfig[repoName] || {};
-                    const targetBranch = appConfig.envBranches?.rel || "";
-                    const baseUrl =
-                      appConfig.baseUrl ||
-                      `https://github.com/comprodls/${repoName}/compare/`;
-
-                    return (
-                      <div key={idx} style={{ marginBottom: "12px" }}>
-                        <span
-                          style={{
-                            fontSize: "0.8rem",
-                            fontWeight: "700",
-                            color: "#1e293b",
-                          }}
-                        >
-                          {repoName}
-                        </span>
-                        {appItem.featureBranches &&
-                        appItem.featureBranches.length > 0 ? (
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: "6px",
-                              marginTop: "6px",
-                            }}
-                          >
-                            {appItem.featureBranches.map((branch, bIdx) => {
-                              const statusKey = `${repoName}-${branch}`;
-                              const currentStatus = mergeStatuses[statusKey];
-                              const config = repoConfig[repoName];
-
-                              return (
-                                <div
-                                  key={bIdx}
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: "10px",
-                                    backgroundColor: "#f8fafc",
-                                    border: "1px solid #e2e8f0",
-                                    padding: "8px 10px",
-                                    borderRadius: "6px",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    <span
-                                      style={{
-                                        fontSize: "0.75rem",
-                                        fontFamily: "monospace",
-                                        color: "#334155",
-                                        wordBreak: "break-all",
-                                        marginRight: "10px",
-                                      }}
-                                    >
-                                      <FaCodeBranch color="#3b82f6" /> {branch}
-                                    </span>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        const githubUrl = `${baseUrl}${targetBranch}...${branch}`;
-                                        window.open(githubUrl, "_blank");
-                                      }}
-                                      className="relBottom-btn-pr"
-                                      title="Create Release PR"
-                                    >
-                                      PR Rel
-                                    </button>
-                                  </div>
-
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "8px",
-                                    }}
-                                  >
-                                    <div
-                                      className="merged-till-badge"
-                                      style={{ margin: 0 }}
-                                    >
-                                      Merged Till:{" "}
-                                      <strong>
-                                        {currentStatus ? (
-                                          currentStatus
-                                        ) : (
-                                          <FaSync
-                                            className="spin-icon"
-                                            color="#15803d"
-                                          />
-                                        )}
-                                      </strong>
-                                    </div>
-
-                                    {currentStatus && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (config) {
-                                            handleSpecificRefresh(
-                                              repoName,
-                                              config.orgName,
-                                              repoName,
-                                              branch,
-                                            );
-                                          }
-                                        }}
-                                        style={{
-                                          background: "none",
-                                          border: "none",
-                                          cursor: "pointer",
-                                          display: "flex",
-                                          padding: "2px",
-                                        }}
-                                        title="Refresh branch status"
-                                      >
-                                        <FaSync color="#15803d" size={14} />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              fontSize: "0.75rem",
-                              color: "#94a3b8",
-                              marginTop: "2px",
-                            }}
-                          >
-                            No branches
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <p style={{ color: "#64748b", marginTop: "20px" }}>
-            No stories linked to this release yet.
-          </p>
-        )}
-      </div>
-
-      {filtered.length > ITEMS_PER_PAGE && (
-        <div className="pagination-container">
-          {visibleCount < filtered.length && (
-            <button
-              className="load-more-btn"
-              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
-              style={{
-                opacity: isAtBottom ? 1 : 0,
-                pointerEvents: isAtBottom ? "auto" : "none",
-                transition: "opacity 0.3s ease-in-out",
-              }}
-            >
-              Load More
-            </button>
-          )}
-
-          <button className="back-top-btn" onClick={scrollToTop}>
-            ⬆
-          </button>
-        </div>
-      )}
-
-      <PrModal
-        isOpen={isMasterModalOpen}
-        onClose={() => setIsMasterModalOpen(false)}
-        appsToBeDeployed={combinedUniqueApps}
-        releaseName={release?.name}
-        prType="master"
+      {/* Story grid with release-specific extra branch renderer. */}
+      <StoryGrid
+        stories={visibleStories}
+        onCardClick={handleStoryClick}
+        gridClassName="release-story-grid"
+        cardClassName="release-story-card"
+        emptyMessage="No stories linked to this release yet."
+        renderExtra={renderReleaseExtra}
       />
 
-      <PrModal
-        isOpen={isAlphaModalOpen}
-        onClose={() => setIsAlphaModalOpen(false)}
-        appsToBeDeployed={combinedUniqueApps}
-        releaseName={release?.name}
-        prType="alpha"
+      {/* Shared load-more/back-to-top controls. */}
+      <PaginationControls
+        filteredItems={filtered}
+        visibleCount={visibleCount}
+        setVisibleCount={setVisibleCount}
+        isAtBottom={isAtBottom}
       />
 
+      {/* PR modal for selected release PR flow type (master/alpha/hfx). */}
       <PrModal
-        isOpen={isHFXModalOpen}
-        onClose={() => setIsHFXModalOpen(false)}
+        isOpen={!!activePrType}
+        onClose={() => setActivePrType(null)}
         appsToBeDeployed={combinedUniqueApps}
         releaseName={release?.name}
-        prType="hfx"
+        prType={activePrType}
       />
 
+      {/* Attach existing story modal. */}
       <AddExistingStoryModal
         isOpen={isAddExistingModalOpen}
         onClose={() => setIsAddExistingModalOpen(false)}
@@ -986,15 +921,16 @@ const ReleaseStories = () => {
         currentSprintStories={stories}
       />
 
+      {/* Edit release modal. */}
       <ReleaseModal
         isOpen={isReleaseModalOpen}
         onClose={() => setIsReleaseModalOpen(false)}
         initialData={release}
         handleSave={handleReleaseSave}
         saving={savingRelease}
+        existingReleases={allRelease}
       />
     </div>
   );
 };
-
 export default ReleaseStories;

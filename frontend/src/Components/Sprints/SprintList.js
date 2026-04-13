@@ -1,193 +1,173 @@
-import React, { useEffect, useState, useContext } from "react";
-import { fetchAllSprints, createSprint, clearAllCaches } from "../../Api/api";
-import { HashLoader } from "react-spinners";
+// Sprint list page.
+//
+// High-level flow:
+// 1) Fetch all sprints on mount.
+// 2) Apply search and sorting in memory.
+// 3) Slice visible rows via pagination state.
+// 4) Open modal to create sprint and append it locally after success.
+// 5) Navigate to sprint stories page on card click.
+import { useEffect, useState, useMemo } from "react";
+import { fetchAllSprints, createSprint, clearAllCaches } from "../../Api/Api";
 import { useNavigate } from "react-router-dom";
 import "../Sprints/SprintList.css";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
-import { AiOutlineArrowUp } from "react-icons/ai";
 import SprintModal from "../Modals/SprintModal";
+import { ITEMS_PER_PAGE } from "../../utils/AppConfig";
+import { handleApiError, handleApiSuccess } from "../Common/ApiUtils";
+import { formatDate } from "../Common/DateUtils";
+import LoadingSpinner from "../Common/LoadingSpinner";
+import usePaginationState from "../Common/UsePaginationState";
+import useInfiniteScroll from "../Common/UseInfiniteScroll";
+import PaginationControls from "../Common/PaginationControls";
 
-/**
- * Main component to render and manage the complete list of sprints.
- * Handles fetching sprint data, searching, pagination (Load More), and initiating new sprint creation.
- */
 const SprintList = () => {
+  // ------------------------------
+  // View State
+  // ------------------------------
+  // Raw sprint list from backend.
   const [sprints, setSprints] = useState([]);
+
+  // Full-page loader for initial fetch.
   const [loading, setLoading] = useState(true);
+
+  // Search text from input box.
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Router helper for page navigation.
   const navigate = useNavigate();
 
-  const [isCreateSprintModalOpen, setCreateIsSprintModalOpen] = useState(false);
+  // Create sprint modal visibility.
+  const [isCreateSprintModalOpen, setIsCreateSprintModalOpen] = useState(false);
+
+  // Save-in-progress state for create modal submit button.
   const [savingSprint, setSavingSprint] = useState(false);
 
-  // For load more at bottom
-  const [isAtBottom, setIsAtBottom] = useState(false);
+  // Persist pagination count in session storage across route revisits.
+  const [visibleCount, setVisibleCount] =
+    usePaginationState(`sprintList_count`);
 
-  /**
-   * Initializes the visible count for pagination from session storage to persist user state,
-   * falling back to the default ITEMS_PER_PAGE if no cache exists.
-   */
-  const [visibleCount, setVisibleCount] = useState(() => {
-    const savedCount = sessionStorage.getItem(`sprintList_count`);
-    return savedCount ? parseInt(savedCount, 10) : ITEMS_PER_PAGE;
-  });
+  // Used by pagination controls to fade/show Load More near page bottom.
+  const isAtBottom = useInfiniteScroll([sprints, visibleCount, searchTerm]);
 
-  // Universal function to check scroll as well as height(for big viewport)
-  const checkBottom = () => {
-    const windowHeight = window.innerHeight;
-    const scrollY = window.scrollY;
-    const documentHeight = document.documentElement.scrollHeight;
-
-    if (
-      documentHeight <= windowHeight + 10 ||
-      windowHeight + scrollY >= documentHeight - 50
-    ) {
-      setIsAtBottom(true);
-    } else {
-      setIsAtBottom(false);
-    }
-  };
-
-  /**
-   * Effect hook to manage scroll and resize events
-   */
+  // ------------------------------
+  // Data Loader: Sprint List
+  // ------------------------------
+  // Runs once on mount and hydrates the page with all sprint cards.
   useEffect(() => {
-    window.addEventListener("scroll", checkBottom);
-    window.addEventListener("resize", checkBottom);
+    const getSprints = async () => {
+      try {
+        // Show loader while requesting data.
+        setLoading(true);
 
-    checkBottom();
+        // Fetch sprint list from API cache/network.
+        const data = await fetchAllSprints();
 
-    return () => {
-      window.removeEventListener("scroll", checkBottom);
-      window.removeEventListener("resize", checkBottom);
+        // Ensure state always receives an array.
+        setSprints(data || []);
+      } catch (err) {
+        console.error(err);
+        toast.error(err.message || "Failed to fetch sprints");
+      } finally {
+        // Stop loader regardless of success/failure.
+        setLoading(false);
+      }
     };
+
+    // Execute loader immediately after component mounts.
+    getSprints();
   }, []);
 
-  /**
-   * Effect hook to make sure whenever the data changes to
-   * recalculate the height
-   */
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      checkBottom();
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [ visibleCount, searchTerm]);
-
-  /**
-   * Effect hook to synchronize the current visible count with session storage
-   * whenever the user interacts with the pagination (Load More).
-   */
-  useEffect(() => {
-    sessionStorage.setItem(`sprintList_count`, visibleCount);
-  }, [visibleCount]);
-
-  /**
-   * Handles the submission of a new sprint.
-   * Sends data to the API, clears local caches, refreshes the sprint list,
-   * and displays a toast notification regarding the outcome.
-   */
+  // ------------------------------
+  // Action Handler: Create Sprint
+  // ------------------------------
+  // Creates sprint via API, closes modal, clears caches, and updates list instantly.
   const handleSprintSave = async (newSprintData) => {
+    // Lock submit while request is in progress.
     setSavingSprint(true);
-    try {
-      await createSprint(newSprintData);
 
-      setCreateIsSprintModalOpen(false);
+    try {
+      // Create sprint in backend.
+      const { isEditMode, ...createPayload } = newSprintData;
+      const createdSprintKey = await createSprint(createPayload);
+      if (!createdSprintKey?._id) {
+        throw new Error("Create sprint response missing _id");
+      }
+
+      const createdSprint = {
+        ...createPayload,
+        _id: createdSprintKey._id,
+      };
+
+      // Close modal after successful save.
+      setIsCreateSprintModalOpen(false);
+
+      // Invalidate related API caches used by other pages/components.
       clearAllCaches();
-      const data = await fetchAllSprints();
-      setSprints(data);
-      toast.success("Sprint created successfully");
+
+      // Optimistic local update to avoid re-fetch.
+      setSprints((prevSprints) => [...prevSprints, createdSprint]);
+
+      // User feedback toast.
+      handleApiSuccess("Sprint created successfully");
     } catch (error) {
-      console.error("Sprint Save error:", error);
-      toast.error(error.message || "Failed to create Sprint");
+      // Unified API error handling with toast.
+      handleApiError(error, "Failed to create Sprint");
     } finally {
+      // Re-enable submit button.
       setSavingSprint(false);
     }
   };
 
-  /**
-   * Effect hook to fetch the complete list of sprints from the backend API
-   * when the component mounts. Manages the loading state during the request.
-   */
-  useEffect(() => {
-    const getSprints = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchAllSprints();
-        setSprints(data);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getSprints();
-  }, []);
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <HashLoader color="#007bff" size={80} />
-      </div>
-    );
-  }
-
-  /**
-   * Navigates to the detailed story view for a specific sprint.
-   */
+  // Opens sprint stories page for selected sprint card.
   const handleSprintClick = (sprintId) => {
     navigate(`/sprints/${sprintId}/stories`);
   };
 
-  /**
-   * Filters the master sprint array based on the current search term,
-   * and subsequently sorts the results in descending order.
-   */
-  const filtered =
-    sprints
-      ?.filter((item) => {
-        const search = searchTerm.toLowerCase();
-        const sprintName = item.name?.toLowerCase() || "";
-        return sprintName.includes(search);
-      })
-      .sort((a, b) => {
-        const nameA = a.name || "";
-        const nameB = b.name || "";
-        return nameB.localeCompare(nameA, undefined, {
-          numeric: true,
-          sensitivity: "base",
-        });
-      }) || [];
+  // ------------------------------
+  // Derived Data: Filter + Sort
+  // ------------------------------
+  // 1) Apply case-insensitive name search.
+  // 2) Sort descending with numeric-aware locale compare.
+  const filtered = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
 
-  // Applies pagination limit to the filtered array
-  const visibleSprints = filtered.slice(0, visibleCount);
+    return (
+      sprints
+        ?.filter((item) => {
+          // If search is empty, keep every sprint.
+          if (!search) return true;
 
-  /**
-   * Utility function to smoothly scroll the window back to the top of the page.
-   */
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+          // Compare normalized sprint name.
+          const sprintName = item.name?.toLowerCase() || "";
+          return sprintName.includes(search);
+        })
+        .sort((a, b) => {
+          // Sort by sprint name in descending order.
+          const nameA = a.name || "";
+          const nameB = b.name || "";
+          return nameB.localeCompare(nameA, undefined, {
+            numeric: true,
+            sensitivity: "base",
+          });
+        }) || []
+    );
+  }, [sprints, searchTerm]);
 
-  // Helper function to format the date
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const options = { day: "numeric", month: "short", year: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-GB", options);
-  };
+  // Apply pagination limit to filtered list.
+  const visibleSprints = useMemo(() => {
+    return filtered.slice(0, visibleCount);
+  }, [filtered, visibleCount]);
 
+  // Render spinner while first load is happening.
+  if (loading) return <LoadingSpinner />;
+
+  // ------------------------------
+  // Render
+  // ------------------------------
   return (
     <div className="sprint-container">
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* Header row: title + search + add sprint action. */}
       <div className="sprint-container2">
         <h3 className="sprint-title">Sprint List</h3>
         <div className="sprint-search-header">
@@ -201,8 +181,10 @@ const SprintList = () => {
               setVisibleCount(ITEMS_PER_PAGE);
             }}
           />
+
+          {/* Opens create sprint modal. */}
           <button
-            onClick={() => setCreateIsSprintModalOpen(true)}
+            onClick={() => setIsCreateSprintModalOpen(true)}
             className="create-sprint-button"
           >
             Add Sprint
@@ -210,59 +192,65 @@ const SprintList = () => {
         </div>
       </div>
 
+      {/* Sprint cards grid. */}
       <div className="sprint-grid">
-        {visibleSprints.map((sprint) => (
-          <div
-            key={sprint._id}
-            onClick={() => handleSprintClick(sprint._id)}
-            className="sprint-card"
-          >
-            {/* Sprint ka naam */}
-            <span className="sprint-card-name">{sprint.name}</span>
-
-            {/* Sprint ki Date Range */}
-            {(sprint.startDate || sprint.endDate) && (
-              <span className="sprint-card-dates">
-                {sprint.startDate ? formatDate(sprint.startDate) : "TBD"}
-                {" - "}
-                {sprint.endDate ? formatDate(sprint.endDate) : "TBD"}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {filtered.length > ITEMS_PER_PAGE && (
-        <div className="pagination-container">
-          {visibleCount < filtered.length && (
-            <button
-              className="load-more-btn"
-              onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
+        {/* Render cards when data exists; otherwise render empty-state text. */}
+        {visibleSprints.length > 0 ? (
+          visibleSprints.map((sprint) => (
+            <a
+              key={sprint._id}
+              onClick={() => handleSprintClick(sprint._id)}
+              className="sprint-card"
               style={{
-                opacity: isAtBottom ? 1 : 0,
-                pointerEvents: isAtBottom ? "auto" : "none",
-                transition: "opacity 0.3s ease-in-out",
+                textDecoration: "none",
+                color: "inherit",
               }}
             >
-              Load More
-            </button>
-          )}
+              {/* Sprint primary label. */}
+              <span className="sprint-card-name">{sprint.name}</span>
 
-          <button className="back-top-btn" onClick={scrollToTop}>
-            <AiOutlineArrowUp />
-          </button>
-        </div>
-      )}
+              {/* Optional date range section when at least one date exists. */}
+              {(sprint.startDate || sprint.endDate) && (
+                <span className="sprint-card-dates">
+                  {sprint.startDate ? formatDate(sprint.startDate) : "TBD"}
+                  {" - "}
+                  {sprint.endDate ? formatDate(sprint.endDate) : "TBD"}
+                </span>
+              )}
+            </a>
+          ))
+        ) : (
+          <p
+            style={{
+              color: "#64748b",
+              marginTop: "20px",
+              textAlign: "center",
+              width: "100%",
+            }}
+          >
+            No sprints found.
+          </p>
+        )}
+      </div>
 
+      {/* Shared load-more/back-to-top footer controls. */}
+      <PaginationControls
+        filteredItems={filtered}
+        visibleCount={visibleCount}
+        setVisibleCount={setVisibleCount}
+        isAtBottom={isAtBottom}
+      />
+
+      {/* Create sprint modal wired to save handler and duplicate-name context. */}
       <SprintModal
         isOpen={isCreateSprintModalOpen}
-        onClose={() => setCreateIsSprintModalOpen(false)}
+        onClose={() => setIsCreateSprintModalOpen(false)}
         initialData={null}
         handleSave={handleSprintSave}
         saving={savingSprint}
+        existingSprints={sprints}
       />
     </div>
   );
 };
-
 export default SprintList;
