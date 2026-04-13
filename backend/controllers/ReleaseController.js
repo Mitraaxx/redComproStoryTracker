@@ -27,9 +27,9 @@ exports.createRelease = async (req, res) => {
       category: category || "General",
     });
 
-    // Persist release and return the created document.
+    // Persist release and return only identity key for frontend-local object construction.
     await newRelease.save();
-    res.status(201).json(newRelease);
+    res.status(201).json({ _id: newRelease._id });
   } catch (err) {
     // Handle duplicate key collisions from DB-level unique constraints.
     if (err.code === 11000) {

@@ -39,34 +39,29 @@ export const clearAllCaches = () => {
 // 3) Parse response safely even for non-JSON error bodies.
 // 4) Throw normalized Error for non-2xx responses.
 const fetchWithAuth = async (url, options = {}) => {
-  let token = null;
-  if (window.Clerk && window.Clerk.session) {
-    token = await window.Clerk.session.getToken();
-  }
-  const headers = {
-    "Content-Type": "application/json",
-    ...options.headers
-  };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  const response = await fetch(url, {
-    ...options,
-    headers
-  });
-  const text = await response.text();
-  let data;
   try {
-    data = text ? JSON.parse(text) : {};
-  } catch (err) {
-    data = {
-      error: text
+    let token = null;
+    if (window.Clerk && window.Clerk.session) {
+      token = await window.Clerk.session.getToken();
+    }
+    const headers = {
+      "Content-Type": "application/json",
+      ...options.headers
     };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+    const data = await response.json();
+    console.log(data);
+
+    return data;
+  } catch (error) {
+    throw error;
   }
-  if (!response.ok) {
-    throw new Error(data.error || `HTTP Error ${response.status}: Failed to fetch`);
-  }
-  return data;
 };
 
 // Sprint list fetch with optional names-only mode for dropdown hydration.

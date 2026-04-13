@@ -88,7 +88,16 @@ const SprintList = () => {
 
     try {
       // Create sprint in backend.
-      const createdSprint = await createSprint(newSprintData);
+      const { isEditMode, ...createPayload } = newSprintData;
+      const createdSprintKey = await createSprint(createPayload);
+      if (!createdSprintKey?._id) {
+        throw new Error("Create sprint response missing _id");
+      }
+
+      const createdSprint = {
+        ...createPayload,
+        _id: createdSprintKey._id,
+      };
 
       // Close modal after successful save.
       setIsCreateSprintModalOpen(false);

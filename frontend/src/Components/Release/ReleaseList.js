@@ -59,7 +59,17 @@ const ReleaseList = () => {
   const handleSave = async (newReleaseData) => {
     setSaving(true);
     try {
-      const createdRelease = await createRelease(newReleaseData);
+      const { isEditMode, ...createPayload } = newReleaseData;
+      const createdReleaseKey = await createRelease(createPayload);
+      if (!createdReleaseKey?._id) {
+        throw new Error("Create release response missing _id");
+      }
+
+      const createdRelease = {
+        ...createPayload,
+        _id: createdReleaseKey._id,
+      };
+
       setIsModalOpen(false);
       clearAllCaches();
       setReleases((prevReleases) => [createdRelease, ...prevReleases]);

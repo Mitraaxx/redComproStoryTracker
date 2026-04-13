@@ -101,7 +101,7 @@ exports.createSprint = async (req, res) => {
     });
 
     await newSprint.save();
-    res.status(201).json(newSprint);
+    res.status(201).json({ _id: newSprint._id });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(400).json({ error: "Sprint Name already exists in Database!" });

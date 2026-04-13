@@ -111,7 +111,17 @@ const StoryList = () => {
   const handleCreateNewStory = async (storyDataWithApps) => {
     setCreatingStory(true);
     try {
-      const createdStory = await createStory(storyDataWithApps);
+      const { isEditMode, ...createPayload } = storyDataWithApps;
+      const createdStoryKey = await createStory(createPayload);
+      if (!createdStoryKey?._id) {
+        throw new Error("Create story response missing _id");
+      }
+
+      const createdStory = {
+        ...createPayload,
+        _id: createdStoryKey._id,
+      };
+
       setStories((prev) => [createdStory, ...prev]);
       setIsCreateModalOpen(false);
       clearAllCaches();
