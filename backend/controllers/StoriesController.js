@@ -25,7 +25,7 @@ exports.getStories = async (req, res) => {
     // List mode: return story-card fields and app names only.
     const stories = await Story.find()
       .select(
-        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps.appName appsToBeDeployed"
+        "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps.appName"
       )
       .sort({ createdAt: -1 });
 
