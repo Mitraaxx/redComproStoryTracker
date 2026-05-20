@@ -15,6 +15,10 @@ import {
 } from "../../utils/AppConfig";
 import SearchableSelect from "../Tools/SearchableSelect";
 import useModalScrollLock from "../Common/UseModalScrollLock";
+import { fetchExistBranchStatus } from "../../Api/Api";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const StoryModal = ({
   isOpen,
@@ -49,6 +53,11 @@ const StoryModal = ({
   const [appFormData, setAppFormData] = useState({});
   const [editingAppIndex, setEditingAppIndex] = useState(null);
 
+  const [branchExist, setBranchExist] = useState(null);
+
+  // For token presence
+  const tokenPresent = localStorage.getItem('github_pat');
+  
   // Prevent background page scroll while modal is open.
   useModalScrollLock(isOpen);
 
@@ -110,6 +119,7 @@ const StoryModal = ({
           sprintName: initialSprintName || "",
           storyId: "",
           storyName: "",
+          storyPoints: 0
         };
         setFormData(resetData);
         setOriginalFormData(resetData);
@@ -171,6 +181,24 @@ const StoryModal = ({
       s.storyId.toLowerCase() !== (initialData?.storyId || "").toLowerCase(),
   );
 
+  function isFib(num){
+    if(num == 0 || num == 1){
+      return true;
+    }
+
+    let a = 0;
+    let b = 1;
+
+    while(b<num){
+      let temp = a+b;
+      a = b;
+      b = temp;
+    }
+
+    return b == num;
+  }
+  const fibBool = isFib(formData.storyPoints)
+
   // Compare all editable buckets to decide if edit mode has meaningful changes.
   const isStoryChanged = Object.keys(formData).some(
     (key) => formData[key] !== originalFormData[key],
@@ -187,6 +215,7 @@ const StoryModal = ({
     isIdEmpty ||
     isNameEmpty ||
     isDuplicateId ||
+    !fibBool ||
     (initialData && !hasChanges);
 
   // Submit main story form: resolve sprint, clean app rows, then dispatch create/edit payload.
@@ -302,6 +331,34 @@ const StoryModal = ({
       [e.target.name]: e.target.value,
     });
 
+    const handleAppChangeBranchExist = (e) =>{
+    setAppFormData({
+      ...appFormData,
+      [e.target.name]: e.target.value,
+    })
+    
+    setBranchExist(null)
+  };
+
+
+  const handleBranchCheck = async() =>{
+    try{
+        let org;
+        for(let key in repoConfig){
+          if(key == appFormData.appName){
+            org = repoConfig[key].orgName;
+          }
+        }
+        const data = await fetchExistBranchStatus(org, appFormData.appName, appFormData.featureBranch)
+
+        setBranchExist(data.exists);
+    }
+    catch(err){
+      console.log(err)
+      toast.error(err.message);
+    }
+  }
+
   // Save app row into list (replace when editing, append when adding).
   const saveAppToList = () => {
     if (!appFormData.appName) return alert("Please select an App Name!");
@@ -353,6 +410,7 @@ const StoryModal = ({
     !appFormData.appName?.trim() ||
     !appFormData.featureBranch?.trim() ||
     !appFormData.baseBranch?.trim() ||
+    !branchExist || 
     (isAllAppsAdded && editingAppIndex === null) ||
     isAppUnchanged;
 
@@ -487,10 +545,21 @@ const StoryModal = ({
                       <input
                         type="number"
                         name="storyPoints"
-                        value={formData.storyPoints || ""}
+                        value={formData.storyPoints}
                         onChange={handleChange}
                         className="form-input"
                       />
+                      {!fibBool && (
+                        <span
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.8rem",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Only Fibonacci numbers are allowed !!
+                        </span>
+                      )}
                     </label>
                   </div>
                   <div className="col-12 col-md-6">
@@ -500,7 +569,11 @@ const StoryModal = ({
                         name="responsibility"
                         value={formData.responsibility}
                         onChange={handleChange}
-                        options={TEAM_MEMBERS}
+                        options={TEAM_MEMBERS.filter((i)=>{
+                          if(formData.firstReview !== i){
+                            return true
+                          }
+                        })}
                         placeholder="Select Team Member"
                       />
                     </label>
@@ -572,7 +645,11 @@ const StoryModal = ({
                         name="firstReview"
                         value={formData.firstReview}
                         onChange={handleChange}
-                        options={TEAM_MEMBERS}
+                        options={TEAM_MEMBERS.filter((i)=>{
+                          if(formData.responsibility !== i){
+                            return true
+                          }
+                        })}
                         placeholder="Select Team Member"
                       />
                     </label>
@@ -822,17 +899,41 @@ const StoryModal = ({
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
-                      <span>
-                        Feature Branch{" "}
-                        <span className="required-asterisk">*</span>
+                      <span className="label-with-action">
+                        <span>
+                          Feature Branch <span className="required-asterisk">*</span>
+                        </span>
+                        <button type="button" onClick={handleBranchCheck} className="branch-check-btn" disabled ={tokenPresent ? false : true}>Check</button>
                       </span>
                       <input
                         type="text"
                         name="featureBranch"
                         value={appFormData.featureBranch || ""}
-                        onChange={handleAppChange}
+                        onChange={handleAppChangeBranchExist}
                         className="form-input"
                       />
+                      {branchExist === true && (
+                        <span
+                          style={{
+                            color: "#22c55e",
+                            fontSize: "0.8rem",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Feature branch exixt
+                        </span>
+                      )}  
+                      {branchExist === false && (
+                        <span
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.8rem",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Feature branch not exist
+                        </span>
+                      )}                      
                     </label>
                   </div>
                   <div className="col-12">

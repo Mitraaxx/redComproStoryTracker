@@ -247,8 +247,7 @@ const SprintStories = () => {
         ...prev,
       ]);
 
-
-      handleApiSuccess("Story successfully moved to this Sprint");
+      handleApiSuccess(`Story added from ${selectedStory.sprint?.name} to ${sprint?.name}`)
     } catch (err) {
       handleApiError(err, "Failed to move story to this sprint");
     } finally {

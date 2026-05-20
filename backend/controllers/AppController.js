@@ -80,3 +80,51 @@ exports.getBranchMergeStatus = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+exports.getBranchExistenceStatus = async (req, res) => {
+  try {
+    // Read GitHub request parameters sent by frontend.
+    const { orgName, repoName, branchName, token } = req.body;
+
+    // Token is required for authenticated GitHub API access.
+    if (!token) {
+      return res.status(401).json({
+        error: "GitHub token missing in request body",
+      });
+    }
+
+    // Request endpoint for the specific branch to see if it exists.
+    const githubUrl = `https://api.github.com/repos/${orgName}/${repoName}/branches/${branchName}`;
+    const githubResponse = await fetch(githubUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github.v3+json",
+      },
+    });
+
+    // A 404 status code means the branch cleanly does not exist.
+    if (githubResponse.status === 404) {
+      return res.status(200).json({
+        branch: branchName,
+        exists: false,
+      });
+    }
+
+    // Convert other GitHub API failures (e.g. 401 Unauthorized, 403 Rate Limit) into a backend error.
+    if (!githubResponse.ok) {
+      const errData = await githubResponse.json();
+      throw new Error(`GitHub API Error: ${errData.message || "An error occurred"}`);
+    }
+
+    // If the response is OK (200), the branch exists.
+    res.status(200).json({
+      branch: branchName,
+      exists: true,
+    });
+  } catch (err) {
+    console.error("Error fetching branch existence status:", err);
+    res.status(500).json({ error: err.message });
+  }
+};

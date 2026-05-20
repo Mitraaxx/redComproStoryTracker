@@ -3,6 +3,9 @@
 // 1) Build authenticated requests through fetchWithAuth.
 // 2) Keep lightweight in-memory caches per resource/endpoint.
 // 3) Rely on explicit global cache invalidation via clearAllCaches after write operations.
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const BASE_URL = process.env.REACT_APP_BASE_URL;
 
 let cachedSprintList = null;
@@ -56,11 +59,9 @@ const fetchWithAuth = async (url, options = {}) => {
       headers
     });
     const data = await response.json();
-    console.log(data);
-
     return data;
   } catch (error) {
-    throw error;
+    toast.error(error.message)
   }
 };
 
@@ -297,3 +298,24 @@ export const fetchBranchMergeStatus = async (orgName, repoName, branchName, forc
     };
   }
 };
+
+
+export const fetchExistBranchStatus = async (orgName, repoName, branchName) =>{
+  try{
+    const token = localStorage.getItem("github_pat");
+    const data = await fetchWithAuth(`${BASE_URL}/github/exist/branch-status`, {
+      method: "POST",
+      body: JSON.stringify({
+        orgName,
+        repoName,
+        branchName,
+        token
+      })
+    });
+
+    return data;
+  }
+  catch(err){
+    console.error("API Error in fetchBranchMergeStatus:", err);
+  }
+}

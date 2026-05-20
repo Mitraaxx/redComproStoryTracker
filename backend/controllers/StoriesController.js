@@ -17,6 +17,7 @@ exports.getStories = async (req, res) => {
     if (view === "validation") {
       const stories = await Story.find()
         .select("_id storyId storyName")
+        .populate("sprint", "name")
         .sort({ createdAt: -1 });
 
       return res.json(stories);
@@ -68,7 +69,7 @@ exports.updateStoryDetails = async (req, res) => {
       { storyId: oldStoryId },
       { $set: updateFields },
       { new: true }
-    );
+    ).populate("sprint", "name");
 
     if (!story) return res.status(404).json({ error: "Story not found" });
     res.json(story);

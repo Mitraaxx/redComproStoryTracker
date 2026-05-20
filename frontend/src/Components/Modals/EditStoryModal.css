@@ -181,6 +181,42 @@
   opacity: 0.7;
 }
 
+/* Inline label + action layout for form headers */
+.label-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+/* Green themed branch check button used in nested app modal */
+.branch-check-btn {
+  padding: 6px 10px;
+  background-color: #16a34a; /* green-600 */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 6px rgba(16,185,129,0.12);
+}
+
+.branch-check-btn:hover:not(:disabled) {
+  background-color: #15803d; /* green-700 */
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(16,185,129,0.18);
+}
+
+.branch-check-btn:disabled {
+  background-color: #86efac;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.85;
+}
+
 @media (max-width: 395px) {
   .form-grid{
     display: flex;

@@ -149,7 +149,7 @@ const ReleaseStories = () => {
   }, [releaseId]);
 
   // Aggregate apps requested by stories, then combine with manual release apps.
-  const storyApps = stories.reduce((acc, story) => {
+  const storyAppsPre = stories.reduce((acc, story) => {
     // Each story may store apps as string or array; normalize to list push.
     if (Array.isArray(story.appsToBeDeployed)) {
       acc.push(...story.appsToBeDeployed);
@@ -159,11 +159,26 @@ const ReleaseStories = () => {
     return acc;
   }, []);
 
+  function storyLinkedAppsFunc(){
+    let arr = [];
+    stories.forEach((elem)=>(
+      elem.linkedApps.forEach((elem)=>(
+        arr.push(elem.appName)
+      ))
+    ))
+
+    return arr;
+  }
+  
+  const storyLinkedApps = storyLinkedAppsFunc()
+
+  const storyApps = [...storyAppsPre, ...storyLinkedApps]
+
   // Release-level manually curated app list.
   const manualReleaseApps = release?.appsToBeDeployed || [];
 
   // Combined + de-duplicated deployment app list used in UI and PR modal.
-  const combinedUniqueApps = [...new Set([...storyApps, ...manualReleaseApps])];
+  const combinedUniqueApps = [...new Set([...storyApps, ...manualReleaseApps,])];
 
   // Options shown in add-manual-app dropdown: exclude apps already selected.
   const availableAppsForManualAdd = Object.keys(repoConfig).filter(

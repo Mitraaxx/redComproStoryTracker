@@ -27,7 +27,8 @@ const {
 // Import app and GitHub status handlers.
 const {
   getAppStoriesByName,
-  getBranchMergeStatus
+  getBranchMergeStatus,
+  getBranchExistenceStatus
 } = require('../controllers/AppController');
 
 // Story routes
@@ -65,6 +66,8 @@ router.put('/releases/:releaseId', updateRelease);
 // 2) branch merge status via GitHub API
 router.get('/apps/name/:appName/stories', getAppStoriesByName);
 router.post('/github/branch-status', getBranchMergeStatus);
+router.post('/github/exist/branch-status', getBranchExistenceStatus);
+
 
 // Export router for mounting in main server.
 module.exports = router;

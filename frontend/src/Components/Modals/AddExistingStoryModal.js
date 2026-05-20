@@ -203,7 +203,7 @@ const AddExistingStoryModal = ({
                   {visibleStories.map((story) => (
                     <a
                       key={story._id}
-                      onClick={() => onSelectStory(story)}
+                      onClick={() =>{onSelectStory(story)}}
                       style={{
                         padding: "12px 16px",
                         backgroundColor: "#f8fafc",
