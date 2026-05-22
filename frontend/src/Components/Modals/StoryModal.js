@@ -19,7 +19,6 @@ import { fetchExistBranchStatus } from "../../Api/Api";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-
 const StoryModal = ({
   isOpen,
   onClose,
@@ -54,10 +53,11 @@ const StoryModal = ({
   const [editingAppIndex, setEditingAppIndex] = useState(null);
 
   const [branchExist, setBranchExist] = useState(null);
+  const [baseBranchExist, setBaseBranchExist] = useState(null);
 
   // For token presence
-  const tokenPresent = localStorage.getItem('github_pat');
-  
+  const tokenPresent = localStorage.getItem("github_pat");
+
   // Prevent background page scroll while modal is open.
   useModalScrollLock(isOpen);
 
@@ -119,7 +119,7 @@ const StoryModal = ({
           sprintName: initialSprintName || "",
           storyId: "",
           storyName: "",
-          storyPoints: 0
+          storyPoints: 0,
         };
         setFormData(resetData);
         setOriginalFormData(resetData);
@@ -181,23 +181,23 @@ const StoryModal = ({
       s.storyId.toLowerCase() !== (initialData?.storyId || "").toLowerCase(),
   );
 
-  function isFib(num){
-    if(num == 0 || num == 1){
+  function isFib(num) {
+    if (num == 0 || num == 1) {
       return true;
     }
 
     let a = 0;
     let b = 1;
 
-    while(b<num){
-      let temp = a+b;
+    while (b < num) {
+      let temp = a + b;
       a = b;
       b = temp;
     }
 
     return b == num;
   }
-  const fibBool = isFib(formData.storyPoints)
+  const fibBool = isFib(formData.storyPoints);
 
   // Compare all editable buckets to decide if edit mode has meaningful changes.
   const isStoryChanged = Object.keys(formData).some(
@@ -331,33 +331,57 @@ const StoryModal = ({
       [e.target.name]: e.target.value,
     });
 
-    const handleAppChangeBranchExist = (e) =>{
+  const handleAppChangeBranchExist = (e) => {
     setAppFormData({
       ...appFormData,
       [e.target.name]: e.target.value,
-    })
-    
-    setBranchExist(null)
+    });
+
+    setBranchExist(null);
+    setBaseBranchExist(null);
   };
 
-
-  const handleBranchCheck = async() =>{
-    try{
-        let org;
-        for(let key in repoConfig){
-          if(key == appFormData.appName){
-            org = repoConfig[key].orgName;
-          }
+  const handleBranchCheck = async () => {
+    try {
+      let org;
+      for (let key in repoConfig) {
+        if (key == appFormData.appName) {
+          org = repoConfig[key].orgName;
         }
-        const data = await fetchExistBranchStatus(org, appFormData.appName, appFormData.featureBranch)
+      }
+      const data = await fetchExistBranchStatus(
+        org,
+        appFormData.appName,
+        appFormData.featureBranch,
+      );
 
-        setBranchExist(data.exists);
-    }
-    catch(err){
-      console.log(err)
+      setBranchExist(data.exists);
+    } catch (err) {
+      console.log(err);
       toast.error(err.message);
     }
-  }
+  };
+
+  const handleBaseBranchCheck = async () => {
+    try {
+      let org;
+      for (let key in repoConfig) {
+        if (key == appFormData.appName) {
+          org = repoConfig[key].orgName;
+        }
+      }
+      const data = await fetchExistBranchStatus(
+        org,
+        appFormData.appName,
+        appFormData.baseBranch,
+      );
+
+      setBaseBranchExist(data.exists);
+    } catch (err) {
+      console.log(err);
+      toast.error(err.message);
+    }
+  };
 
   // Save app row into list (replace when editing, append when adding).
   const saveAppToList = () => {
@@ -410,7 +434,8 @@ const StoryModal = ({
     !appFormData.appName?.trim() ||
     !appFormData.featureBranch?.trim() ||
     !appFormData.baseBranch?.trim() ||
-    !branchExist || 
+    !branchExist ||
+    !baseBranchExist ||
     (isAllAppsAdded && editingAppIndex === null) ||
     isAppUnchanged;
 
@@ -569,9 +594,9 @@ const StoryModal = ({
                         name="responsibility"
                         value={formData.responsibility}
                         onChange={handleChange}
-                        options={TEAM_MEMBERS.filter((i)=>{
-                          if(formData.firstReview !== i){
-                            return true
+                        options={TEAM_MEMBERS.filter((i) => {
+                          if (formData.firstReview !== i) {
+                            return true;
                           }
                         })}
                         placeholder="Select Team Member"
@@ -645,9 +670,9 @@ const StoryModal = ({
                         name="firstReview"
                         value={formData.firstReview}
                         onChange={handleChange}
-                        options={TEAM_MEMBERS.filter((i)=>{
-                          if(formData.responsibility !== i){
-                            return true
+                        options={TEAM_MEMBERS.filter((i) => {
+                          if (formData.responsibility !== i) {
+                            return true;
                           }
                         })}
                         placeholder="Select Team Member"
@@ -874,6 +899,8 @@ const StoryModal = ({
                     // Closing nested app modal also clears current edit pointer.
                     setIsAppFormOpen(false);
                     setEditingAppIndex(null);
+                    setBaseBranchExist(null);
+                    setBranchExist(null);
                   }}
                   style={{
                     cursor: "pointer",
@@ -901,9 +928,17 @@ const StoryModal = ({
                     <label className="form-label w-100">
                       <span className="label-with-action">
                         <span>
-                          Feature Branch <span className="required-asterisk">*</span>
+                          Feature Branch{" "}
+                          <span className="required-asterisk">*</span>
                         </span>
-                        <button type="button" onClick={handleBranchCheck} className="branch-check-btn" disabled ={tokenPresent ? false : true}>Check</button>
+                        <button
+                          type="button"
+                          onClick={handleBranchCheck}
+                          className="branch-check-btn"
+                          disabled={tokenPresent ? false : true}
+                        >
+                          Check
+                        </button>
                       </span>
                       <input
                         type="text"
@@ -922,7 +957,7 @@ const StoryModal = ({
                         >
                           Feature branch exixt
                         </span>
-                      )}  
+                      )}
                       {branchExist === false && (
                         <span
                           style={{
@@ -933,21 +968,54 @@ const StoryModal = ({
                         >
                           Feature branch not exist
                         </span>
-                      )}                      
+                      )}
                     </label>
                   </div>
                   <div className="col-12">
                     <label className="form-label w-100">
-                      <span>
-                        Base Branch <span className="required-asterisk">*</span>
+                      <span className="label-with-action">
+                        <span>
+                          Base Branch{" "}
+                          <span className="required-asterisk">*</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleBaseBranchCheck}
+                          className="branch-check-btn"
+                          disabled={tokenPresent ? false : true}
+                        >
+                          Check
+                        </button>
                       </span>
                       <input
                         type="text"
                         name="baseBranch"
                         value={appFormData.baseBranch || ""}
-                        onChange={handleAppChange}
+                        onChange={handleAppChangeBranchExist}
                         className="form-input"
                       />
+                      {baseBranchExist === true && (
+                        <span
+                          style={{
+                            color: "#22c55e",
+                            fontSize: "0.8rem",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Base branch exixt
+                        </span>
+                      )}
+                      {baseBranchExist === false && (
+                        <span
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.8rem",
+                            marginTop: "4px",
+                          }}
+                        >
+                          Base branch not exist
+                        </span>
+                      )}
                     </label>
                   </div>
                   <div className="col-12">
