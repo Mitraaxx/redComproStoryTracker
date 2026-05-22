@@ -355,6 +355,10 @@ const StoryModal = ({
         appFormData.featureBranch,
       );
 
+      if(!data){
+        return;
+      }
+
       setBranchExist(data.exists);
     } catch (err) {
       console.log(err);
@@ -375,6 +379,10 @@ const StoryModal = ({
         appFormData.appName,
         appFormData.baseBranch,
       );
+
+      if(!data){
+        return;
+      }
 
       setBaseBranchExist(data.exists);
     } catch (err) {

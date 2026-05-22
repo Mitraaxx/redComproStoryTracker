@@ -58,7 +58,13 @@ const fetchWithAuth = async (url, options = {}) => {
       ...options,
       headers
     });
+
+    if (!response.ok) {
+    throw new Error(`Request failed`);
+    }
+
     const data = await response.json();
+    
     return data;
   } catch (error) {
     toast.error(error.message)
@@ -316,6 +322,6 @@ export const fetchExistBranchStatus = async (orgName, repoName, branchName) =>{
     return data;
   }
   catch(err){
-    console.error("API Error in fetchBranchMergeStatus:", err);
+    console.log("API Error in fetchBranchMergeStatus:", err);
   }
 }
