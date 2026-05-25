@@ -144,12 +144,9 @@ const SprintList = () => {
         })
         .sort((a, b) => {
           // Sort by sprint name in descending order.
-          const nameA = a.name || "";
-          const nameB = b.name || "";
-          return nameB.localeCompare(nameA, undefined, {
-            numeric: true,
-            sensitivity: "base",
-          });
+          const nameA = parseInt((a.name || "").match(/\d+/)?.[0] || 0);
+          const nameB = parseInt((b.name || "").match(/\d+/)?.[0] || 0);
+          return nameB - nameA
         }) || []
     );
   }, [sprints, searchTerm]);
