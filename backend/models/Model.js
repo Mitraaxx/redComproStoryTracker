@@ -110,6 +110,17 @@ const storySchema = new mongoose.Schema(
   },
 );
 
+storySchema.virtual('releaseDetails', {
+  ref: 'Release',          // The model to link to
+  localField: 'releaseTag', // The field in the Story schema
+  foreignField: 'name',     // The field in the Release schema
+  justOne: true             // Set to true because one story has one release
+});
+
+// Ensure virtuals are included when you output the data to your frontend
+storySchema.set('toObject', { virtuals: true });
+storySchema.set('toJSON', { virtuals: true });
+
 const Story = mongoose.model("Story", storySchema);
 
 // Release stores release metadata used by release list/detail pages.

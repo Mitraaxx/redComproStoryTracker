@@ -57,7 +57,7 @@ exports.getReleases = async (req, res) => {
         )
         .sort({ createdAt: -1 });
 
-      return res.json({ release, stories });
+      return res.json({ release, stories});
     }
 
     // List mode: support names-only payload for dropdown hydration.

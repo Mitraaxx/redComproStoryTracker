@@ -250,7 +250,6 @@ const StoryDetails = () => {
       // Clear cross-page caches so lists/details on other screens are fresh.
       clearAllCaches();
 
-
       handleApiSuccess("Update Successful");
     } catch (error) {
       handleApiError(error, "Update Failed");
@@ -348,6 +347,14 @@ const StoryDetails = () => {
     }
   };
 
+  function openRelease() {
+    if(storyData.releaseDetails?._id === undefined){
+      return;
+    }
+    navigate(`/releases/${storyData.releaseDetails._id}/stories`);
+    return;
+  }
+
   // Initial page loading state.
   if (loading) return <LoadingSpinner />;
 
@@ -400,7 +407,32 @@ const StoryDetails = () => {
           </p>
           <p>
             <strong>Release Tag: </strong>{" "}
+            <span style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "5px"
+              }}>
             <span id="release-tag">{storyData.releaseTag}</span>
+            <svg
+              onClick={openRelease}
+              style={{
+                cursor: "pointer",
+                marginTop: "5px"
+              }}
+              width="12px"
+              height="12px"
+              viewBox="0 0 15 15"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M9.31802 0.974873C9.94222 0.350672 10.7888 0 11.6716 0C13.5098 0 15 1.49019 15 3.32843C15 4.21118 14.6493 5.05778 14.0251 5.68198L10.8536 8.85355L10.1464 8.14645L13.318 4.97487C13.7547 4.53821 14 3.94596 14 3.32843C14 2.04247 12.9575 1 11.6716 1C11.054 1 10.4618 1.24532 10.0251 1.68198L6.85355 4.85355L6.14645 4.14645L9.31802 0.974873ZM10.8536 4.85355L4.85355 10.8536L4.14645 10.1464L10.1464 4.14645L10.8536 4.85355ZM4.85355 6.85355L1.68198 10.0251C1.24532 10.4618 1 11.054 1 11.6716C1 12.9575 2.04247 14 3.32843 14C3.94596 14 4.53821 13.7547 4.97487 13.318L8.14645 10.1464L8.85355 10.8536L5.68198 14.0251C5.05778 14.6493 4.21118 15 3.32843 15C1.49019 15 0 13.5098 0 11.6716C0 10.7888 0.350673 9.94222 0.974874 9.31802L4.14645 6.14645L4.85355 6.85355Z"
+                fill="#000000"
+              />
+            </svg>
+            </span>
           </p>
 
           {/* Planning/ownership fields. */}

@@ -1,4 +1,4 @@
-const { Story } = require("../models/Model");
+const { Release, Story } = require("../models/Model");
 
 exports.getStories = async (req, res) => {
   try {
@@ -8,7 +8,7 @@ exports.getStories = async (req, res) => {
 
     if (id) {
       // Detail mode: return one story and populate sprint name for UI display.
-      const story = await Story.findById(id).populate("sprint", "name");
+      const story = await Story.findById(id).populate("sprint", "name").populate("releaseDetails", "_id");;
       if (!story) return res.status(404).json({ error: "Story not found" });
       return res.json(story);
     }
@@ -29,6 +29,9 @@ exports.getStories = async (req, res) => {
         "_id storyId storyName responsibility storyPoints firstReview qaEnvRelDate comments status liveEnvRelease linkedApps.appName"
       )
       .sort({ createdAt: -1 });
+
+    const release = await Release.findOne({ name: "releaseTag" }).select('_id');
+    stories.releaseId = release;
 
     return res.json(stories);
   } catch (err) {
